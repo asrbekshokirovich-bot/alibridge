@@ -60,6 +60,7 @@ services:
     name: alibridge-redis
     plan: free
     maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
 
   # ============================================
   # Frontend — React/Vite (Static Site)

@@ -1,0 +1,74 @@
+services:
+  # ============================================
+  # Backend — FastAPI + aiogram bot
+  # ============================================
+  - type: web
+    name: alibridge-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: BOT_USERNAME
+        value: alibridgebot
+      - key: MINIAPP_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_USE_SSL
+        value: "true"
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: alibridge-redis
+          property: connectionString
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXPIRE_MINUTES
+        value: "60"
+      - key: QR_HMAC_SECRET
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: APP_ENV
+        value: production
+      - key: LOG_FORMAT
+        value: json
+      - key: POSTGRES_USER
+        value: postgres.wiqjhquaojlrtgnkpcdi
+      - key: POSTGRES_PASSWORD
+        sync: false
+      - key: POSTGRES_HOST
+        value: aws-1-eu-central-1.pooler.supabase.com
+      - key: POSTGRES_PORT
+        value: "5432"
+      - key: POSTGRES_DB
+        value: postgres
+    healthCheckPath: /health
+
+  # ============================================
+  # Redis (Key Value)
+  # ============================================
+  - type: redis
+    name: alibridge-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+
+  # ============================================
+  # Frontend — React/Vite (Static Site)
+  # ============================================
+  - type: web
+    name: alibridge-frontend
+    runtime: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: ./frontend/dist
+    plan: free
+    envVars:
+      - key: VITE_BOT_USERNAME
+        value: alibridgebot
+      - key: VITE_APP_VERSION
+        value: "1.0.0"

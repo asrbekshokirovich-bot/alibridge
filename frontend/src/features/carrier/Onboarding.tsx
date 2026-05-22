@@ -177,7 +177,7 @@ export default function CarrierOnboarding() {
     <div className="flex min-h-screen flex-col p-4">
 
       {/* Progress bar */}
-      {step !== 'done' && (
+      {(
         <div className="mb-6">
           <div className="mb-1.5 flex items-center justify-between text-xs">
             <span className="text-tg-hint">{stepIdx + 1} / {WIZARD_STEPS.length}</span>

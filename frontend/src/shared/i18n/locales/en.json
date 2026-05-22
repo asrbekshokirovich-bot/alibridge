@@ -1,0 +1,157 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "remove": "Remove",
+    "close": "Close"
+  },
+  "roles": {
+    "orderer": "Orderer",
+    "carrier": "Carrier",
+    "warehouse_uz": "Tashkent Warehouse",
+    "warehouse_tr": "Istanbul Warehouse",
+    "china_worker": "China Worker",
+    "courier": "Courier",
+    "courier_uz": "Uzbekistan Courier",
+    "courier_tr": "Turkey Courier",
+    "admin": "Admin"
+  },
+  "auth": {
+    "welcome": "Welcome to ALI BRIDGE",
+    "select_role": "Select your role",
+    "logging_in": "Logging in..."
+  },
+  "catalog": {
+    "title": "Catalog",
+    "weight": "Available weight",
+    "add_to_basket": "Add to Basket",
+    "no_items": "No items available"
+  },
+  "basket": {
+    "title": "Basket",
+    "empty": "Basket is empty",
+    "remove": "Remove",
+    "checkout": "Checkout"
+  },
+  "picks": {
+    "empty": "No active picks",
+    "total": "Total",
+    "delivered": "Delivered"
+  },
+  "scan": {
+    "title": "Scanner",
+    "start": "Start Scanning",
+    "stop": "Stop",
+    "history": "History",
+    "hint": "Press «Start» to scan a QR code",
+    "ok": "Success",
+    "error": "Error"
+  },
+  "orders": {
+    "title": "Orders",
+    "create": "New Order",
+    "empty": "No orders yet",
+    "items": "Items",
+    "tracking": "Tracking",
+    "total": "Total",
+    "in_transit": "In transit",
+    "delivered": "Delivered",
+    "destination": "Destination city",
+    "destination_required": "Please enter destination city",
+    "lines_required": "Add at least one item",
+    "item_name": "Item name",
+    "quantity": "Qty",
+    "weight_g": "Weight (g)",
+    "notes": "Notes",
+    "add_item": "Add item",
+    "submit": "Create Order"
+  },
+  "warehouse": {
+    "intake": "Intake",
+    "intake_desc": "Receive a new shipment",
+    "scan": "Scan Session",
+    "scan_desc": "Scan QR codes",
+    "labels": "Labels",
+    "labels_desc": "Print product labels",
+    "pending": "Pending",
+    "in_stock": "In warehouse",
+    "today": "Shipped today",
+    "no_pending": "No shipments pending intake",
+    "enter_counts": "Enter received counts",
+    "expected": "Expected",
+    "confirm_intake": "Confirm Intake",
+    "discrepancy_found": "Discrepancy found! Manager notified.",
+    "print": "Print",
+    "reprint": "Reprint",
+    "no_labels": "No labels to print",
+    "products": "products"
+  },
+  "warehouse_tr": {
+    "receive": "Receive Goods",
+    "receive_desc": "Receive from courier",
+    "handoff": "Courier Handoff",
+    "handoff_desc": "Hand off for delivery",
+    "customer_pickup": "Customer Pickup",
+    "customer_pickup_desc": "Customer came to collect",
+    "arriving": "Arriving",
+    "in_stock": "In warehouse",
+    "ready": "Awaiting pickup",
+    "confirm_handoff": "Confirm Handoff",
+    "items_selected": "items selected",
+    "courier_id": "Courier ID",
+    "handoff_code": "Handoff code (6 digits)",
+    "fill_all": "Please fill all fields",
+    "confirm": "Hand Off",
+    "nothing_ready": "No items ready for handoff"
+  },
+  "china": {
+    "no_tickets": "No sourcing tickets",
+    "needed": "Needed",
+    "sourced": "Sourced",
+    "price_cny": "Price (¥)"
+  },
+  "carrier": {
+    "my_picks": "My Picks",
+    "scan": "Scanner"
+  },
+  "courier": {
+    "queue": "Delivery Queue",
+    "queue_desc": "Items to deliver",
+    "scan_desc": "Scan QR codes",
+    "pending": "Pending",
+    "in_delivery": "In delivery",
+    "today": "Today",
+    "queue_empty": "Queue is empty",
+    "mark_delivered": "Mark as Delivered"
+  },
+  "admin": {
+    "users": "Users",
+    "orders": "Orders",
+    "products": "Products",
+    "disputes": "Disputes",
+    "payouts": "Payouts",
+    "roles": "Roles",
+    "grant": "Grant",
+    "revoke": "Revoke",
+    "search_users": "Search users...",
+    "pending_payouts": "Pending payouts",
+    "review": "Review",
+    "resolution": "Resolution",
+    "deduction_amount": "Deduction amount",
+    "notes": "Notes",
+    "resolve": "Resolve",
+    "no_disputes": "No open disputes",
+    "gross": "Gross",
+    "deductions": "Deductions",
+    "net": "Net payment",
+    "approve": "Approve",
+    "reject": "Reject",
+    "reject_reason": "Reason for rejection:",
+    "no_payouts": "No payout requests"
+  }
+}

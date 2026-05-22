@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($env:PATH*)",
+      "PowerShell(docker *)",
+      "PowerShell(docker-compose *)",
+      "PowerShell(winget *)",
+      "PowerShell(wsl *)",
+      "PowerShell(Get-Process*)",
+      "PowerShell(Get-Service*)",
+      "PowerShell(Get-ChildItem*)",
+      "PowerShell(Get-Content*)",
+      "PowerShell(Test-Path*)",
+      "PowerShell(Start-Process*)",
+      "PowerShell(Stop-Process*)",
+      "PowerShell(New-Item*)",
+      "PowerShell(Remove-Item*)",
+      "PowerShell(Set-Location*)",
+      "PowerShell(Copy-Item*)",
+      "PowerShell(npm *)",
+      "PowerShell(node *)",
+      "PowerShell(pip *)"
+    ],
+    "deny": []
+  }
+}

@@ -1,0 +1,157 @@
+{
+  "common": {
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "retry": "Повторить",
+    "back": "Назад",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "confirm": "Подтвердить",
+    "remove": "Удалить",
+    "close": "Закрыть"
+  },
+  "roles": {
+    "orderer": "Заказчик",
+    "carrier": "Перевозчик",
+    "warehouse_uz": "Склад Ташкент",
+    "warehouse_tr": "Склад Стамбул",
+    "china_worker": "Сотрудник Китай",
+    "courier": "Курьер",
+    "courier_uz": "Курьер Узбекистан",
+    "courier_tr": "Курьер Турция",
+    "admin": "Администратор"
+  },
+  "auth": {
+    "welcome": "Добро пожаловать в ALI BRIDGE",
+    "select_role": "Выберите роль",
+    "logging_in": "Вход..."
+  },
+  "catalog": {
+    "title": "Каталог",
+    "weight": "Доступный вес",
+    "add_to_basket": "В корзину",
+    "no_items": "Товаров нет"
+  },
+  "basket": {
+    "title": "Корзина",
+    "empty": "Корзина пуста",
+    "remove": "Удалить",
+    "checkout": "Оформить"
+  },
+  "picks": {
+    "empty": "Нет активных товаров",
+    "total": "Всего",
+    "delivered": "Доставлено"
+  },
+  "scan": {
+    "title": "Сканирование",
+    "start": "Начать сканирование",
+    "stop": "Остановить",
+    "history": "История",
+    "hint": "Нажмите «Начать» для сканирования QR-кода",
+    "ok": "Успешно",
+    "error": "Ошибка"
+  },
+  "orders": {
+    "title": "Заказы",
+    "create": "Новый заказ",
+    "empty": "Нет заказов",
+    "items": "Позиции",
+    "tracking": "Отслеживание",
+    "total": "Всего",
+    "in_transit": "В пути",
+    "delivered": "Доставлено",
+    "destination": "Город доставки",
+    "destination_required": "Укажите город доставки",
+    "lines_required": "Добавьте хотя бы один товар",
+    "item_name": "Название товара",
+    "quantity": "Кол-во",
+    "weight_g": "Вес (г)",
+    "notes": "Примечание",
+    "add_item": "Добавить товар",
+    "submit": "Создать заказ"
+  },
+  "warehouse": {
+    "intake": "Приёмка",
+    "intake_desc": "Принять новую партию",
+    "scan": "Сканирование",
+    "scan_desc": "Сканировать QR-коды",
+    "labels": "Этикетки",
+    "labels_desc": "Печать этикеток",
+    "pending": "Ожидают",
+    "in_stock": "На складе",
+    "today": "Отправлено сегодня",
+    "no_pending": "Нет партий для приёмки",
+    "enter_counts": "Введите количество",
+    "expected": "Ожидается",
+    "confirm_intake": "Подтвердить приёмку",
+    "discrepancy_found": "Обнаружено расхождение! Менеджер уведомлён.",
+    "print": "Печатать",
+    "reprint": "Перепечатать",
+    "no_labels": "Нет этикеток для печати",
+    "products": "товаров"
+  },
+  "warehouse_tr": {
+    "receive": "Встреча рейса",
+    "receive_desc": "Принять от курьера",
+    "handoff": "Передача курьеру",
+    "handoff_desc": "Передать для доставки",
+    "customer_pickup": "Выдача клиенту",
+    "customer_pickup_desc": "Клиент пришёл за заказом",
+    "arriving": "Прилетает",
+    "in_stock": "На складе",
+    "ready": "Ждут клиентов",
+    "confirm_handoff": "Подтвердить передачу",
+    "items_selected": "позиций выбрано",
+    "courier_id": "ID курьера",
+    "handoff_code": "Код передачи (6 цифр)",
+    "fill_all": "Заполните все поля",
+    "confirm": "Передать",
+    "nothing_ready": "Нет товаров для передачи"
+  },
+  "china": {
+    "no_tickets": "Нет заявок на закупку",
+    "needed": "Нужно",
+    "sourced": "Закуплено",
+    "price_cny": "Цена (¥)"
+  },
+  "carrier": {
+    "my_picks": "Мои пики",
+    "scan": "Сканирование"
+  },
+  "courier": {
+    "queue": "Очередь доставки",
+    "queue_desc": "Товары для доставки",
+    "scan_desc": "Сканировать QR-коды",
+    "pending": "Ожидают",
+    "in_delivery": "В доставке",
+    "today": "Сегодня",
+    "queue_empty": "Очередь пуста",
+    "mark_delivered": "Отметить доставленным"
+  },
+  "admin": {
+    "users": "Пользователи",
+    "orders": "Заказы",
+    "products": "Товары",
+    "disputes": "Споры",
+    "payouts": "Выплаты",
+    "roles": "Роли",
+    "grant": "Назначить",
+    "revoke": "Отозвать",
+    "search_users": "Поиск пользователей...",
+    "pending_payouts": "Ожидают выплаты",
+    "review": "Просмотреть",
+    "resolution": "Решение",
+    "deduction_amount": "Сумма удержания",
+    "notes": "Примечание",
+    "resolve": "Принять решение",
+    "no_disputes": "Открытых споров нет",
+    "gross": "Начислено",
+    "deductions": "Удержания",
+    "net": "К выплате",
+    "approve": "Подтвердить",
+    "reject": "Отклонить",
+    "reject_reason": "Причина отклонения:",
+    "no_payouts": "Нет заявок на выплату"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "start": {
+    "welcome": "👋 Welcome to ALI BRIDGE!\nSelect your language / Tilni tanlang:",
+    "role_menu": "📱 Open App",
+    "no_role": "You have no assigned roles. Please contact an administrator."
+  },
+  "carrier": {
+    "onboarding_start": "To work as a carrier, you need to complete registration.",
+    "consent_title": "📋 Carrier Registration",
+    "consent_text": "You will need:\n• Phone number (OTP)\n• Passport photo page\n• Selfie\n• Flight ticket photo",
+    "consent_btn": "✅ I agree, continue",
+    "ask_phone": "📱 Send your phone number:",
+    "ask_passport": "📄 Take a photo of your passport's photo page:",
+    "ask_selfie": "🤳 Take a selfie holding your passport:",
+    "ask_ticket": "🎫 Take a photo of your flight ticket:",
+    "ask_destination": "🌍 Enter your destination city (e.g. Istanbul):",
+    "confirm_route": "Route: {origin} → {destination}\nDeparture date: {date}\n\nConfirm?",
+    "confirm_yes": "✅ Confirm",
+    "confirm_no": "❌ Cancel",
+    "success": "🎉 Registration complete! Welcome, {name}!",
+    "pending_review": "⏳ Your documents are under review. We'll notify you of the result.",
+    "ocr_failed": "❌ Could not read document. Please take a clearer photo.",
+    "ticket_parse_failed": "❌ Could not read ticket data. Make sure the entire ticket is visible."
+  },
+  "orders": {
+    "status_updated": "📦 Order #{order_number} status changed: {status}",
+    "landed": "✈️ Your carrier has landed! Packages will be at the warehouse soon.",
+    "delivered": "🎉 Your order #{order_number} has been delivered!"
+  },
+  "errors": {
+    "generic": "An error occurred. Please try again later.",
+    "not_authorized": "You are not authorized to perform this action.",
+    "invalid_qr": "❌ Invalid QR code.",
+    "already_taken": "❌ This item has already been taken by another carrier."
+  }
+}

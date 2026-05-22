@@ -1,0 +1,58 @@
+{
+  "common": {
+    "welcome": "Assalomu alaykum, {name}!",
+    "select_language": "Tilni tanlang",
+    "language_set": "Til o'rnatildi: {lang}",
+    "back": "Orqaga",
+    "cancel": "Bekor qilish",
+    "confirm": "Tasdiqlash",
+    "error": "Xatolik yuz berdi",
+    "unauthorized": "Sizda bu amal uchun ruxsat yo'q"
+  },
+  "start": {
+    "greeting": "ALI BRIDGE'ga xush kelibsiz!\n\n📦 Kargo zanjiri: 🇨🇳 → 🇺🇿 → 🇹🇷",
+    "open_app": "📱 Ilovani ochish",
+    "select_role": "Rolingizni tanlang"
+  },
+  "roles": {
+    "orderer": "📦 Buyurtmachi",
+    "carrier": "✈️ Yo'lovchi (Carrier)",
+    "warehouse_uz": "🏭 Toshkent ombor",
+    "warehouse_tr": "🏭 Turkiya ombor",
+    "china_worker": "🇨🇳 Xitoy xodimi",
+    "courier_uz": "🚗 O'zbekiston kuryer",
+    "courier_tr": "🚗 Turkiya kuryer",
+    "admin": "👤 Administrator"
+  },
+  "carrier": {
+    "onboarding_start": "Yo'lovchi sifatida ro'yxatdan o'tish\n\nKerakli ma'lumotlar:\n• Passport bio-page rasmi\n• Aviabilet rasmi\n• Telefon raqami",
+    "liability_consent": "Mas'uliyatni qabul qilaman: men olib ketayotgan mahsulotlar yo'qolsa yoki shikastlansa, mendan summa ushlab qolinishi mumkin.",
+    "upload_passport": "📸 Passport rasmini yuklang",
+    "upload_ticket": "✈️ Aviabilet rasmini yuklang",
+    "select_destination": "Yakuniy manzilingizni tanlang"
+  },
+  "catalog": {
+    "title": "📦 Mavjud kargolar",
+    "no_items": "Hozircha mavjud kargo yo'q",
+    "add_to_basket": "🛒 Savatga qo'shish",
+    "remove": "❌ Olib tashlash",
+    "weight": "Og'irlik: {kg} kg",
+    "price": "Narx: {amount} {currency}"
+  },
+  "scan": {
+    "instruction": "Barkod yoki QR ni skanerlang",
+    "scanned": "✅ Skanerlandi: {count}/{total}",
+    "completed": "Barcha paketlar qabul qilindi!",
+    "invalid_qr": "QR yaroqsiz yoki ushbu sizning vazifangizda yo'q"
+  },
+  "status": {
+    "pending": "⏳ Kutilmoqda",
+    "in_warehouse": "📦 Omborda",
+    "with_courier_uz": "🚗 O'zbekiston kuryerda",
+    "with_carrier": "✈️ Yo'lovchida",
+    "in_flight": "✈️ Parvozda",
+    "with_courier_tr": "🚗 Turkiya kuryerda",
+    "at_tr_wh": "🏭 Turkiya omborida",
+    "delivered": "✅ Yetkazildi"
+  }
+}

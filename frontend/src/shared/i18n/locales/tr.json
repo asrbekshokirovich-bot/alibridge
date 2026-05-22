@@ -1,0 +1,157 @@
+{
+  "common": {
+    "loading": "Yükleniyor...",
+    "error": "Hata",
+    "retry": "Tekrar dene",
+    "back": "Geri",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "confirm": "Onayla",
+    "remove": "Kaldır",
+    "close": "Kapat"
+  },
+  "roles": {
+    "orderer": "Sipariş Sahibi",
+    "carrier": "Taşıyıcı",
+    "warehouse_uz": "Taşkent Deposu",
+    "warehouse_tr": "İstanbul Deposu",
+    "china_worker": "Çin Çalışanı",
+    "courier": "Kurye",
+    "courier_uz": "Özbekistan Kurye",
+    "courier_tr": "Türkiye Kurye",
+    "admin": "Yönetici"
+  },
+  "auth": {
+    "welcome": "ALI BRIDGE'e Hoş Geldiniz",
+    "select_role": "Rol seçin",
+    "logging_in": "Giriş yapılıyor..."
+  },
+  "catalog": {
+    "title": "Katalog",
+    "weight": "Kullanılabilir ağırlık",
+    "add_to_basket": "Sepete Ekle",
+    "no_items": "Ürün yok"
+  },
+  "basket": {
+    "title": "Sepet",
+    "empty": "Sepet boş",
+    "remove": "Kaldır",
+    "checkout": "Sipariş ver"
+  },
+  "picks": {
+    "empty": "Aktif ürün yok",
+    "total": "Toplam",
+    "delivered": "Teslim edildi"
+  },
+  "scan": {
+    "title": "Tarama",
+    "start": "Taramayı başlat",
+    "stop": "Durdur",
+    "history": "Geçmiş",
+    "hint": "QR kod taramak için «Başlat»a dokunun",
+    "ok": "Başarılı",
+    "error": "Hata"
+  },
+  "orders": {
+    "title": "Siparişler",
+    "create": "Yeni Sipariş",
+    "empty": "Sipariş yok",
+    "items": "Ürünler",
+    "tracking": "Takip",
+    "total": "Toplam",
+    "in_transit": "Yolda",
+    "delivered": "Teslim edildi",
+    "destination": "Teslimat şehri",
+    "destination_required": "Teslimat şehrini girin",
+    "lines_required": "En az bir ürün ekleyin",
+    "item_name": "Ürün adı",
+    "quantity": "Adet",
+    "weight_g": "Ağırlık (g)",
+    "notes": "Not",
+    "add_item": "Ürün ekle",
+    "submit": "Sipariş oluştur"
+  },
+  "warehouse": {
+    "intake": "Teslim Alma",
+    "intake_desc": "Yeni gönderi teslim al",
+    "scan": "Tarama",
+    "scan_desc": "QR kodları tara",
+    "labels": "Etiketler",
+    "labels_desc": "Etiket yazdır",
+    "pending": "Bekleyen",
+    "in_stock": "Depoda",
+    "today": "Bugün gönderildi",
+    "no_pending": "Teslim alınacak gönderi yok",
+    "enter_counts": "Miktarları girin",
+    "expected": "Beklenen",
+    "confirm_intake": "Teslim almayı onayla",
+    "discrepancy_found": "Fark tespit edildi! Yönetici bilgilendirildi.",
+    "print": "Yazdır",
+    "reprint": "Tekrar yazdır",
+    "no_labels": "Yazdırılacak etiket yok",
+    "products": "ürün"
+  },
+  "warehouse_tr": {
+    "receive": "Kargo Teslim Al",
+    "receive_desc": "Kuryeden teslim al",
+    "handoff": "Kurye Teslimatı",
+    "handoff_desc": "Teslimat için ver",
+    "customer_pickup": "Müşteri Teslim",
+    "customer_pickup_desc": "Müşteri kargosunu aldı",
+    "arriving": "Geliyor",
+    "in_stock": "Depoda",
+    "ready": "Teslim bekliyor",
+    "confirm_handoff": "Teslimi onayla",
+    "items_selected": "ürün seçildi",
+    "courier_id": "Kurye ID",
+    "handoff_code": "Teslim kodu (6 rakam)",
+    "fill_all": "Tüm alanları doldurun",
+    "confirm": "Teslim Et",
+    "nothing_ready": "Teslim edilecek ürün yok"
+  },
+  "china": {
+    "no_tickets": "Satın alma talebi yok",
+    "needed": "Gerekli",
+    "sourced": "Temin edildi",
+    "price_cny": "Fiyat (¥)"
+  },
+  "carrier": {
+    "my_picks": "Seçimlerim",
+    "scan": "Tarama"
+  },
+  "courier": {
+    "queue": "Teslimat Kuyruğu",
+    "queue_desc": "Teslim edilecek ürünler",
+    "scan_desc": "QR kodları tara",
+    "pending": "Bekleyen",
+    "in_delivery": "Teslimat sürecinde",
+    "today": "Bugün",
+    "queue_empty": "Kuyruk boş",
+    "mark_delivered": "Teslim edildi olarak işaretle"
+  },
+  "admin": {
+    "users": "Kullanıcılar",
+    "orders": "Siparişler",
+    "products": "Ürünler",
+    "disputes": "Anlaşmazlıklar",
+    "payouts": "Ödemeler",
+    "roles": "Roller",
+    "grant": "Ata",
+    "revoke": "İptal et",
+    "search_users": "Kullanıcı ara...",
+    "pending_payouts": "Bekleyen ödemeler",
+    "review": "İncele",
+    "resolution": "Karar",
+    "deduction_amount": "Kesinti miktarı",
+    "notes": "Not",
+    "resolve": "Karar ver",
+    "no_disputes": "Açık anlaşmazlık yok",
+    "gross": "Brüt",
+    "deductions": "Kesintiler",
+    "net": "Net ödeme",
+    "approve": "Onayla",
+    "reject": "Reddet",
+    "reject_reason": "Red nedeni:",
+    "no_payouts": "Ödeme talebi yok"
+  }
+}

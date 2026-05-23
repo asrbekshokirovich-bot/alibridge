@@ -66,7 +66,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             await bot.set_webhook(
                 url=settings.bot_webhook_url,
                 secret_token=settings.bot_webhook_secret,
-                drop_pending_updates=True,
+                drop_pending_updates=False,
             )
             log.info("bot_webhook_set", url=settings.bot_webhook_url)
         except Exception as e:
@@ -107,10 +107,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         except (asyncio.CancelledError, Exception):
             pass
 
-    try:
-        await bot.delete_webhook()
-    except Exception:
-        pass
     await bot.session.close()
     await close_redis()
     await close_db()

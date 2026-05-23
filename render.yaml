@@ -14,6 +14,10 @@ services:
         sync: false
       - key: BOT_USERNAME
         value: alibridgebot
+      - key: BOT_WEBHOOK_URL
+        value: https://alibridge-backend.onrender.com/api/v1/telegram/webhook
+      - key: BOT_WEBHOOK_SECRET
+        value: alibridge-webhook-secret-2024
       - key: MINIAPP_URL
         sync: false
       - key: DATABASE_URL

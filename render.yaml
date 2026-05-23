@@ -19,7 +19,9 @@ services:
       - key: BOT_WEBHOOK_SECRET
         value: alibridge-webhook-secret-2024
       - key: MINIAPP_URL
-        sync: false
+        value: https://alibridge-frontend.onrender.com
+      - key: CORS_ORIGINS
+        value: https://alibridge-frontend.onrender.com,https://web.telegram.org,https://t.me
       - key: DATABASE_URL
         sync: false
       - key: DB_USE_SSL
@@ -79,3 +81,5 @@ services:
         value: alibridgebot
       - key: VITE_APP_VERSION
         value: "1.0.0"
+      - key: VITE_API_URL
+        value: https://alibridge-backend.onrender.com/api/v1

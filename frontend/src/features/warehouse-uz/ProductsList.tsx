@@ -56,6 +56,7 @@ function SpecsView({ onSelect }: { onSelect: (spec: Spec) => void }) {
   const [confirmSpec, setConfirmSpec] = useState<Spec | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deletedSpecIds, setDeletedSpecIds] = useState<Set<string>>(new Set());
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery<Spec[]>({
     queryKey: ['wh-specs'],
@@ -67,14 +68,27 @@ function SpecsView({ onSelect }: { onSelect: (spec: Spec) => void }) {
 
   const handleDeleteSpec = async (spec: Spec) => {
     setDeleteLoading(true);
+    setDeleteError(null);
     try {
-      await api.delete(`/warehouse/uz/products/specs/${spec.spec_id}`);
+      const { data } = await api.delete<{ products_count: number; remaining: number }>(
+        `/warehouse/uz/products/specs/${spec.spec_id}`
+      );
       haptic('success');
-      setDeletedSpecIds((prev) => new Set([...prev, spec.spec_id]));
-      setConfirmSpec(null);
-      queryClient.invalidateQueries({ queryKey: ['wh-specs'] });
-    } catch {
+      // Carrier olib ketgan mahsulot qolsa katalog ro'yxatda qoladi (backend guard).
+      if (data.remaining > 0) {
+        setDeleteError(
+          `${data.products_count} ta o'chirildi. ${data.remaining} ta yo'lovchida bo'lgani uchun katalog saqlandi.`
+        );
+        queryClient.invalidateQueries({ queryKey: ['wh-specs'] });
+        setConfirmSpec(null);
+      } else {
+        setDeletedSpecIds((prev) => new Set([...prev, spec.spec_id]));
+        setConfirmSpec(null);
+        queryClient.invalidateQueries({ queryKey: ['wh-specs'] });
+      }
+    } catch (err: unknown) {
       haptic('error');
+      setDeleteError((err as any)?.response?.data?.error?.message || "O'chirishda xatolik");
     } finally {
       setDeleteLoading(false);
     }
@@ -91,11 +105,16 @@ function SpecsView({ onSelect }: { onSelect: (spec: Spec) => void }) {
           "{confirmSpec.title}" katalogi o'chirilsinmi?
         </p>
         <p className="text-center text-sm text-tg-hint">
-          {confirmSpec.count} ta mahsulot ham o'chiriladi
+          Ombordagi {confirmSpec.count} ta mahsulot o'chiriladi
         </p>
+        {deleteError && (
+          <div className="w-full rounded-xl bg-amber-500/15 px-4 py-3 text-center text-sm text-amber-300">
+            ⚠️ {deleteError}
+          </div>
+        )}
         <div className="flex w-full gap-3">
           <button
-            onClick={() => { setConfirmSpec(null); haptic('light'); }}
+            onClick={() => { setConfirmSpec(null); setDeleteError(null); haptic('light'); }}
             className="flex-1 rounded-xl bg-white/10 py-3 font-bold text-tg-text"
           >
             Bekor
@@ -120,6 +139,13 @@ function SpecsView({ onSelect }: { onSelect: (spec: Spec) => void }) {
         <h2 className="text-lg font-bold">Mahsulotlar</h2>
         <span className="text-sm text-tg-hint">{visible.length} katalog</span>
       </div>
+
+      {deleteError && (
+        <div className="flex items-start justify-between gap-2 rounded-xl bg-amber-500/15 px-4 py-3 text-sm text-amber-300">
+          <span>⚠️ {deleteError}</span>
+          <button onClick={() => setDeleteError(null)} className="shrink-0 text-amber-300/70">✕</button>
+        </div>
+      )}
 
       {visible.length === 0 ? (
         <Card><p className="text-center text-sm text-tg-hint">Ombor bo'sh</p></Card>
@@ -214,6 +240,7 @@ function ItemsView({ spec, onBack }: { spec: Spec; onBack: () => void }) {
 
   const handleDelete = async (productId: string) => {
     setDeleteLoading(true);
+    setBulkDeleteError(null);
     try {
       await api.delete(`/warehouse/uz/products/${productId}`);
       haptic('success');
@@ -221,8 +248,13 @@ function ItemsView({ spec, onBack }: { spec: Spec; onBack: () => void }) {
       setConfirmDeleteId(null);
       queryClient.invalidateQueries({ queryKey: ['wh-specs'] });
       queryClient.invalidateQueries({ queryKey: ['wh-spec-items', spec.spec_id] });
-    } catch {
+    } catch (err: unknown) {
       haptic('error');
+      setConfirmDeleteId(null);
+      setBulkDeleteError(
+        (err as any)?.response?.data?.error?.message ||
+        "Bu mahsulot omborda emas — o'chirib bo'lmaydi"
+      );
     } finally {
       setDeleteLoading(false);
     }
@@ -234,12 +266,23 @@ function ItemsView({ spec, onBack }: { spec: Spec; onBack: () => void }) {
     setDeleteLoading(true);
     setBulkDeleteError(null);
     try {
-      await api.delete(`/warehouse/uz/products/bulk?ids=${encodeURIComponent(ids.join(','))}`);
+      const { data: res } = await api.delete<{ deleted: number; skipped: number }>(
+        `/warehouse/uz/products/bulk?ids=${encodeURIComponent(ids.join(','))}`
+      );
       haptic('success');
-      setDeletedIds((prev) => new Set([...prev, ...ids]));
-      setConfirmBulkDelete(false);
       queryClient.invalidateQueries({ queryKey: ['wh-specs'] });
       queryClient.invalidateQueries({ queryKey: ['wh-spec-items', spec.spec_id] });
+      // Carrier olib ketganlar o'tkazib yuboriladi (backend guard).
+      if (res.skipped > 0) {
+        setDeletedIds((prev) => new Set([...prev, ...ids]));
+        setBulkDeleteError(
+          `${res.deleted} ta o'chirildi. ${res.skipped} ta yo'lovchida bo'lgani uchun o'chmadi.`
+        );
+        refetch();
+      } else {
+        setDeletedIds((prev) => new Set([...prev, ...ids]));
+        setConfirmBulkDelete(false);
+      }
     } catch (err: unknown) {
       haptic('error');
       setBulkDeleteError((err as any)?.response?.data?.error?.message || 'Xato yuz berdi');
@@ -324,6 +367,13 @@ function ItemsView({ spec, onBack }: { spec: Spec; onBack: () => void }) {
       >
         🖨️ Barchasini chop etish (PDF)
       </button>
+
+      {bulkDeleteError && (
+        <div className="flex items-start justify-between gap-2 rounded-xl bg-amber-500/15 px-4 py-3 text-sm text-amber-300">
+          <span>⚠️ {bulkDeleteError}</span>
+          <button onClick={() => setBulkDeleteError(null)} className="shrink-0 text-amber-300/70">✕</button>
+        </div>
+      )}
 
       {visible.length === 0 && !isLoading ? (
         <Card><p className="text-center text-sm text-tg-hint">Mahsulot topilmadi</p></Card>

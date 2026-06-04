@@ -5,7 +5,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
 import type {
-  CatalogResponse,
   BasketPick,
   OrderSummary,
   OrderDetail,
@@ -48,18 +47,6 @@ export function useMe() {
   });
 }
 
-// ─── Catalog ──────────────────────────────────────────────────────────────────
-
-export function useCatalog() {
-  return useQuery<CatalogResponse>({
-    queryKey: ['catalog'],
-    queryFn: async () => {
-      const { data } = await api.get<CatalogResponse>('/catalog');
-      return data;
-    },
-  });
-}
-
 // ─── Basket ───────────────────────────────────────────────────────────────────
 
 export function useBasket() {
@@ -72,19 +59,6 @@ export function useBasket() {
   });
 }
 
-export function useAddToBasket() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (productId: string) => {
-      await api.post('/basket/add', { product_id: productId });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['basket'] });
-      queryClient.invalidateQueries({ queryKey: ['catalog'] });
-    },
-  });
-}
-
 export function useRemoveFromBasket() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -93,7 +67,7 @@ export function useRemoveFromBasket() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['basket'] });
-      queryClient.invalidateQueries({ queryKey: ['catalog'] });
+      queryClient.invalidateQueries({ queryKey: ['catalog-specs'] });
     },
   });
 }
@@ -187,16 +161,141 @@ export function useDisputes(status?: string) {
   });
 }
 
+// ─── Products ─────────────────────────────────────────────────────────────────
+
+/** Admin: mahsulotni o'chirish */
+export function useDeleteProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (productId: string) => {
+      await api.delete(`/admin/products/${productId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+    },
+  });
+}
+
+/** Warehouse UZ: mahsulotni o'chirish */
+export function useDeleteProductWh() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (productId: string) => {
+      await api.delete(`/warehouse/uz/products/${productId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quick-intake-labels'] });
+    },
+  });
+}
+
 // ─── Profile ──────────────────────────────────────────────────────────────────
 
 export function useUpdateLanguage() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (language: string) => {
-      await api.patch('/profile/me/language', { language });
+      await api.patch('/profile/me/language', { language_code: language });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['me'] });
+    },
+  });
+}
+
+// ─── China sourcing ─────────────────────────────────────────────────────────
+
+export interface ChinaTicket {
+  order_line_id: string;
+  sourcing_spec_id: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  photos: string[];
+  quantity: number;
+  target_unit_weight_g: number | null;
+  color: string | null;
+  notes: string | null;
+}
+
+export interface ChinaShipmentItem {
+  id: string;
+  short_code: string;
+  status: string;
+  unit_weight_g: number;
+  color: string | null;
+  title: string;
+  photo: string | null;
+}
+
+export interface ChinaStats {
+  open_tickets: number;
+  ready_to_ship: number;
+  in_transit: number;
+}
+
+export function useChinaStats() {
+  return useQuery<ChinaStats>({
+    queryKey: ['china-stats'],
+    queryFn: async () => {
+      const { data } = await api.get<ChinaStats>('/china/stats');
+      return data;
+    },
+  });
+}
+
+export function useChinaTickets() {
+  return useQuery<ChinaTicket[]>({
+    queryKey: ['china-tickets'],
+    queryFn: async () => {
+      const { data } = await api.get<ChinaTicket[]>('/china/tickets');
+      return data;
+    },
+  });
+}
+
+export function useChinaShipments() {
+  return useQuery<ChinaShipmentItem[]>({
+    queryKey: ['china-shipments'],
+    queryFn: async () => {
+      const { data } = await api.get<ChinaShipmentItem[]>('/china/shipments');
+      return data;
+    },
+  });
+}
+
+export function useSourceTicket() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {
+      order_line_id: string;
+      count: number;
+      unit_weight_g: number;
+      color?: string | null;
+      box_items_count?: number | null;
+    }) => {
+      const { order_line_id, ...body } = payload;
+      const { data } = await api.post(`/china/tickets/${order_line_id}/source`, body);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['china-tickets'] });
+      queryClient.invalidateQueries({ queryKey: ['china-shipments'] });
+      queryClient.invalidateQueries({ queryKey: ['china-stats'] });
+    },
+  });
+}
+
+export function useShipProducts() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (productIds: string[]) => {
+      const { data } = await api.post('/china/shipments/ship', { product_ids: productIds });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['china-shipments'] });
+      queryClient.invalidateQueries({ queryKey: ['china-stats'] });
     },
   });
 }

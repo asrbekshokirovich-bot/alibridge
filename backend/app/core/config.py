@@ -8,8 +8,14 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field, PostgresDsn, RedisDsn, computed_field
+from pydantic import Field, PostgresDsn, RedisDsn, computed_field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Production'da qabul qilinmaydigan zaif/standart sir qiymatlari
+_WEAK_SECRET_MARKERS = ("change-me", "changeme", "your-", "example", "secret-2024")
+_WEAK_DB_PASSWORDS = frozenset(
+    {"changeme", "postgres", "password", "A1L2I3B4R5I6D7G8E9"}
+)
 
 
 class AppSettings(BaseSettings):
@@ -37,6 +43,9 @@ class AppSettings(BaseSettings):
     bot_username: str
     bot_webhook_url: str | None = None
     bot_webhook_secret: str | None = None
+    # webhook o'rniga polling ishlatish (beqaror tunnel uchun — bot updatelarni
+    # o'zi tortib oladi, inbound tunnel kerak emas)
+    bot_force_polling: bool = False
 
     miniapp_url: str
     miniapp_base_path: str = "/"
@@ -114,6 +123,8 @@ class AppSettings(BaseSettings):
     s3_access_key: str = ""
     s3_secret_key: str = ""
     s3_use_ssl: bool = True
+    # Tashqi URL — brauzerdan fayllarni ko'rish uchun (bo'sh bo'lsa s3_endpoint ishlatiladi)
+    s3_public_url: str = ""
 
     # ============================================
     # OCR
@@ -183,6 +194,45 @@ class AppSettings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.app_env == "production"
+
+    @model_validator(mode="after")
+    def _validate_production_secrets(self) -> "AppSettings":
+        """Production'da zaif yoki standart sirlarni rad etish (xavfsizlik guard).
+
+        Development'da o'tkazib yuboriladi — faqat APP_ENV=production da ishlaydi.
+        """
+        if self.app_env != "production":
+            return self
+
+        problems: list[str] = []
+
+        def _check_secret(name: str, value: str, min_len: int = 32) -> None:
+            low = (value or "").lower()
+            if not value or len(value) < min_len:
+                problems.append(f"{name}: kamida {min_len} belgi bo'lishi shart")
+            elif any(m in low for m in _WEAK_SECRET_MARKERS):
+                problems.append(f"{name}: standart/zaif qiymat — tasodifiy qiymatga almashtiring")
+
+        _check_secret("JWT_SECRET", self.jwt_secret)
+        _check_secret("QR_HMAC_SECRET", self.qr_hmac_secret)
+        _check_secret("ENCRYPTION_KEY", self.encryption_key, min_len=32)
+
+        # Webhook secret production'da majburiy (H2)
+        if not self.bot_webhook_secret or len(self.bot_webhook_secret) < 16:
+            problems.append("BOT_WEBHOOK_SECRET: production'da majburiy (kamida 16 belgi)")
+        elif any(m in self.bot_webhook_secret.lower() for m in _WEAK_SECRET_MARKERS):
+            problems.append("BOT_WEBHOOK_SECRET: standart/zaif qiymat")
+
+        # DB paroli
+        if self.postgres_password in _WEAK_DB_PASSWORDS or len(self.postgres_password) < 12:
+            problems.append("POSTGRES_PASSWORD: zaif yoki standart — kuchli tasodifiy parol qo'ying")
+
+        if problems:
+            raise ValueError(
+                "Production xavfsizlik tekshiruvi muvaffaqiyatsiz:\n  - "
+                + "\n  - ".join(problems)
+            )
+        return self
 
     @computed_field  # type: ignore[misc]
     @property

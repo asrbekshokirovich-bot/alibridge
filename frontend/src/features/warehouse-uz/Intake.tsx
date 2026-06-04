@@ -32,6 +32,8 @@ export default function WarehouseUzIntake() {
   const { t } = useTranslation();
   const [selectedShipment, setSelectedShipment] = useState<PendingShipment | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [prices, setPrices] = useState<Record<string, string>>({});
+  const [doneOrderId, setDoneOrderId] = useState<string | null>(null);
 
   useBackButton(() => {
     if (selectedShipment) {
@@ -52,7 +54,7 @@ export default function WarehouseUzIntake() {
   });
 
   const intakeMutation = useMutation({
-    mutationFn: async (payload: { order_id: string; lines: { line_id: string; count_received: number }[] }) => {
+    mutationFn: async (payload: { order_id: string; lines: { line_id: string; count_received: number; cargo_price: number }[] }) => {
       const { data } = await api.post<IntakeResult>('/warehouse/uz/intake', payload);
       return data;
     },
@@ -62,6 +64,7 @@ export default function WarehouseUzIntake() {
       if (hasDiscrepancy) {
         alert(t('warehouse.discrepancy_found'));
       }
+      setDoneOrderId(selectedShipment!.id);
       setSelectedShipment(null);
       setCounts({});
     },
@@ -78,11 +81,41 @@ export default function WarehouseUzIntake() {
       lines: selectedShipment.lines.map((line) => ({
         line_id: line.id,
         count_received: counts[line.id] ?? line.quantity,
+        cargo_price: parseFloat(prices[line.id] ?? '') || 0,
       })),
     });
   };
 
   if (isLoading && !selectedShipment) return <LoadingScreen />;
+
+  // Intake muvaffaqiyat ekrani
+  if (doneOrderId) {
+    return (
+      <div className="flex flex-col items-center gap-4 p-6 pt-12">
+        <div className="text-5xl">✅</div>
+        <h2 className="text-xl font-bold text-center">{t('warehouse.intake_done')}</h2>
+        <p className="text-sm text-tg-hint text-center leading-relaxed">
+          {t('warehouse.label_prompt')}
+        </p>
+        <Button
+          fullWidth
+          size="lg"
+          onClick={() => {
+            setDoneOrderId(null);
+            navigate('/warehouse-uz/labels');
+          }}
+        >
+          🖨️ {t('warehouse.go_to_labels')}
+        </Button>
+        <button
+          className="text-sm text-tg-hint underline"
+          onClick={() => setDoneOrderId(null)}
+        >
+          {t('warehouse.skip_for_now')}
+        </button>
+      </div>
+    );
+  }
 
   // Qabul jarayoni
   if (selectedShipment) {
@@ -110,6 +143,20 @@ export default function WarehouseUzIntake() {
                   setCounts((prev) => ({ ...prev, [line.id]: parseInt(e.target.value) || 0 }))
                 }
                 className="w-20 rounded-lg border border-tg-secondary-bg bg-tg-secondary-bg px-2 py-1.5 text-center text-sm text-tg-text outline-none focus:border-tg-button"
+              />
+            </div>
+            <div className="mt-2 flex items-center gap-2">
+              <span className="flex-1 text-xs text-tg-hint">Olib ketish narxi (USD):</span>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                placeholder="0.00"
+                value={prices[line.id] ?? ''}
+                onChange={(e) =>
+                  setPrices((prev) => ({ ...prev, [line.id]: e.target.value }))
+                }
+                className="w-24 rounded-lg border border-tg-secondary-bg bg-tg-secondary-bg px-2 py-1.5 text-center text-sm text-tg-text outline-none focus:border-tg-button"
               />
             </div>
           </Card>

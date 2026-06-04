@@ -90,3 +90,14 @@ async def get_json(key: str) -> Any | None:
     if value is None:
         return None
     return json.loads(value)
+
+
+async def invalidate_bot_auth_cache(telegram_id: int) -> None:
+    """Bot auth cache'ni tozalash (rol o'zgarganda — L3: stale rol oynasi).
+
+    Xato bo'lsa jim e'tiborga olinmaydi (cache — best-effort).
+    """
+    try:
+        await get_redis().delete(f"bot:auth:{telegram_id}")
+    except Exception:
+        pass

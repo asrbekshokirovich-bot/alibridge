@@ -13,6 +13,7 @@ import random
 import string
 import uuid
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import List
@@ -87,6 +88,8 @@ class IntakeShipmentService:
         lines_rows = (await self._session.execute(lines_stmt)).all()
 
         count_map = {lc["line_id"]: lc["count_received"] for lc in line_counts}
+        price_map = {lc["line_id"]: Decimal(str(lc.get("cargo_price") or 0)) for lc in line_counts}
+        currency_map = {lc["line_id"]: lc.get("cargo_currency") or "USD" for lc in line_counts}
         worker_uuid = uuid.UUID(warehouse_worker_id)
 
         # Circular import'dan qochish uchun ichida import
@@ -103,6 +106,8 @@ class IntakeShipmentService:
         for order_line, spec_title in lines_rows:
             line_id = str(order_line.id)
             count_received = count_map.get(line_id, 0)
+            cargo_price = price_map.get(line_id, Decimal("0"))
+            cargo_currency = currency_map.get(line_id, "USD")
             expected = order_line.quantity
 
             # Farqni aniqlash
@@ -138,10 +143,12 @@ class IntakeShipmentService:
                     qr_payload=qr_payload,
                     barcode_payload=short_code,
                     unit_weight_g=order_line.target_unit_weight_g or 500,
-                    cargo_price_uz_to_tr=Decimal("0"),
+                    cargo_price_uz_to_tr=cargo_price,
+                    cargo_currency=cargo_currency,
                     status=ProductStatus.AT_TASHKENT_WH.value,
                     custody_holder_type=HolderType.TASHKENT_WH.value,
                     custody_holder_id=worker_uuid,
+                    label_attached_at=datetime.now(timezone.utc),
                 )
                 self._session.add(product)
 

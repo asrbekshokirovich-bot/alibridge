@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.api.deps.auth import get_current_user, require_role
 from app.api.deps.db import get_db_session
@@ -52,17 +53,29 @@ async def request_payout(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """Payout so'rash — to'lanmagan deliveredpicklar uchun."""
-    # Carrier ning DELIVERED + dispute yo'q picklar
-    picks_stmt = select(CarrierPick).where(
-        CarrierPick.carrier_user_id == user.id,
-        CarrierPick.handoff_status == HandoffStatus.DELIVERED.value,
-        CarrierPick.dispute_status == DisputeStatus.NONE.value,
+    # HIGH-3 fix: race condition oldini olish uchun SELECT FOR UPDATE
+    # Bu picks bo'yicha boshqa transaction kutib turadi
+    picks_stmt = (
+        select(CarrierPick)
+        .where(
+            CarrierPick.carrier_user_id == user.id,
+            CarrierPick.handoff_status == HandoffStatus.DELIVERED.value,
+            CarrierPick.dispute_status == DisputeStatus.NONE.value,
+        )
+        .with_for_update(skip_locked=True)  # boshqa concurrent so'rov kutib qolmaydi
     )
     all_picks = (await session.execute(picks_stmt)).scalars().all()
 
     # Allaqachon payout ga kirgan picklarni chiqarib tashlash
-    already_in_payout_stmt = select(PayoutLine.carrier_pick_id)
-    already_ids = {r[0] for r in (await session.execute(already_in_payout_stmt)).all()}
+    # Faqat bu carrier ning picklari bilan cheklash (MED fix ham)
+    pick_ids = [p.id for p in all_picks]
+    if pick_ids:
+        already_in_payout_stmt = select(PayoutLine.carrier_pick_id).where(
+            PayoutLine.carrier_pick_id.in_(pick_ids)
+        )
+        already_ids = {r[0] for r in (await session.execute(already_in_payout_stmt)).all()}
+    else:
+        already_ids = set()
     eligible = [p for p in all_picks if p.id not in already_ids]
 
     if not eligible:

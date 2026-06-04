@@ -21,9 +21,10 @@ class TestMoneyCreation:
         with pytest.raises(Exception):
             Money(amount=Decimal("10"), currency="INVALID")
 
-    def test_negative_amount_raises(self):
-        with pytest.raises(Exception):
-            Money(amount=Decimal("-1"), currency="USD")
+    def test_negative_amount_allowed(self):
+        # Manfiy summa ruxsat etiladi (deduction / ushlab qolish uchun)
+        m = Money(amount=Decimal("-1"), currency="USD")
+        assert m.is_negative
 
     def test_zero_amount_allowed(self):
         m = Money(amount=Decimal("0"), currency="USD")
@@ -45,9 +46,10 @@ class TestMoneyArithmetic:
         result = ten_usd - five_usd
         assert result.amount == Decimal("5.00")
 
-    def test_subtract_resulting_negative_raises(self, five_usd, ten_usd):
-        with pytest.raises(Exception):
-            five_usd - ten_usd  # 5 - 10 = -5 → ruxsat yo'q
+    def test_subtract_resulting_negative_allowed(self, five_usd, ten_usd):
+        # 5 - 10 = -5: manfiy natija ruxsat (deduction uchun)
+        result = five_usd - ten_usd
+        assert result.amount == Decimal("-5.00")
 
     def test_multiply_by_scalar(self, ten_usd):
         result = ten_usd * 3

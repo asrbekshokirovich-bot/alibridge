@@ -39,8 +39,10 @@ class InvalidQrPayloadError(AppException):
     message = "QR kod yaroqsiz yoki o'zgartirilgan"
 
 
-# Signature uzunligi (bytes)
-SIGNATURE_LENGTH = 8
+# Signature uzunligi (bytes) — yangi QR'lar 16 bayt (128-bit)
+SIGNATURE_LENGTH = 16
+# Eski QR'lar 8 bayt (64-bit) bilan imzolangan — orqaga moslik uchun qabul qilinadi
+_LEGACY_SIGNATURE_LENGTH = 8
 PRODUCT_ID_LENGTH = 16
 
 
@@ -66,7 +68,7 @@ class QrSigner:
         Natija: ~32 belgi
         """
         product_bytes = product_id.bytes  # 16 bytes
-        signature = self._sign(product_bytes)
+        signature = self._sign(product_bytes, SIGNATURE_LENGTH)
 
         combined = product_bytes + signature
         return base64.urlsafe_b64encode(combined).decode("ascii").rstrip("=")
@@ -90,17 +92,29 @@ class QrSigner:
                 details={"reason": str(e)},
             ) from e
 
-        if len(combined) != PRODUCT_ID_LENGTH + SIGNATURE_LENGTH:
+        # Yangi (16 bayt) yoki eski (8 bayt) imzo uzunligini aniqlash
+        sig_len: int
+        if len(combined) == PRODUCT_ID_LENGTH + SIGNATURE_LENGTH:
+            sig_len = SIGNATURE_LENGTH
+        elif len(combined) == PRODUCT_ID_LENGTH + _LEGACY_SIGNATURE_LENGTH:
+            sig_len = _LEGACY_SIGNATURE_LENGTH
+        else:
             raise InvalidQrPayloadError(
                 message="QR payload uzunligi noto'g'ri",
-                details={"expected": PRODUCT_ID_LENGTH + SIGNATURE_LENGTH, "got": len(combined)},
+                details={
+                    "expected": [
+                        PRODUCT_ID_LENGTH + SIGNATURE_LENGTH,
+                        PRODUCT_ID_LENGTH + _LEGACY_SIGNATURE_LENGTH,
+                    ],
+                    "got": len(combined),
+                },
             )
 
         product_bytes = combined[:PRODUCT_ID_LENGTH]
         signature = combined[PRODUCT_ID_LENGTH:]
 
-        # Imzoni tekshirish
-        expected = self._sign(product_bytes)
+        # Imzoni tekshirish (mos uzunlik bilan)
+        expected = self._sign(product_bytes, sig_len)
         if not hmac.compare_digest(signature, expected):
             raise InvalidQrPayloadError(message="QR imzosi yaroqsiz")
 
@@ -109,10 +123,10 @@ class QrSigner:
     # ============================================
     # Internal
     # ============================================
-    def _sign(self, data: bytes) -> bytes:
-        """HMAC-SHA256 imzosi (birinchi 8 byte)."""
+    def _sign(self, data: bytes, length: int = SIGNATURE_LENGTH) -> bytes:
+        """HMAC-SHA256 imzosi (birinchi `length` byte)."""
         mac = hmac.new(self._secret, data, hashlib.sha256)
-        return mac.digest()[:SIGNATURE_LENGTH]
+        return mac.digest()[:length]
 
 
 # ============================================

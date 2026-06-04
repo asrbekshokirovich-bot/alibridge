@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { api, extractErrorMessage } from '@shared/api/client';
 import { Card } from '@shared/components/Card';
 import { Button } from '@shared/components/Button';
@@ -23,9 +23,13 @@ interface ScanEntry {
 
 export default function CarrierScanner() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryClient = useQueryClient();
+  const fromBasket = (location.state as { fromBasket?: boolean } | null)?.fromBasket ?? false;
   const { t } = useTranslation();
   const [entries, setEntries] = useState<ScanEntry[]>([]);
   const [lastQr, setLastQr] = useState<string | null>(null);
+  const [scannedCount, setScannedCount] = useState(0);
 
   useBackButton(() => navigate(-1));
 
@@ -40,6 +44,9 @@ export default function CarrierScanner() {
     onSuccess: (data, qrPayload) => {
       haptic('success');
       setEntries((prev) => [{ qr: qrPayload, result: data, error: null }, ...prev]);
+      setScannedCount((c) => c + 1);
+      queryClient.invalidateQueries({ queryKey: ['carrier-picks'] });
+      queryClient.invalidateQueries({ queryKey: ['basket'] });
     },
     onError: (error, qrPayload) => {
       haptic('error');
@@ -63,6 +70,20 @@ export default function CarrierScanner() {
 
   return (
     <div className="flex flex-col gap-4 p-4 pb-20">
+      {/* Savatchadan kelgan — maxsus ko'rsatma */}
+      {fromBasket && (
+        <div className="rounded-xl bg-accent-blue/15 border border-white/10 p-3 flex items-start gap-2">
+          <span className="text-xl">📦</span>
+          <div>
+            <p className="text-sm font-semibold text-accent-blue">Mahsulotlarni qabul qiling</p>
+            <p className="text-xs text-accent-blue mt-0.5">
+              Savatchadagi har bir mahsulotning QR kodini skaner qiling.
+              Hammasi skanerlangach pul to'lov tasdiqlanadi.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Skaner oynasi */}
       <Card>
         <div ref={scannerRef} className="overflow-hidden rounded-lg" style={{ minHeight: 240 }} />
@@ -79,21 +100,31 @@ export default function CarrierScanner() {
         </div>
       </Card>
 
-      {/* Natijalar tarixi */}
+      {/* Scan natijalari */}
+      {scannedCount > 0 && (
+        <Button fullWidth size="lg" onClick={() => navigate('/carrier/picks')}>
+          📋 Picklarimga o'tish ({scannedCount} ta qabul qilindi)
+        </Button>
+      )}
+
       {entries.length > 0 && (
         <div className="space-y-2">
-          <p className="px-1 text-sm font-medium text-tg-hint">{t('scan.history')}</p>
+          <p className="px-1 text-sm font-medium text-tg-hint">Skanerlangan mahsulotlar</p>
           {entries.map((entry, idx) => (
-            <Card key={idx} className={entry.error ? 'border border-red-400' : 'border border-green-400'}>
+            <Card key={idx} className={entry.error ? 'border border-white/10' : 'border border-white/10'}>
               {entry.result ? (
-                <div>
-                  <p className="font-mono text-sm font-semibold">{entry.result.short_code}</p>
-                  <p className="text-xs text-tg-hint">
-                    → {entry.result.new_holder_type}
-                  </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">✅</span>
+                  <div>
+                    <p className="font-mono text-sm font-semibold">{entry.result.short_code}</p>
+                    <p className="text-xs text-emerald-400 font-medium">Qabul qilindi</p>
+                  </div>
                 </div>
               ) : (
-                <p className="text-sm text-red-500">{entry.error}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">❌</span>
+                  <p className="text-sm text-red-500">{entry.error}</p>
+                </div>
               )}
             </Card>
           ))}

@@ -53,53 +53,24 @@ FLIGHT_RE = re.compile(r"\b([A-Z]{2})\s*(\d{1,4})\b")
 
 
 async def recognize_ticket(image_bytes: bytes) -> TicketOcrResult:
-    """Ticket rasmidan parvoz ma'lumotlarini chiqarish.
+    """Ticket rasmini saqlash — ma'lumotlar carrier tomonidan qo'lda kiritiladi.
 
-    Google Cloud Vision Document Text Detection ishlatadi.
+    OCR o'chirilgan: carrier parvoz raqami, aeroportlar va sanani o'zi to'ldiradi.
+    Rasm faqat arxiv maqsadida saqlanadi.
 
     Args:
-        image_bytes: ticket rasmining bayt'lari
+        image_bytes: ticket rasmining bayt'lari (faqat saqlash uchun)
 
     Returns:
-        TicketOcrResult — legs[] bo'sh bo'lsa OCR muvaffaqiyatsiz.
-
-    Raises:
-        OcrError: Vision API ishlamadi yoki credentials yo'q
+        TicketOcrResult — valid=False, carrier qo'lda to'ldiradi.
     """
-    if not settings.google_vision_credentials_path:
-        raise OcrError(
-            message="Google Vision credentials sozlanmagan",
-            details={"hint": "GOOGLE_VISION_CREDENTIALS_PATH .env'da kerak"},
-        )
-
-    try:
-        # Bu yerda Google Vision API chaqiriladi (sync → async wrapper)
-        # from google.cloud import vision_v1
-        # client = vision_v1.ImageAnnotatorClient.from_service_account_json(...)
-        # response = client.document_text_detection(image=vision_v1.Image(content=image_bytes))
-        # raw_text = response.full_text_annotation.text
-
-        # Stub: production'da yuqoridagi kod ishlaydi
-        raw_text = ""  # placeholder
-
-        legs = _parse_legs(raw_text)
-        passenger = _parse_passenger_name(raw_text)
-
-        return TicketOcrResult(
-            valid=bool(legs and passenger),
-            passenger_name=passenger,
-            legs=legs,
-            raw_text=raw_text,
-        )
-
-    except OcrError:
-        raise
-    except Exception as e:
-        log.exception("ticket_ocr_failed")
-        raise OcrError(
-            message="Ticketni tanib bo'lmadi",
-            details={"error": str(e)},
-        ) from e
+    log.info("ticket_ocr_skipped_manual_entry", size_bytes=len(image_bytes))
+    return TicketOcrResult(
+        valid=False,
+        passenger_name="",
+        legs=[],
+        raw_text="",
+    )
 
 
 def _parse_legs(raw_text: str) -> list[TicketLeg]:

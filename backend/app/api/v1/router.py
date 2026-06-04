@@ -24,6 +24,7 @@ api_router = APIRouter()
 
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(carrier.router, prefix="/carrier", tags=["carrier"])
+api_router.include_router(china.router, prefix="/china", tags=["china"])
 api_router.include_router(profile.router, prefix="/profile", tags=["profile"])
 api_router.include_router(catalog.router, prefix="/catalog", tags=["catalog"])
 api_router.include_router(basket.router, prefix="/basket", tags=["basket"])
@@ -35,7 +36,6 @@ api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(warehouse_uz.router, prefix="/warehouse/uz", tags=["warehouse-uz"])
 api_router.include_router(warehouse_tr.router, prefix="/warehouse/tr", tags=["warehouse-tr"])
 api_router.include_router(courier_uz.router, prefix="/courier", tags=["courier-uz"])
-api_router.include_router(china.router, prefix="/china", tags=["china"])
 api_router.include_router(
     telegram_webhook.router,
     prefix="/telegram",

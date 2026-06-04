@@ -8,7 +8,10 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 export function Card({ className, children, ...rest }: CardProps) {
   return (
     <div
-      className={twMerge('rounded-2xl bg-tg-sectionBg p-4 shadow-sm', className)}
+      className={twMerge(
+        'rounded-4xl bg-tg-sectionBg p-4 shadow-card ring-1 ring-white/[0.06]',
+        className,
+      )}
       {...rest}
     >
       {children}

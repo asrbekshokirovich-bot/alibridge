@@ -10,7 +10,6 @@ export type Role =
   | 'carrier'
   | 'warehouse_uz'
   | 'warehouse_tr'
-  | 'china_worker'
   | 'courier_uz'
   | 'courier_tr'
   | 'admin';
@@ -96,7 +95,6 @@ export interface ProductTrack {
 // ─── Custody ──────────────────────────────────────────────────────────────────
 
 export type HolderType =
-  | 'CHINA_WORKER'
   | 'CARRIER'
   | 'WAREHOUSE_UZ'
   | 'WAREHOUSE_TR'

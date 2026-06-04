@@ -59,9 +59,20 @@ export interface ApiError {
 
 export function extractErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
-    const apiError = error.response?.data as ApiError | undefined;
-    if (apiError?.error?.message) {
-      return apiError.error.message;
+    const data = error.response?.data as
+      | { error?: { message?: string }; detail?: unknown }
+      | undefined;
+    // AppException format: { error: { message } }
+    if (data?.error?.message) {
+      return data.error.message;
+    }
+    // FastAPI HTTPException format: { detail: "..." }
+    if (typeof data?.detail === 'string') {
+      return data.detail;
+    }
+    // FastAPI validation (422): { detail: [{ msg }] }
+    if (Array.isArray(data?.detail) && (data.detail[0] as { msg?: string })?.msg) {
+      return (data.detail[0] as { msg: string }).msg;
     }
     return error.message;
   }

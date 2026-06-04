@@ -7,6 +7,7 @@ in a single process (modular monolith).
 from __future__ import annotations
 
 import asyncio
+import re
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
@@ -32,6 +33,101 @@ log = get_logger(__name__)
 
 
 # ============================================
+# Cloudflared tunnel URL — avtomatik topish
+# ============================================
+def _get_cloudflared_webhook_url() -> str | None:
+    """cloudflared tunnel URL'ni avto-topish.
+
+    Ustuvorlik tartibi:
+    1. Shared volume faylidagi log (`/cf_shared/tunnel.log`)
+    2. Docker socket (Linux muhitida)
+    """
+    # ── 1. Shared volume (cross-platform, eng ishonchli) ─────────────────────
+    try:
+        with open("/cf_shared/tunnel.log") as fh:
+            content = fh.read()
+        # JSON format: {"message":"...https://xxx.trycloudflare.com..."} yoki oddiy matn
+        # re.findall — oxirgi (eng yangi) URL ni olish uchun
+        matches = re.findall(r"https://[a-z0-9-]+\.trycloudflare\.com", content)
+        if matches:
+            base = matches[-1].rstrip("/")
+            return f"{base}/api/v1/telegram/webhook"
+    except OSError:
+        pass
+
+    # ── 2. Docker socket (Linux) ──────────────────────────────────────────────
+    try:
+        import docker  # type: ignore[import]
+        client = docker.DockerClient(base_url="unix:///var/run/docker.sock")
+        try:
+            container = client.containers.get("alibridge-cloudflared")
+            raw_logs = container.logs(tail=100, stdout=True, stderr=True)
+            logs = raw_logs.decode("utf-8", errors="ignore")
+            match = re.search(r"https://[a-z0-9-]+\.trycloudflare\.com", logs)
+            if match:
+                base = match.group(0).rstrip("/")
+                return f"{base}/api/v1/telegram/webhook"
+        finally:
+            client.close()
+    except Exception as e:
+        log.debug("cloudflared_url_detect_failed", error=str(e))
+
+    return None
+
+
+def _detect_miniapp_url() -> str | None:
+    """cloudflared log'dan jonli Mini App bazaviy URL'ini topadi (webhook suffsiksiz)."""
+    webhook = _get_cloudflared_webhook_url()
+    if webhook and "trycloudflare.com" in webhook:
+        return webhook.replace("/api/v1/telegram/webhook", "").rstrip("/")
+    return None
+
+
+async def _set_menu_button(url: str) -> bool:
+    """Telegram "Menu Button"ni berilgan Mini App URL bilan o'rnatadi."""
+    if not url.startswith("https://") or "localhost" in url:
+        return False
+    try:
+        from aiogram.types import MenuButtonWebApp, WebAppInfo as _WebAppInfo
+
+        await bot.set_chat_menu_button(
+            menu_button=MenuButtonWebApp(
+                text="ALI BRIDGE",
+                web_app=_WebAppInfo(url=url),
+            )
+        )
+        log.info("menu_button_set", url=url)
+        return True
+    except Exception as e:
+        log.warning("menu_button_failed", error=str(e))
+        return False
+
+
+async def _miniapp_url_watcher() -> None:
+    """Ephemeral cloudflared tunnel URL'i restart/qayta-ulanishda o'zgaradi.
+
+    Bu fon vazifasi log faylni davriy kuzatib, yangi URL paydo bo'lganda
+    menu button'ni avto-yangilaydi — Mini App havolasi doim jonli qoladi.
+    """
+    while True:
+        await asyncio.sleep(15)
+        try:
+            latest = _detect_miniapp_url()
+            if latest and latest != settings.miniapp_url:
+                log.info(
+                    "miniapp_url_changed",
+                    old=settings.miniapp_url,
+                    new=latest,
+                )
+                settings.miniapp_url = latest
+                await _set_menu_button(latest)
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            log.debug("miniapp_url_watcher_error", error=str(e))
+
+
+# ============================================
 # Lifespan: startup / shutdown
 # ============================================
 @asynccontextmanager
@@ -54,23 +150,40 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     _polling_task: asyncio.Task | None = None
 
-    # Webhook URL localhost yoki yo'q bo'lsa — polling ishlatamiz
-    _use_polling = not settings.bot_webhook_url or any(
-        h in (settings.bot_webhook_url or "")
+    # Webhook URL aniqlash:
+    # 1. Agar BOT_WEBHOOK_URL bo'sh yoki trycloudflare.com (ephemeral) bo'lsa —
+    #    cloudflared log'dan yangi URL avto-aniqlanadi
+    # 2. Aks holda (real domain) — env qiymati ishlatiladi
+    _configured_url = settings.bot_webhook_url or ""
+    if not _configured_url or "trycloudflare.com" in _configured_url:
+        await asyncio.sleep(2)  # cloudflared tayyor bo'lishi uchun
+        _webhook_url: str | None = _get_cloudflared_webhook_url()
+    else:
+        _webhook_url = _configured_url
+
+    # Mini App tugmasi ephemeral cloudflared tunnel'ining JONLI URL'ini ishlatsin.
+    # (.env dagi MINIAPP_URL har cloudflared restartida eskirib qoladi → "kirmayapti".)
+    if _webhook_url and "trycloudflare.com" in _webhook_url:
+        _miniapp_base = _webhook_url.replace("/api/v1/telegram/webhook", "").rstrip("/")
+        settings.miniapp_url = _miniapp_base
+        log.info("miniapp_url_autodetected", url=_miniapp_base)
+
+    _use_polling = settings.bot_force_polling or not _webhook_url or any(
+        h in (_webhook_url or "")
         for h in ("localhost", "127.0.0.1", "0.0.0.0")
     )
 
-    if not _use_polling:
+    if not _use_polling and _webhook_url:
         # Production webhook
         try:
             await bot.set_webhook(
-                url=settings.bot_webhook_url,
+                url=_webhook_url,
                 secret_token=settings.bot_webhook_secret,
                 drop_pending_updates=False,
             )
-            log.info("bot_webhook_set", url=settings.bot_webhook_url)
+            log.info("bot_webhook_set", url=_webhook_url)
         except Exception as e:
-            log.warning("bot_webhook_failed_fallback_polling", error=str(e))
+            log.warning("bot_webhook_failed_polling", error=str(e))
             _use_polling = True
 
     if _use_polling:
@@ -80,18 +193,42 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         except Exception:
             pass
 
+        _ALLOWED_UPDATES = ["message", "callback_query", "my_chat_member"]
+
         async def _safe_poll() -> None:
-            try:
-                await dp.start_polling(bot, handle_signals=False)
-            except Exception as e:
-                log.error(
-                    "bot_polling_error",
-                    error=str(e),
-                    hint="Check BOT_TOKEN in .env — get it from @BotFather",
-                )
+            backoff = 5
+            while True:
+                try:
+                    await dp.start_polling(
+                        bot,
+                        handle_signals=False,
+                        allowed_updates=_ALLOWED_UPDATES,
+                    )
+                    break  # clean shutdown (CancelledError raised externally)
+                except asyncio.CancelledError:
+                    raise
+                except Exception as e:
+                    log.error(
+                        "bot_polling_error",
+                        error=str(e),
+                        hint="Restarting in seconds...",
+                    )
+                    await asyncio.sleep(backoff)
+                    backoff = min(backoff * 2, 60)
 
         _polling_task = asyncio.create_task(_safe_poll())
-        log.info("bot_polling_started")
+        log.info("bot_polling_started", allowed_updates=["message", "callback_query", "my_chat_member"])
+
+    # Telegram "Menu Button" (chap-pastdagi doimiy tugma) — jonli Mini App URL bilan
+    # sinxronlash. Aks holda BotFather'dagi eski statik URL yangi userlarda
+    # "Name or service not known" beradi (ephemeral cloudflared tunnel o'zgaradi).
+    await _set_menu_button(settings.miniapp_url)
+
+    # Tunnel URL'i restart/qayta-ulanishda o'zgaradi — fon kuzatuvchisi
+    # menu button'ni jonli tutadi.
+    _url_watcher_task: asyncio.Task | None = None
+    if "trycloudflare.com" in settings.miniapp_url:
+        _url_watcher_task = asyncio.create_task(_miniapp_url_watcher())
 
     log.info("application_ready")
 
@@ -99,6 +236,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     # ---------- Shutdown ----------
     log.info("application_shutting_down")
+
+    if _url_watcher_task and not _url_watcher_task.done():
+        _url_watcher_task.cancel()
+        try:
+            await _url_watcher_task
+        except (asyncio.CancelledError, Exception):
+            pass
 
     if _polling_task and not _polling_task.done():
         _polling_task.cancel()
@@ -136,10 +280,16 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # CORS
 # ============================================
 if settings.cors_origins_list:
+    # Xavfsizlik: wildcard "*" + credentials birga ishlatilmaydi (footgun).
+    # Auth Bearer token orqali (cookie emas), shuning uchun wildcard bo'lsa
+    # credentials'ni o'chiramiz.
+    _has_wildcard = "*" in settings.cors_origins_list
+    if _has_wildcard and settings.is_production:
+        log.warning("cors_wildcard_in_production", origins=settings.cors_origins_list)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins_list,
-        allow_credentials=True,
+        allow_credentials=not _has_wildcard,
         allow_methods=["*"],
         allow_headers=["*"],
     )

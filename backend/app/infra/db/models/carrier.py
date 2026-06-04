@@ -117,6 +117,12 @@ class CarrierProfile(Base, TimestampMixin):
         primary_key=True,
     )
 
+    # Personal info (entered by carrier during onboarding)
+    first_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    last_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    middle_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    birth_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+
     # Identity (uploaded via mini-app; MRZ extraction is optional/future)
     passport_number: Mapped[str | None] = mapped_column(String(32), nullable=True)
     passport_country: Mapped[str | None] = mapped_column(String(3), nullable=True)
@@ -158,6 +164,18 @@ class CarrierProfile(Base, TimestampMixin):
     )
     blacklisted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
+        nullable=True,
+    )
+
+    # Reserved — kelajakdagi admin moderatsiyasi uchun (HOZIRCHA ISHLATILMAYDI).
+    # Carrier tasdiqlash oqimi olib tashlandi: ro'yxatdan o'tgach darhol pick qiladi.
+    # Ustunlar migration 0007 da yaratilgan — alembic tarixini buzmaslik uchun qoldirildi.
+    approved_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    approved_by_admin_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
         nullable=True,
     )
 
@@ -239,6 +257,16 @@ class CarrierPick(Base, UUIDPrimaryKeyMixin):
     # TR delivery
     tr_delivery_mode: Mapped[str | None] = mapped_column(tr_delivery_enum, nullable=True)
     carrier_address_tr: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # WH approval — carrier savatni tasdiqlagach (AWAITING_HANDOFF), WH xodimi
+    # tasdiqlaydi yoki rad etadi. wh_approved_at NULL = tasdiq kutilmoqda.
+    wh_approved_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    wh_rejected_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    rejection_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Lifecycle
     picked_at: Mapped[datetime] = mapped_column(

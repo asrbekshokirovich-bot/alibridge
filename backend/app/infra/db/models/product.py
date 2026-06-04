@@ -112,6 +112,18 @@ class Product(Base, UUIDPrimaryKeyMixin):
         server_default="UZS",
     )
 
+    # Declared goods value — yo'qotish/zarar holatida carrier qarzdorligi shu summa
+    declared_value: Mapped[Decimal | None] = mapped_column(Numeric(18, 4), nullable=True)
+    declared_currency: Mapped[str] = mapped_column(
+        String(3),
+        nullable=False,
+        default="USD",
+        server_default="USD",
+    )
+
+    # Quti (box) rejimi: ichidagi dona soni. NULL = oddiy dona-mahsulot.
+    box_items_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
     # Condition at intake
     condition_on_intake: Mapped[str] = mapped_column(
         condition_enum,

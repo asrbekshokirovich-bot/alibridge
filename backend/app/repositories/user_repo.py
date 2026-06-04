@@ -119,9 +119,10 @@ class UserRepository(BaseRepository[User]):
         """Telegram'dan kelgan ma'lumot bo'yicha userni yaratish yoki yangilash."""
         existing = await self.get_by_telegram_id(telegram_id)
         if existing:
-            if full_name:
+            # Faqat haqiqatan o'zgargan bo'lsa yozamiz (ortiqcha UPDATE/commit yo'q)
+            if full_name and existing.full_name != full_name:
                 existing.full_name = full_name
-            if telegram_username:
+            if telegram_username and existing.telegram_username != telegram_username:
                 existing.telegram_username = telegram_username
             return existing
 

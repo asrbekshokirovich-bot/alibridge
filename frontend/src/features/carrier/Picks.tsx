@@ -20,6 +20,9 @@ interface Pick {
   picked_at: string;
   delivered_at: string | null;
   payout_status: string | null;
+  wh_approved_at: string | null;
+  wh_rejected_at: string | null;
+  rejection_reason: string | null;
 }
 
 interface PayoutResponse {
@@ -36,12 +39,33 @@ const PAYOUT_METHODS = [
   { key: 'other',  label: '📋 Boshqa' },
 ] as const;
 
-const STATUS_COLORS: Record<string, string> = {
-  IN_TRANSIT: 'text-blue-500',
-  DELIVERED:  'text-green-500',
-  DISPUTED:   'text-red-500',
-  PAID_OUT:   'text-tg-hint',
+const STATUS_LABELS: Record<string, string> = {
+  in_basket:           '🛒 Savatda',
+  awaiting_handoff:    '⏳ Kutilmoqda',
+  carrier_has_custody: '✅ Qabul qilindi',
+  dropped_off:         '🚚 Yuk topshirildi',
+  delivered:           '✅ Yetkazildi',
 };
+
+const STATUS_COLORS: Record<string, string> = {
+  in_basket:           'text-tg-hint',
+  awaiting_handoff:    'text-orange-500',
+  carrier_has_custody: 'text-green-500',
+  dropped_off:         'text-accent-blue',
+  delivered:           'text-emerald-400',
+};
+
+// WH tasdiq holatini hisobga olgan status
+function deriveStatus(p: Pick): { label: string; color: string } {
+  if (p.wh_rejected_at) return { label: '❌ Rad etildi', color: 'text-red-400' };
+  if (p.status === 'awaiting_handoff' && p.wh_approved_at) {
+    return { label: '✅ Tasdiqlandi', color: 'text-emerald-400' };
+  }
+  if (p.status === 'awaiting_handoff' && !p.wh_approved_at) {
+    return { label: '⏳ Tasdiq kutilmoqda', color: 'text-accent-amber' };
+  }
+  return { label: STATUS_LABELS[p.status] ?? p.status, color: STATUS_COLORS[p.status] ?? 'text-tg-hint' };
+}
 
 export default function CarrierPicks() {
   const navigate = useNavigate();
@@ -211,9 +235,10 @@ export default function CarrierPicks() {
               </p>
             </div>
             <div className="flex flex-col items-end gap-1">
-              <span className={`text-xs font-semibold ${STATUS_COLORS[pick.status] ?? 'text-tg-hint'}`}>
-                {pick.status}
-              </span>
+              {(() => {
+                const s = deriveStatus(pick);
+                return <span className={`text-xs font-semibold ${s.color}`}>{s.label}</span>;
+              })()}
               {pick.payout_status && (
                 <span className="rounded bg-tg-secondary-bg px-1.5 py-0.5 text-xs text-tg-hint">
                   💰 {pick.payout_status}
@@ -221,6 +246,24 @@ export default function CarrierPicks() {
               )}
             </div>
           </div>
+
+          {/* WH tasdiq xabari (#3) */}
+          {pick.status === 'awaiting_handoff' && pick.wh_approved_at && (
+            <p className="mt-2 rounded-lg bg-emerald-500/15 px-3 py-2 text-xs text-emerald-400">
+              ✅ Ombor administratori buyurtmangizni tasdiqladi. Iltimos, jo'natishni kuting.
+            </p>
+          )}
+          {pick.status === 'awaiting_handoff' && !pick.wh_approved_at && !pick.wh_rejected_at && (
+            <p className="mt-2 rounded-lg bg-accent-amber/15 px-3 py-2 text-xs text-accent-amber">
+              ⏳ Buyurtmangiz ombor administratori tasdig'ini kutmoqda.
+            </p>
+          )}
+          {pick.wh_rejected_at && (
+            <p className="mt-2 rounded-lg bg-red-500/15 px-3 py-2 text-xs text-red-400">
+              ❌ Rad etildi{pick.rejection_reason ? `: ${pick.rejection_reason}` : ''}
+            </p>
+          )}
+
           <p className="mt-2 text-xs text-tg-hint">
             {new Date(pick.picked_at).toLocaleDateString()}
             {pick.delivered_at && (

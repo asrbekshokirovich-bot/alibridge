@@ -1,4 +1,4 @@
-"""China worker router (cheklangan ko'rinish)."""
+"""China worker bot router — sourcing uchun Mini App'ni ochadi."""
 
 from __future__ import annotations
 
@@ -11,11 +11,11 @@ from app.domain.enums import Role
 router = Router(name="china")
 
 
-@router.message(Command("tickets"))
-async def open_tickets(message: Message, roles: list[Role]) -> None:
-    """Ochiq sourcing tickets (faqat spec ma'lumotlari)."""
+@router.message(Command("sourcing"))
+async def my_sourcing(message: Message, roles: list[Role]) -> None:
+    """Sourcing vazifalari — Mini App'ni oching."""
     if Role.CHINA_WORKER not in roles:
-        await message.answer("⛔ Faqat Xitoy xodimlari uchun")
+        await message.answer("⛔ Faqat China worker uchun")
         return
 
-    await message.answer("📋 Tickets — Mini App'ni oching")
+    await message.answer("🛒 Sourcing vazifalari — Mini App'ni oching")

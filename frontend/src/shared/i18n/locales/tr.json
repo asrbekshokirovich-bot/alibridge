@@ -12,10 +12,10 @@
   },
   "roles": {
     "orderer": "Sipariş Sahibi",
+    "china_worker": "Çin Tedarikçi",
     "carrier": "Taşıyıcı",
     "warehouse_uz": "Taşkent Deposu",
     "warehouse_tr": "İstanbul Deposu",
-    "china_worker": "Çin Çalışanı",
     "courier": "Kurye",
     "courier_uz": "Özbekistan Kurye",
     "courier_tr": "Türkiye Kurye",
@@ -27,7 +27,7 @@
     "logging_in": "Giriş yapılıyor..."
   },
   "catalog": {
-    "title": "Katalog",
+    "title": "Ürünler",
     "weight": "Kullanılabilir ağırlık",
     "add_to_basket": "Sepete Ekle",
     "no_items": "Ürün yok"
@@ -35,8 +35,9 @@
   "basket": {
     "title": "Sepet",
     "empty": "Sepet boş",
+    "total": "Toplam",
     "remove": "Kaldır",
-    "checkout": "Sipariş ver"
+    "checkout": "Depoya teslim et →"
   },
   "picks": {
     "empty": "Aktif ürün yok",
@@ -89,7 +90,11 @@
     "print": "Yazdır",
     "reprint": "Tekrar yazdır",
     "no_labels": "Yazdırılacak etiket yok",
-    "products": "ürün"
+    "products": "ürün",
+    "intake_done": "Teslim alma başarıyla tamamlandı!",
+    "label_prompt": "Şimdi her ürüne QR etiket basıp yapıştırın. Etiketlendikten sonra ürünler taşıyıcı kataloğunda görünür.",
+    "go_to_labels": "Etiketleri Yazdır",
+    "skip_for_now": "Sonra yaparım"
   },
   "warehouse_tr": {
     "receive": "Kargo Teslim Al",
@@ -108,12 +113,6 @@
     "fill_all": "Tüm alanları doldurun",
     "confirm": "Teslim Et",
     "nothing_ready": "Teslim edilecek ürün yok"
-  },
-  "china": {
-    "no_tickets": "Satın alma talebi yok",
-    "needed": "Gerekli",
-    "sourced": "Temin edildi",
-    "price_cny": "Fiyat (¥)"
   },
   "carrier": {
     "my_picks": "Seçimlerim",

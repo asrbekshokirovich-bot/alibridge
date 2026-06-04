@@ -5,10 +5,19 @@ import { Button } from '@shared/components/Button';
 import { Card } from '@shared/components/Card';
 import { useBackButton } from '@shared/hooks/useTelegram';
 
-type Step = 'consent' | 'phone' | 'passport' | 'ticket' | 'route' | 'confirm' | 'done';
+type Step = 'consent' | 'personal' | 'phone' | 'passport' | 'ticket' | 'route' | 'confirm' | 'done';
 
 interface FormData {
+  // Shaxsiy ma'lumot
+  firstName: string;
+  lastName: string;
+  middleName: string;
+  birthDay: string;
+  birthMonth: string;
+  birthYear: string;
+  // Aloqa
   phone: string;
+  // Reys
   routeKey: string;
   departIata: string;
   arriveIata: string;
@@ -16,6 +25,7 @@ interface FormData {
   departTime: string;
   allowedKg: string;
   flightNumber: string;
+  // Fotosuratlar
   passportPhotoUrl: string;
   ticketPhotoUrl: string;
   passportPreview: string;
@@ -31,7 +41,31 @@ const ROUTES: Record<string, { from: string; to: string }> = {
   'FEG-IST': { from: "Farg'ona (FEG)",  to: 'Istanbul Atatürk (IST)' },
 };
 
-const WIZARD_STEPS: Step[] = ['consent', 'phone', 'passport', 'ticket', 'route', 'confirm'];
+const WIZARD_STEPS: Step[] = ['consent', 'personal', 'phone', 'passport', 'ticket', 'route', 'confirm'];
+
+// Kun/Oy/Yil dan YYYY-MM-DD hosil qiladi + validatsiya (kalendar + 18 yosh).
+function toBirthDate(
+  y: string,
+  m: string,
+  d: string,
+): { value: string; error: string } {
+  if (!y && !m && !d) return { value: '', error: '' };
+  const yy = parseInt(y, 10);
+  const mm = parseInt(m, 10);
+  const dd = parseInt(d, 10);
+  if (!yy || !mm || !dd) return { value: '', error: '' }; // hali to'liq emas
+  const thisYear = new Date().getFullYear();
+  if (yy < 1920 || yy > thisYear) return { value: '', error: "Yilni to'g'ri kiriting" };
+  if (mm < 1 || mm > 12) return { value: '', error: 'Oy 1–12 orasida bo\'lsin' };
+  const daysInMonth = new Date(yy, mm, 0).getDate();
+  if (dd < 1 || dd > daysInMonth) return { value: '', error: 'Kun noto\'g\'ri' };
+  const dob = new Date(yy, mm - 1, dd);
+  const ageMs = Date.now() - dob.getTime();
+  const age = ageMs / (365.25 * 24 * 60 * 60 * 1000);
+  if (age < 18) return { value: '', error: '18 yoshdan katta bo\'lishingiz kerak' };
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return { value: `${yy}-${pad(mm)}-${pad(dd)}`, error: '' };
+}
 
 export default function CarrierOnboarding() {
   const navigate = useNavigate();
@@ -41,7 +75,13 @@ export default function CarrierOnboarding() {
   const [uploadingTicket, setUploadingTicket] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<FormData>({
-    phone: '',
+    firstName: '',
+    lastName: '',
+    middleName: '',
+    birthDay: '',
+    birthMonth: '',
+    birthYear: '',
+    phone: '+998',
     routeKey: 'TAS-IST',
     departIata: 'TAS',
     arriveIata: 'IST',
@@ -59,7 +99,8 @@ export default function CarrierOnboarding() {
   const progress = ((stepIdx + 1) / WIZARD_STEPS.length) * 100;
 
   const PREV_STEP: Partial<Record<Step, Step>> = {
-    phone: 'consent',
+    personal: 'consent',
+    phone: 'personal',
     passport: 'phone',
     ticket: 'passport',
     route: 'ticket',
@@ -75,6 +116,9 @@ export default function CarrierOnboarding() {
 
   const update = (field: keyof FormData, value: string) =>
     setForm((f) => ({ ...f, [field]: value }));
+
+  // Tug'ilgan sana (kun/oy/yil dan) — validatsiya bilan
+  const birth = toBirthDate(form.birthYear, form.birthMonth, form.birthDay);
 
   const handleRouteChange = (key: string) => {
     const [dep, arr] = key.split('-');
@@ -138,6 +182,10 @@ export default function CarrierOnboarding() {
       ).toISOString();
 
       await api.post('/carrier/profile', {
+        first_name: form.firstName.trim(),
+        last_name: form.lastName.trim(),
+        middle_name: form.middleName.trim() || null,
+        birth_date: birth.value || null,
         phone: form.phone,
         depart_iata: form.departIata,
         arrive_iata: form.arriveIata,
@@ -166,8 +214,8 @@ export default function CarrierOnboarding() {
         <p className="mb-8 text-sm text-tg-hint">
           Endi katalogdan mahsulotlar tanlab olishingiz mumkin.
         </p>
-        <Button variant="primary" fullWidth onClick={() => navigate('/carrier/catalog')}>
-          Katalogga o'tish →
+        <Button variant="primary" fullWidth onClick={() => navigate('/carrier')}>
+          Dashboardga o'tish →
         </Button>
       </div>
     );
@@ -217,8 +265,106 @@ export default function CarrierOnboarding() {
           </Card>
 
           <div className="mt-auto">
-            <Button variant="primary" fullWidth onClick={() => setStep('phone')}>
+            <Button variant="primary" fullWidth onClick={() => setStep('personal')}>
               Roziman, davom etish →
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* ── PERSONAL INFO ───────────────────────────────────────────────────── */}
+      {step === 'personal' && (
+        <div className="flex flex-1 flex-col gap-4">
+          <h2 className="text-xl font-bold text-tg-text">👤 Shaxsiy ma'lumotlar</h2>
+          <p className="text-sm text-tg-hint">
+            Passport ma'lumotlariga mos ravishda to'ldiring.
+          </p>
+
+          <div className="space-y-3">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-tg-hint">Familiya *</label>
+              <input
+                type="text"
+                placeholder="Karimov"
+                value={form.lastName}
+                onChange={(e) => update('lastName', e.target.value)}
+                autoFocus
+                className="w-full rounded-xl bg-tg-secondaryBg px-4 py-3 text-tg-text outline-none focus:ring-2 focus:ring-tg-button/40"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-tg-hint">Ism *</label>
+              <input
+                type="text"
+                placeholder="Jasur"
+                value={form.firstName}
+                onChange={(e) => update('firstName', e.target.value)}
+                className="w-full rounded-xl bg-tg-secondaryBg px-4 py-3 text-tg-text outline-none focus:ring-2 focus:ring-tg-button/40"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-tg-hint">
+                Otasining ismi <span className="text-tg-hint font-normal">(ixtiyoriy)</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Aliyevich"
+                value={form.middleName}
+                onChange={(e) => update('middleName', e.target.value)}
+                className="w-full rounded-xl bg-tg-secondaryBg px-4 py-3 text-tg-text outline-none focus:ring-2 focus:ring-tg-button/40"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-medium text-tg-hint">Tug'ilgan sana *</label>
+              <div className="grid grid-cols-3 gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Kun"
+                  maxLength={2}
+                  value={form.birthDay}
+                  onChange={(e) => update('birthDay', e.target.value.replace(/\D/g, ''))}
+                  className="w-full rounded-xl bg-tg-secondaryBg px-4 py-3 text-center text-tg-text outline-none focus:ring-2 focus:ring-tg-button/40"
+                />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Oy"
+                  maxLength={2}
+                  value={form.birthMonth}
+                  onChange={(e) => update('birthMonth', e.target.value.replace(/\D/g, ''))}
+                  className="w-full rounded-xl bg-tg-secondaryBg px-4 py-3 text-center text-tg-text outline-none focus:ring-2 focus:ring-tg-button/40"
+                />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Yil"
+                  maxLength={4}
+                  value={form.birthYear}
+                  onChange={(e) => update('birthYear', e.target.value.replace(/\D/g, ''))}
+                  className="w-full rounded-xl bg-tg-secondaryBg px-4 py-3 text-center text-tg-text outline-none focus:ring-2 focus:ring-tg-button/40"
+                />
+              </div>
+              {birth.error ? (
+                <p className="mt-1 text-xs text-red-500">{birth.error}</p>
+              ) : (
+                <p className="mt-1 text-xs text-tg-hint">Masalan: 15 / 06 / 1995 · 18 yoshdan katta bo'lishi kerak</p>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-auto flex gap-3">
+            <Button variant="secondary" onClick={() => setStep('consent')}>← Orqaga</Button>
+            <Button
+              variant="primary"
+              fullWidth
+              disabled={!form.firstName.trim() || !form.lastName.trim() || !birth.value}
+              onClick={() => setStep('phone')}
+            >
+              Davom etish →
             </Button>
           </div>
         </div>
@@ -238,11 +384,17 @@ export default function CarrierOnboarding() {
               type="tel"
               inputMode="tel"
               placeholder="+998 90 123 45 67"
+              maxLength={16}
               value={form.phone}
-              onChange={(e) => update('phone', e.target.value)}
+              onChange={(e) =>
+                update('phone', e.target.value.replace(/[^\d+]/g, '').replace(/(?!^)\+/g, ''))
+              }
               autoFocus
               className="w-full rounded-xl bg-tg-secondaryBg px-4 py-3 text-tg-text outline-none focus:ring-2 focus:ring-tg-button/40"
             />
+            <p className="mt-1 text-xs text-tg-hint">
+              Davlat kodi bilan (+ belgisi bilan). Masalan: +998901234567 yoki +905551234567 (chet el ham bo'ladi)
+            </p>
           </div>
 
           <div className="mt-auto flex gap-3">
@@ -250,7 +402,7 @@ export default function CarrierOnboarding() {
             <Button
               variant="primary"
               fullWidth
-              disabled={form.phone.replace(/\D/g, '').length < 7}
+              disabled={!/^\+\d{7,15}$/.test(form.phone)}
               onClick={() => setStep('passport')}
             >
               Davom etish →
@@ -292,14 +444,14 @@ export default function CarrierOnboarding() {
               type="file"
               accept="image/*"
               capture="environment"
-              className="hidden"
+              className="sr-only"
               disabled={uploadingPassport}
               onChange={handlePassportFile}
             />
           </label>
 
           {error && (
-            <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
+            <div className="rounded-xl bg-red-500/15 px-4 py-3 text-sm text-red-400">{error}</div>
           )}
 
           <div className="mt-auto flex gap-3">
@@ -350,14 +502,14 @@ export default function CarrierOnboarding() {
               type="file"
               accept="image/*"
               capture="environment"
-              className="hidden"
+              className="sr-only"
               disabled={uploadingTicket}
               onChange={handleTicketFile}
             />
           </label>
 
           {error && (
-            <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
+            <div className="rounded-xl bg-red-500/15 px-4 py-3 text-sm text-red-400">{error}</div>
           )}
 
           <div className="mt-auto flex gap-3">
@@ -471,6 +623,11 @@ export default function CarrierOnboarding() {
 
           <Card>
             <dl className="space-y-3 text-sm">
+              <InfoRow
+                label="👤 F.I.O"
+                value={[form.lastName, form.firstName, form.middleName].filter(Boolean).join(' ')}
+              />
+              <InfoRow label="🎂 Tug'ilgan sana" value={`${form.birthDay}.${form.birthMonth}.${form.birthYear}`} />
               <InfoRow label="📱 Telefon" value={form.phone} />
               <InfoRow
                 label="✈️ Yo'nalish"
@@ -490,7 +647,7 @@ export default function CarrierOnboarding() {
           </Card>
 
           {error && (
-            <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
+            <div className="rounded-xl bg-red-500/15 px-4 py-3 text-sm text-red-400">{error}</div>
           )}
 
           <div className="mt-auto flex gap-3">
@@ -510,13 +667,14 @@ export default function CarrierOnboarding() {
 
 function stepTitle(step: Step): string {
   const titles: Record<Step, string> = {
-    consent: 'Shartlar',
-    phone: 'Telefon',
+    consent:  'Shartlar',
+    personal: 'Shaxsiy',
+    phone:    'Telefon',
     passport: 'Passport',
-    ticket: 'Bilet',
-    route: "Yo'nalish",
-    confirm: 'Tasdiqlash',
-    done: 'Tayyor',
+    ticket:   'Bilet',
+    route:    "Yo'nalish",
+    confirm:  'Tasdiqlash',
+    done:     'Tayyor',
   };
   return titles[step] ?? step;
 }

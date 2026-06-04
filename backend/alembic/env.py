@@ -84,6 +84,7 @@ def do_run_migrations(connection: Connection) -> None:
 async def run_async_migrations() -> None:
     """Run migrations using the async engine."""
     _connect_args: dict = {"ssl": "require"} if settings.db_use_ssl else {}
+    _connect_args["statement_cache_size"] = 0
     connectable = async_engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",

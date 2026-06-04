@@ -10,18 +10,24 @@ Xavfsizlik qatlamlari:
 
 from __future__ import annotations
 
+import re
 from io import BytesIO
 
 from fastapi import APIRouter, Depends, File, Query, UploadFile
+from fastapi.responses import Response
 from PIL import Image
 from pydantic import BaseModel
 
-from app.api.deps.auth import get_current_user
+from app.api.deps.auth import get_current_user, require_role
 from app.core.exceptions import ValidationError
+from app.domain.enums import Role
 from app.infra.db.models.user import User
 from app.infra.storage import get_storage
 
 router = APIRouter()
+
+# Auth'li serve uchun ruxsat etilgan key formati (path traversal himoyasi)
+_KEY_RE = re.compile(r"^[a-z]+/\d{4}-\d{2}/[0-9a-f-]{36}\.(jpg|png|webp)$")
 
 # Ruxsat etilgan content type'lar (HTTP header bo'yicha birinchi filtr)
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
@@ -107,3 +113,31 @@ async def upload_image(
     )
 
     return UploadResponse(url=url, key=key, size=len(content))
+
+
+@router.get("/file")
+async def serve_file(
+    key: str = Query(..., description="S3 key (masalan: passport/2026-06/<uuid>.jpg)"),
+    _: User = Depends(require_role(Role.ADMIN, Role.WAREHOUSE_UZ)),
+) -> Response:
+    """Maxfiy faylni auth bilan stream qilish (admin + ombor xodimi).
+
+    Passport/selfie/ticket/evidence rasmlari nginx /media orqali OCHIQ
+    berilmaydi — faqat shu endpoint orqali (download token + admin/ombor roli).
+    Ombor xodimi carrier shaxsini tekshirish uchun passport/biletni ko'radi.
+    `?token=<download_token>` query param bilan `<img>` da ishlatish mumkin.
+    """
+    if not _KEY_RE.match(key):
+        raise ValidationError(message="Key formati yaroqsiz")
+
+    storage = get_storage()
+    try:
+        body, content_type = await storage.download(key)
+    except Exception as e:
+        raise ValidationError(message="Fayl topilmadi") from e
+
+    return Response(
+        content=body,
+        media_type=content_type,
+        headers={"Cache-Control": "private, max-age=60", "X-Content-Type-Options": "nosniff"},
+    )

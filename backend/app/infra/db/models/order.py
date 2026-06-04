@@ -68,6 +68,15 @@ class SourcingSpec(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     category: Mapped[str | None] = mapped_column(String(64), nullable=True)
     default_weight_g: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
+    # Intake rejimi: piece (dona) | box (quti) | textile (to'plam).
+    # box/textile → har Product = 1 konteyner (Product.box_items_count dona).
+    sourcing_mode: Mapped[str] = mapped_column(
+        String(16),
+        default="piece",
+        server_default="piece",
+        nullable=False,
+    )
+
     photos: Mapped[list[Any]] = mapped_column(JSONB, default=list, server_default="[]")
 
     is_urgent: Mapped[bool] = mapped_column(default=False, server_default="false")
@@ -136,6 +145,10 @@ class Order(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     )
 
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    wh_uz_approved_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     # Relationships
     orderer: Mapped["User | None"] = relationship(

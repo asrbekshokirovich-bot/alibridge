@@ -68,11 +68,11 @@ async def order_summary(
     return {"total": total, "in_transit": in_transit, "delivered": delivered}
 
 
-@router.get("", response_model=list[OrderEntity])
+@router.get("")
 async def list_my_orders(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
-) -> list[OrderEntity]:
+) -> list[dict]:
     """Mening buyurtmalarim."""
     result = await session.execute(
         select(Order)
@@ -81,7 +81,18 @@ async def list_my_orders(
         .order_by(Order.created_at.desc())
     )
     orders = list(result.scalars().all())
-    return [OrderEntity.model_validate(o) for o in orders]
+    return [
+        {
+            "id": str(o.id),
+            "order_number": str(o.id)[:8].upper(),
+            "status": o.status,
+            "total_items": sum(l.quantity for l in (o.lines or [])),
+            "created_at": o.created_at.isoformat(),
+            "destination_city": o.notes or "",
+            "wh_uz_approved_at": o.wh_uz_approved_at.isoformat() if o.wh_uz_approved_at else None,
+        }
+        for o in orders
+    ]
 
 
 @router.post("", response_model=OrderEntity, status_code=201)
@@ -106,7 +117,7 @@ async def create_order(
         for line in body.lines
     ]
 
-    # Walk-in customer faqat WAREHOUSE_UZ roli uchun
+    # CRIT-5 fix: walk-in customer tekshiruvi
     if body.walk_in_customer_id is not None:
         user_roles = await UserRepository(session).get_roles(user.id)
         if Role.WAREHOUSE_UZ not in user_roles:
@@ -114,6 +125,14 @@ async def create_order(
                 message="Walk-in buyurtma faqat ombor xodimi yaratishi mumkin",
                 error_code="forbidden",
                 status_code=403,
+            )
+        # IDOR fix: berilgan UUID haqiqiy foydalanuvchi ekanligini tekshirish
+        walk_in_user = await UserRepository(session).get_by_id(body.walk_in_customer_id)
+        if walk_in_user is None:
+            raise AppException(
+                message="Bunday foydalanuvchi topilmadi",
+                error_code="not_found",
+                status_code=404,
             )
 
     order = await service.create(
@@ -130,6 +149,75 @@ async def create_order(
     )
     order_with_lines = result.scalar_one()
     return OrderEntity.model_validate(order_with_lines)
+
+
+class SimpleOrderLine(BaseModel):
+    name: str
+    quantity: int = Field(..., gt=0)
+    unit_weight_g: int = 0
+    notes: str | None = None
+
+
+class CreateSimpleOrderRequest(BaseModel):
+    destination_city: str = ""
+    lines: list[SimpleOrderLine]
+    notes: str | None = None
+
+
+@router.post("/simple", status_code=201)
+async def create_simple_order(
+    body: CreateSimpleOrderRequest,
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db_session),
+) -> dict:
+    """Buyurtmachi uchun soddalashtirilgan buyurtma yaratish.
+
+    Har bir qator uchun avtomatik SourcingSpec yaratiladi.
+    destination_city → order.notes da saqlanadi.
+    """
+    from app.infra.db.models.order import SourcingSpec as SourcingSpecModel
+
+    valid_lines = [l for l in body.lines if l.name.strip()]
+    if not valid_lines:
+        raise HTTPException(status_code=400, detail="Kamida 1 ta mahsulot nomi kerak")
+
+    # Har bir qator uchun SourcingSpec yaratish
+    spec_pairs: list[tuple[uuid.UUID, SimpleOrderLine]] = []
+    for line in valid_lines:
+        spec = SourcingSpecModel(
+            id=uuid.uuid4(),
+            title=line.name.strip(),
+            default_weight_g=line.unit_weight_g if line.unit_weight_g > 0 else None,
+            is_customer_orderable=False,  # carrier katalogida ko'rinmasin
+        )
+        session.add(spec)
+        await session.flush()
+        spec_pairs.append((spec.id, line))
+
+    combined_notes = body.destination_city.strip() or None
+    if body.notes and body.notes.strip():
+        combined_notes = (
+            f"{combined_notes}\n{body.notes.strip()}" if combined_notes else body.notes.strip()
+        )
+
+    service = CreateOrderService(session)
+    order = await service.create(
+        created_by_user_id=user.id,
+        lines=[
+            OrderLineInput(
+                sourcing_spec_id=spec_id,
+                quantity=line.quantity,
+                target_unit_weight_g=line.unit_weight_g if line.unit_weight_g > 0 else None,
+                notes=line.notes,
+            )
+            for spec_id, line in spec_pairs
+        ],
+        orderer_user_id=user.id,
+        notes=combined_notes,
+    )
+    await session.commit()
+
+    return {"id": str(order.id), "order_number": str(order.id)[:8].upper()}
 
 
 @router.get("/{order_id}")

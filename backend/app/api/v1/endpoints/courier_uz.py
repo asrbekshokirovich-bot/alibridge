@@ -81,8 +81,12 @@ async def courier_stats(
     session: AsyncSession = Depends(get_db_session),
 ) -> dict:
     """Dashboard statistikasi."""
+    from datetime import datetime, timezone
+    from app.infra.db.models.custody import CustodyEvent
+
     ctx = _courier_ctx(current_user)
 
+    # Hozir qo'limdagi mahsulotlar
     with_me = (await session.execute(
         select(func.count(Product.id)).where(
             Product.status == ctx.with_status,
@@ -90,10 +94,25 @@ async def courier_stats(
         )
     )).scalar_one()
 
+    # Bugun yetkazilganlar (CustodyEvent → DELIVERED_TO_ORDERER)
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    delivered_event = (
+        CustodyEventType.DELIVERED_TO_ORDERER.value
+        if not ctx.is_tr
+        else CustodyEventType.HANDED_TO_TR_WH.value
+    )
+    delivered_today = (await session.execute(
+        select(func.count(CustodyEvent.id)).where(
+            CustodyEvent.event_type == delivered_event,
+            CustodyEvent.actor_user_id == current_user.id,
+            CustodyEvent.at >= today_start,
+        )
+    )).scalar_one()
+
     return {
         "pending_pickup": with_me,
         "in_delivery": with_me,
-        "delivered_today": 0,
+        "delivered_today": delivered_today,
     }
 
 
@@ -178,8 +197,14 @@ async def courier_queue(
     """Bu kuryer bilan bo'lgan mahsulotlar ro'yxati."""
     ctx = _courier_ctx(current_user)
 
+    from app.infra.db.models.custody import CustodyEvent
+
     stmt = (
-        select(Product, SourcingSpec.title.label("spec_title"))
+        select(
+            Product,
+            SourcingSpec.title.label("spec_title"),
+            SourcingSpec.photos.label("photos"),
+        )
         .outerjoin(SourcingSpec, Product.sourcing_spec_id == SourcingSpec.id)
         .where(
             Product.status == ctx.with_status,
@@ -189,18 +214,81 @@ async def courier_queue(
     )
     rows = (await session.execute(stmt)).all()
 
+    # Pickup vaqtini CustodyEvent dan olish
+    product_ids = [p.id for p, *_ in rows]
+    pickup_times: dict = {}
+    if product_ids:
+        ev_rows = (await session.execute(
+            select(CustodyEvent.product_id, CustodyEvent.at.label("created_at"))
+            .where(
+                CustodyEvent.product_id.in_(product_ids),
+                CustodyEvent.actor_user_id == current_user.id,
+                CustodyEvent.event_type == ctx.pickup_event,
+            )
+        )).all()
+        pickup_times = {str(r.product_id): r.created_at for r in ev_rows}
+
     return [
         {
             "id": str(p.id),
             "short_code": p.short_code,
             "spec_title": spec_title or "Noma'lum",
-            "delivery_address": "",
-            "recipient_name": "",
-            "recipient_phone": "",
+            "photo": (list(photos)[0] if photos else None),
+            "unit_weight_g": p.unit_weight_g or 0,
             "notes": None,
-            "assigned_at": p.created_at.isoformat(),
+            "picked_up_at": pickup_times.get(str(p.id), p.created_at).isoformat(),
         }
-        for p, spec_title in rows
+        for p, spec_title, photos in rows
+    ]
+
+
+# ── History ───────────────────────────────────────────────────────────────────
+
+@router.get("/history")
+async def courier_history(
+    current_user: User = Depends(require_role(*_COURIER_ROLES)),
+    session: AsyncSession = Depends(get_db_session),
+) -> list[dict]:
+    """Yetkazilgan yuklar tarixi (oxirgi 50 ta)."""
+    from app.infra.db.models.custody import CustodyEvent
+
+    ctx = _courier_ctx(current_user)
+    delivered_event = (
+        CustodyEventType.HANDED_TO_TR_WH.value
+        if ctx.is_tr
+        else CustodyEventType.DELIVERED_TO_ORDERER.value
+    )
+
+    stmt = (
+        select(
+            CustodyEvent.product_id,
+            CustodyEvent.at.label("delivered_at"),
+            Product.short_code,
+            Product.unit_weight_g,
+            SourcingSpec.title.label("spec_title"),
+            SourcingSpec.photos.label("photos"),
+        )
+        .join(Product, Product.id == CustodyEvent.product_id)
+        .outerjoin(SourcingSpec, SourcingSpec.id == Product.sourcing_spec_id)
+        .where(
+            CustodyEvent.event_type == delivered_event,
+            CustodyEvent.actor_user_id == current_user.id,
+        )
+        .order_by(CustodyEvent.at.desc())
+        .limit(50)
+    )
+    rows = (await session.execute(stmt)).all()
+
+    return [
+        {
+            "product_id": str(r.product_id),
+            "short_code": r.short_code,
+            "spec_title": r.spec_title or "Noma'lum",
+            "photo": (list(r.photos)[0] if r.photos else None),
+            "unit_weight_g": r.unit_weight_g or 0,
+            "delivered_at": r.delivered_at.isoformat(),
+        }
+        for r in rows
     ]
 
 
@@ -230,17 +318,26 @@ async def deliver_product(
             detail=f"Mahsulot kuryerda emas (holati: {product.status})",
         )
 
-    product.status = ProductStatus.DELIVERED.value
-    product.custody_holder_type = HolderType.ORDERER.value
-    product.custody_holder_id = None
+    if ctx.is_tr:
+        product.status = ProductStatus.AT_TR_WH.value
+        product.custody_holder_type = HolderType.TR_WH.value
+        product.custody_holder_id = None
+        deliver_event = CustodyEventType.HANDED_TO_TR_WH.value
+        to_holder = HolderType.TR_WH.value
+    else:
+        product.status = ProductStatus.DELIVERED.value
+        product.custody_holder_type = HolderType.ORDERER.value
+        product.custody_holder_id = None
+        deliver_event = CustodyEventType.DELIVERED_TO_ORDERER.value
+        to_holder = HolderType.ORDERER.value
 
     session.add(CustodyEvent(
         id=uuid.uuid4(),
         product_id=product.id,
-        event_type=CustodyEventType.DELIVERED_TO_ORDERER.value,
+        event_type=deliver_event,
         from_holder_type=ctx.holder_type,
         from_holder_id=current_user.id,
-        to_holder_type=HolderType.ORDERER.value,
+        to_holder_type=to_holder,
         to_holder_id=None,
         actor_user_id=current_user.id,
     ))

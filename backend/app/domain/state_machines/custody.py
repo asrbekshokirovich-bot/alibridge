@@ -39,6 +39,27 @@ VALID_TRANSITIONS: frozenset[CustodyTransition] = frozenset(
             event_type=CustodyEventType.CREATED,
         ),
         # ============================================
+        # China side: sourcing → shipped → Tashkent
+        # ============================================
+        # China worker sources the product (card created in China)
+        CustodyTransition(
+            from_holder=None,
+            to_holder=HolderType.CHINA_SUPPLIER,
+            event_type=CustodyEventType.CREATED,
+        ),
+        # China worker ships it toward Tashkent
+        CustodyTransition(
+            from_holder=HolderType.CHINA_SUPPLIER,
+            to_holder=HolderType.IN_TRANSIT_CN_UZ,
+            event_type=CustodyEventType.SHIPPED_FROM_CHINA,
+        ),
+        # Tashkent warehouse receives the China shipment
+        CustodyTransition(
+            from_holder=HolderType.IN_TRANSIT_CN_UZ,
+            to_holder=HolderType.TASHKENT_WH,
+            event_type=CustodyEventType.RECEIVED_AT_TASHKENT,
+        ),
+        # ============================================
         # UZ side: warehouse → carrier (3 modes)
         # ============================================
         # Mode A: warehouse pickup (direct to carrier)
@@ -135,6 +156,16 @@ VALID_TRANSITIONS: frozenset[CustodyTransition] = frozenset(
         ),
         CustodyTransition(
             from_holder=HolderType.YANDEX_BRIDGE,
+            to_holder=HolderType.LOST,
+            event_type=CustodyEventType.FLAGGED_LOST,
+        ),
+        CustodyTransition(
+            from_holder=HolderType.CHINA_SUPPLIER,
+            to_holder=HolderType.LOST,
+            event_type=CustodyEventType.FLAGGED_LOST,
+        ),
+        CustodyTransition(
+            from_holder=HolderType.IN_TRANSIT_CN_UZ,
             to_holder=HolderType.LOST,
             event_type=CustodyEventType.FLAGGED_LOST,
         ),

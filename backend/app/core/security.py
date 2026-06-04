@@ -62,6 +62,24 @@ def create_access_token(
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 
+def create_download_token(*, user_id: uuid.UUID, expires_in_seconds: int = 120) -> str:
+    """Qisqa muddatli (default 120s) yuklab olish tokeni.
+
+    Bu token URL query param sifatida ishlatiladi (PDF/rasm uchun, `<img>`/openLink
+    Authorization header yubora olmaydi). `scope=download` claim'i bilan belgilanadi —
+    oddiy sessiya tokeni URL'da ishlatib bo'lmaydi (loglarda uzoq muddat qolmasligi uchun).
+    """
+    now = datetime.now(timezone.utc)
+    payload: dict[str, Any] = {
+        "sub": str(user_id),
+        "scope": "download",
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(seconds=expires_in_seconds)).timestamp()),
+        "jti": str(uuid.uuid4()),
+    }
+    return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
 def decode_access_token(token: str) -> dict[str, Any]:
     """JWT token'ni dekodlash va tekshirish.
 

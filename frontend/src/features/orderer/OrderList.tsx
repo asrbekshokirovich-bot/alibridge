@@ -18,14 +18,17 @@ interface OrderItem {
 }
 
 const STATUS_EMOJI: Record<string, string> = {
-  DRAFT: '✏️',
-  CONFIRMED: '✅',
-  IN_PRODUCTION: '🏭',
-  READY_TO_SHIP: '📦',
-  IN_TRANSIT: '✈️',
-  CUSTOMS: '🛃',
-  DELIVERED: '🎉',
-  CANCELLED: '❌',
+  draft: '✏️',
+  pending_sourcing: '⏳',
+  sourcing: '🏭',
+  in_transit_cn_uz: '🚢',
+  at_tashkent: '📦',
+  in_transit_uz_tr: '✈️',
+  at_tr_wh: '🏬',
+  partially_delivered: '📬',
+  delivered: '🎉',
+  cancelled: '❌',
+  disputed: '⚠️',
 };
 
 export default function OrderList() {

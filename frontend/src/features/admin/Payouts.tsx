@@ -149,7 +149,7 @@ export default function AdminPayouts() {
               <span>{payout.gross_amount} {payout.currency}</span>
             </div>
             {parseFloat(payout.deductions) > 0 && (
-              <div className="flex justify-between text-red-500">
+              <div className="flex justify-between text-red-400">
                 <span>{t('admin.deductions')}</span>
                 <span>-{payout.deductions} {payout.currency}</span>
               </div>

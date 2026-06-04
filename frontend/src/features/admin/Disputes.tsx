@@ -180,7 +180,7 @@ export default function AdminDisputes() {
               </p>
               <p className="mt-1 line-clamp-2 text-xs text-tg-hint">{dispute.description}</p>
             </div>
-            <span className="ml-2 flex-shrink-0 rounded bg-red-100 px-2 py-0.5 text-xs font-bold text-red-600">
+            <span className="ml-2 flex-shrink-0 rounded bg-red-500/20 px-2 py-0.5 text-xs font-bold text-red-400">
               {dispute.status}
             </span>
           </div>

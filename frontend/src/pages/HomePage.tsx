@@ -76,8 +76,10 @@ export default function HomePage() {
   if (loginFailed && !isAuthenticated) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center p-6 text-center">
-        <div className="mb-4 text-5xl">🔐</div>
-        <p className="mb-2 font-semibold text-tg-text">Kirish mumkin emas</p>
+        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-4xl bg-white/5 text-4xl ring-1 ring-white/10">
+          🔐
+        </div>
+        <p className="mb-2 text-lg font-bold text-tg-text">Kirish mumkin emas</p>
         <p className="text-sm text-tg-hint">Telegram orqali Mini App ni oching</p>
       </div>
     );
@@ -91,83 +93,84 @@ export default function HomePage() {
   // ── Rol yo'q → tanlash ekrani ──────────────────────────────────────────────
   if (!user || user.roles.length === 0) {
     return (
-      <div className="flex min-h-screen flex-col p-4">
+      <div className="relative flex min-h-screen flex-col overflow-hidden p-5">
+        {/* Fon glow */}
+        <div className="pointer-events-none absolute -top-32 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-brand-500/25 blur-3xl" />
+
         {/* Sarlavha */}
-        <div className="py-8 text-center">
-          <div className="mb-3 text-5xl">🌉</div>
-          <h1 className="text-2xl font-bold text-tg-text">ALI BRIDGE</h1>
-          <p className="mt-1 text-sm text-tg-hint">Siz kim ekansiz?</p>
+        <div className="relative z-10 pb-6 pt-10 text-center animate-fade-in">
+          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-4xl bg-hero-violet text-4xl shadow-glow-violet">
+            🌉
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-tg-text">ALI BRIDGE</h1>
+          <p className="mt-1.5 text-sm text-tg-hint">Siz kim ekansiz?</p>
         </div>
 
         {/* Tanlov kartalari */}
-        <div className="flex flex-col gap-3">
-          {/* Yo'lovchi / Carrier */}
+        <div className="relative z-10 flex flex-col gap-4 animate-slide-up">
+          {/* Yo'lovchi / Carrier — violet gradient */}
           <button
             className="w-full text-left disabled:opacity-60"
             disabled={selectingRole !== null}
             onClick={() => handleSelectRole('carrier')}
           >
-            <Card className="transition-all active:scale-95">
-              <div className="flex items-center gap-4">
-                <span className="text-4xl">✈️</span>
+            <div className="relative overflow-hidden rounded-5xl bg-hero-violet p-6 shadow-glow-violet transition-all active:scale-[0.97]">
+              <div className="pointer-events-none absolute -right-6 -top-8 h-32 w-32 rounded-full bg-white/15 blur-xl" />
+              <div className="relative flex items-center gap-4">
+                <span className="flex h-14 w-14 items-center justify-center rounded-3xl bg-white/20 text-3xl backdrop-blur">
+                  ✈️
+                </span>
                 <div className="flex-1">
-                  <p className="font-semibold text-tg-text">
-                    Turkiyaga ketaman
-                  </p>
-                  <p className="mt-0.5 text-sm text-tg-hint">
+                  <p className="text-lg font-extrabold text-white">Turkiyaga ketaman</p>
+                  <p className="mt-0.5 text-sm text-white/80">
                     Yo'lovchi sifatida ro'yxatdan o'taman va yuk tashiyman
                   </p>
                 </div>
-                {selectingRole === 'carrier' ? (
-                  <span className="text-tg-hint animate-spin">⏳</span>
-                ) : (
-                  <span className="text-tg-hint">›</span>
-                )}
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-lg font-bold text-white">
+                  {selectingRole === 'carrier' ? '⏳' : '›'}
+                </span>
               </div>
-            </Card>
+            </div>
           </button>
 
-          {/* Buyurtmachi / Orderer */}
+          {/* Buyurtmachi / Orderer — lime */}
           <button
             className="w-full text-left disabled:opacity-60"
             disabled={selectingRole !== null}
             onClick={() => handleSelectRole('orderer')}
           >
-            <Card className="transition-all active:scale-95">
-              <div className="flex items-center gap-4">
-                <span className="text-4xl">📦</span>
+            <div className="relative overflow-hidden rounded-5xl bg-accent-lime p-6 shadow-glow-lime transition-all active:scale-[0.97]">
+              <div className="pointer-events-none absolute -right-6 -top-8 h-32 w-32 rounded-full bg-white/30 blur-xl" />
+              <div className="relative flex items-center gap-4">
+                <span className="flex h-14 w-14 items-center justify-center rounded-3xl bg-black/10 text-3xl">
+                  📦
+                </span>
                 <div className="flex-1">
-                  <p className="font-semibold text-tg-text">
-                    Buyurtma beraman
-                  </p>
-                  <p className="mt-0.5 text-sm text-tg-hint">
-                    Xitoydan mahsulot oldiraman
-                  </p>
+                  <p className="text-lg font-extrabold text-[#0a0a0f]">Buyurtma beraman</p>
+                  <p className="mt-0.5 text-sm text-[#0a0a0f]/70">Xitoydan mahsulot oldiraman</p>
                 </div>
-                {selectingRole === 'orderer' ? (
-                  <span className="text-tg-hint animate-spin">⏳</span>
-                ) : (
-                  <span className="text-tg-hint">›</span>
-                )}
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black/10 text-lg font-bold text-[#0a0a0f]">
+                  {selectingRole === 'orderer' ? '⏳' : '›'}
+                </span>
               </div>
-            </Card>
+            </div>
           </button>
         </div>
 
         {/* Xato xabari */}
         {error && (
-          <p className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-center text-sm text-red-600">
+          <p className="relative z-10 mt-4 rounded-2xl bg-red-500/10 px-4 py-3 text-center text-sm text-red-400 ring-1 ring-red-500/20">
             {error}
           </p>
         )}
 
         {/* Til tanlash */}
-        <div className="mt-auto pt-6">
+        <div className="relative z-10 mt-auto pt-6">
           <LanguageSelector />
         </div>
 
         {/* Kuryer / ombor uchun izoh */}
-        <p className="pt-2 text-center text-xs text-tg-hint">
+        <p className="relative z-10 pt-2 text-center text-xs text-tg-hint">
           Kuryer va ombor xodimlari uchun rolni admin tayinlaydi
         </p>
       </div>
@@ -176,28 +179,38 @@ export default function HomePage() {
 
   // ── Bir nechta rol → tanlash ───────────────────────────────────────────────
   return (
-    <div className="space-y-3 p-4">
-      <h2 className="px-1 text-lg font-semibold text-tg-text">
+    <div className="space-y-3 p-5">
+      <h2 className="px-1 pt-6 text-2xl font-extrabold tracking-tight text-tg-text">
         Qaysi rolda ishlaysiz?
       </h2>
-      {user.roles.map((role) => (
-        <Card
-          key={role}
-          className="cursor-pointer transition-all active:scale-95"
-          onClick={() => {
-            const path = roleToPath(role);
-            if (path) navigate(path);
-          }}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">{roleEmoji(role)}</span>
-              <span className="font-medium text-tg-text">{t(`roles.${role}`, { defaultValue: role })}</span>
+      <div className="space-y-3 animate-slide-up">
+        {user.roles.map((role, i) => (
+          <Card
+            key={role}
+            className="cursor-pointer transition-all active:scale-[0.97]"
+            onClick={() => {
+              const path = roleToPath(role);
+              if (path) navigate(path);
+            }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span
+                  className={`flex h-12 w-12 items-center justify-center rounded-2xl text-2xl ${roleTile(i)}`}
+                >
+                  {roleEmoji(role)}
+                </span>
+                <span className="font-bold text-tg-text">
+                  {t(`roles.${role}`, { defaultValue: role })}
+                </span>
+              </div>
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-tg-hint">
+                ›
+              </span>
             </div>
-            <span className="text-tg-hint">›</span>
-          </div>
-        </Card>
-      ))}
+          </Card>
+        ))}
+      </div>
       <LanguageSelector />
     </div>
   );
@@ -209,11 +222,11 @@ function roleToPath(role: Role): string | null {
   const map: Record<Role, string> = {
     orderer: '/orderer',
     carrier: '/carrier',
+    china_worker: '/china',
     warehouse_uz: '/warehouse-uz',
     warehouse_tr: '/warehouse-tr',
-    china_worker: '/china',
-    courier_uz: '/courier',
-    courier_tr: '/courier',
+    courier_uz: '/couriers',
+    courier_tr: '/couriers',
     admin: '/admin',
   };
   return map[role] ?? null;
@@ -223,9 +236,9 @@ function roleEmoji(role: Role): string {
   const map: Record<Role, string> = {
     orderer: '📦',
     carrier: '✈️',
+    china_worker: '🇨🇳',
     warehouse_uz: '🏭',
     warehouse_tr: '🏬',
-    china_worker: '🇨🇳',
     courier_uz: '🛵',
     courier_tr: '🚚',
     admin: '⚙️',
@@ -233,3 +246,15 @@ function roleEmoji(role: Role): string {
   return map[role] ?? '👤';
 }
 
+// Icon tile rangi — accent ranglar aylanma tarzda
+function roleTile(i: number): string {
+  const tiles = [
+    'bg-brand-500/20 text-brand-200',
+    'bg-accent-lime/20 text-accent-lime',
+    'bg-accent-pink/20 text-accent-pink',
+    'bg-accent-blue/20 text-accent-blue',
+    'bg-accent-cyan/20 text-accent-cyan',
+    'bg-accent-amber/20 text-accent-amber',
+  ];
+  return tiles[i % tiles.length]!;
+}

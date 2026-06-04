@@ -30,8 +30,9 @@ FROM base AS development
 COPY requirements.txt ./
 
 # Install with pip (much faster than poetry)
+# --retries/--timeout: beqaror tarmoq (PyPI) uchun bardoshlilik
 RUN pip install --upgrade pip && \
-    pip install -r requirements.txt
+    pip install --retries 10 --timeout 120 -r requirements.txt
 
 # Copy source code (mounted in docker-compose)
 COPY . .
@@ -47,7 +48,7 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload
 FROM base AS production
 
 COPY requirements.txt ./
-RUN pip install --upgrade pip && pip install -r requirements.txt
+RUN pip install --upgrade pip && pip install --retries 10 --timeout 120 -r requirements.txt
 
 COPY . .
 RUN mkdir -p /app/logs

@@ -24,10 +24,10 @@ export function LanguageSelector() {
         <button
           key={code}
           onClick={() => handleChange(code)}
-          className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-all
+          className={`rounded-full px-3 py-1.5 text-xs font-bold transition-all active:scale-95
             ${i18n.language.startsWith(code)
-              ? 'bg-tg-button text-tg-button-text'
-              : 'bg-tg-secondary-bg text-tg-hint hover:text-tg-text'
+              ? 'bg-gradient-to-br from-brand-400 to-accent-blue text-white shadow-glow-violet'
+              : 'bg-white/5 text-tg-hint ring-1 ring-white/10 hover:text-tg-text'
             }`}
         >
           {flag} {label}

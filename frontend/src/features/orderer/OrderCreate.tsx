@@ -30,12 +30,21 @@ export default function OrderCreate() {
   const [lines, setLines] = useState<OrderLine[]>([
     { name: '', quantity: 1, unit_weight_g: 0 },
   ]);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useBackButton(() => navigate(-1));
 
   const createMutation = useMutation({
     mutationFn: async (payload: CreateOrderPayload) => {
-      const { data } = await api.post<{ id: string; order_number: string }>('/orders', payload);
+      const { data } = await api.post<{ id: string; order_number: string }>('/orders/simple', {
+        destination_city: payload.destination_city,
+        lines: payload.lines.map((l) => ({
+          name: l.name,
+          quantity: l.quantity,
+          unit_weight_g: l.unit_weight_g,
+        })),
+        notes: payload.notes,
+      });
       return data;
     },
     onSuccess: (data) => {
@@ -44,7 +53,7 @@ export default function OrderCreate() {
     },
     onError: (error) => {
       haptic('error');
-      alert(extractErrorMessage(error));
+      setSubmitError(extractErrorMessage(error));
     },
   });
 
@@ -63,13 +72,14 @@ export default function OrderCreate() {
   };
 
   const handleSubmit = () => {
+    setSubmitError(null);
     if (!destinationCity.trim()) {
-      alert(t('orders.destination_required'));
+      setSubmitError(t('orders.destination_required'));
       return;
     }
     const validLines = lines.filter((l) => l.name.trim());
     if (validLines.length === 0) {
-      alert(t('orders.lines_required'));
+      setSubmitError(t('orders.lines_required'));
       return;
     }
     createMutation.mutate({
@@ -158,6 +168,12 @@ export default function OrderCreate() {
           className="w-full resize-none rounded-lg border border-tg-secondary-bg bg-tg-secondary-bg px-3 py-2 text-sm text-tg-text outline-none focus:border-tg-button"
         />
       </Card>
+
+      {submitError && (
+        <p className="rounded-lg bg-red-500/15 px-4 py-3 text-sm text-red-400 text-center">
+          {submitError}
+        </p>
+      )}
 
       <Button
         fullWidth

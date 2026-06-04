@@ -50,6 +50,8 @@ class HolderType(StrEnum):
 class ProductStatus(StrEnum):
     """Lifecycle status of a product (one physical unit)."""
 
+    READY_AT_CHINA = "ready_at_china"      # sourced by China worker, ready to ship
+    IN_TRANSIT_CN_UZ = "in_transit_cn_uz"  # shipped from China, en route to Tashkent
     PENDING_INTAKE = "pending_intake"      # arrived at UZ WH, not yet processed
     AT_TASHKENT_WH = "at_tashkent_wh"      # in catalog, available
     IN_BASKET = "in_basket"                # in some carrier's basket (locked)
@@ -70,6 +72,8 @@ class CustodyEventType(StrEnum):
     """Type of custody event recorded in the ledger."""
 
     CREATED = "created"                    # product card created at intake
+    SHIPPED_FROM_CHINA = "shipped_from_china"      # China worker shipped to Tashkent
+    RECEIVED_AT_TASHKENT = "received_at_tashkent"  # Tashkent WH received China shipment
     PICKED_BY_COURIER = "picked_by_courier"
     DELIVERED_TO_CARRIER = "delivered_to_carrier"
     YANDEX_SEALED = "yandex_sealed"
@@ -175,10 +179,12 @@ class HandoffStatus(StrEnum):
 
 
 class TrDeliveryMode(StrEnum):
-    """How items reach TR warehouse from carrier."""
+    """How the carrier hands off items in Turkey."""
 
-    TR_COURIER_FROM_CARRIER = "tr_courier_from_carrier"
-    CARRIER_DROPOFF = "carrier_dropoff"
+    TR_COURIER_FROM_CARRIER = "tr_courier_from_carrier"  # custom address — courier collects
+    CARRIER_DROPOFF = "carrier_dropoff"                  # carrier drops at TR warehouse
+    TR_AIRPORT_PICKUP = "tr_airport_pickup"              # collected at TR airport
+    TR_HOME_HOTEL_PICKUP = "tr_home_hotel_pickup"        # collected from carrier's home/hotel
 
 
 # ============================================
@@ -240,6 +246,27 @@ class DisputeResolution(StrEnum):
     FORCE_MAJEURE = "FORCE_MAJEURE"    # company eats the loss
     ORDERER_FAULT = "ORDERER_FAULT"    # orderer at fault, no deduction
     SPLIT         = "SPLIT"            # partial deduction
+
+
+# ============================================
+# Carrier debt (qarzdorlik)
+# ============================================
+class DebtStatus(StrEnum):
+    """Carrier qarzdorligi holati."""
+
+    OUTSTANDING = "outstanding"   # to'lanmagan
+    SETTLED = "settled"           # yopilgan
+
+
+# ============================================
+# China cargo input mode
+# ============================================
+class SourcingMode(StrEnum):
+    """Mahsulot kiritish/qabul qilish usuli."""
+
+    PIECE = "piece"      # dona (shtuk) — har dona alohida mahsulot
+    BOX = "box"          # quti — bitta quti, ichida N dona
+    TEXTILE = "textile"  # tekstil — to'plam (bundle), ichida N dona, kg asosida
 
 
 # ============================================

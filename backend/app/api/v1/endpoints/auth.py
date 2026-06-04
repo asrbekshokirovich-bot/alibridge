@@ -10,7 +10,7 @@ from app.api.deps.auth import get_current_user
 from app.api.deps.db import get_db_session
 from app.core.exceptions import AppException
 from app.core.limiter import limiter
-from app.core.security import create_access_token
+from app.core.security import create_access_token, create_download_token
 from app.domain.enums import Role
 from app.infra.db.models.user import User
 from app.infra.telegram.auth import validate_init_data
@@ -83,6 +83,29 @@ async def auth_telegram(
     )
 
 
+class DownloadTokenResponse(BaseModel):
+    token: str
+    expires_in: int
+
+
+@router.post("/download-token", response_model=DownloadTokenResponse)
+@limiter.limit("30/minute")
+async def issue_download_token(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+) -> DownloadTokenResponse:
+    """Qisqa muddatli yuklab olish tokeni (PDF/rasm URL'lari uchun).
+
+    Frontend bu tokenni `?token=` query param sifatida ishlatadi — oddiy sessiya
+    tokeni URL'ga qo'yilmaydi (loglarga tushmasligi uchun). 120 soniyada eskiradi.
+    """
+    ttl = 120
+    return DownloadTokenResponse(
+        token=create_download_token(user_id=current_user.id, expires_in_seconds=ttl),
+        expires_in=ttl,
+    )
+
+
 # ============================================
 # Foydalanuvchi o'zi uchun rol tanlaydi
 # ============================================
@@ -125,25 +148,19 @@ async def select_role(
 
     repo = UserRepository(session)
 
-    # Allaqachon roli bormi?
+    # Bir kishi ham orderer, ham carrier bo'la oladi. Allaqachon shu rol bo'lsa —
+    # idempotent (xato bermaymiz). Aks holda mavjud rollarga QO'SHAMIZ.
     existing = await repo.get_roles(current_user.id)
-    if existing:
-        raise AppException(
-            message="Sizda allaqachon rol bor",
-            error_code="role_already_assigned",
-            details={"current_roles": [r.value for r in existing]},
+    if selected in existing:
+        roles = existing
+    else:
+        await repo.grant_role(
+            user_id=current_user.id,
+            role=selected,
+            granted_by_user_id=current_user.id,
         )
-
-    # Rol berish (o'zi o'ziga beradi)
-    await repo.grant_role(
-        user_id=current_user.id,
-        role=selected,
-        granted_by_user_id=current_user.id,
-    )
-    await session.commit()
-
-    # Yangi JWT — rol bilan
-    roles = await repo.get_roles(current_user.id)
+        await session.commit()
+        roles = await repo.get_roles(current_user.id)
 
     from app.core.config import settings
 

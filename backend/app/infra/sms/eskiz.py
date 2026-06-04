@@ -51,7 +51,7 @@ class EskizSmsClient:
         if resp.status_code != 200:
             raise SmsError(
                 message="Eskiz auth muvaffaqiyatsiz",
-                details={"status": resp.status_code, "body": resp.text},
+                details={"status": resp.status_code},
             )
 
         token = resp.json()["data"]["token"]
@@ -98,7 +98,7 @@ class EskizSmsClient:
         if resp.status_code not in (200, 201):
             raise SmsError(
                 message="SMS yuborilmadi",
-                details={"status": resp.status_code, "body": resp.text},
+                details={"status": resp.status_code},
             )
 
         result = resp.json()

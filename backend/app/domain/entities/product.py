@@ -28,6 +28,10 @@ class ProductEntity(BaseModel):
     cargo_price_uz_to_tr: Decimal
     cargo_currency: str = "UZS"
 
+    declared_value: Decimal | None = None
+    declared_currency: str = "USD"
+    box_items_count: int | None = None
+
     condition_on_intake: ProductCondition = ProductCondition.OK
     status: ProductStatus
     custody_holder_type: HolderType

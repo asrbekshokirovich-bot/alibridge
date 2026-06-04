@@ -106,8 +106,21 @@ class FxService:
         except Exception as e:
             log.warning("cbu_fetch_failed", error=str(e))
 
-        # TCMB — TRY (TODO: XML parsing)
-        # Default fallback rates if API fails
+        # TCMB — TRY (USD/TRY cross rate)
+        try:
+            import xml.etree.ElementTree as ET
+            resp = await self._client.get(TCMB_URL)
+            root = ET.fromstring(resp.text)
+            for currency in root.findall("Currency"):
+                if currency.get("CurrencyCode") == "USD":
+                    selling = currency.findtext("ForexSelling")
+                    if selling:
+                        # TCMB beradi: 1 USD = X TRY → biz TRY/USD saqlaymiz
+                        rates["TRY"] = Decimal(selling)
+                    break
+        except Exception as e:
+            log.warning("tcmb_fetch_failed", error=str(e))
+
         rates.setdefault("UZS", Decimal("12500"))
         rates.setdefault("TRY", Decimal("33.5"))
         rates.setdefault("EUR", Decimal("0.92"))

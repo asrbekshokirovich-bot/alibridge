@@ -1,42 +1,121 @@
 """
-Invariant 1 — Custody State Machine uchun ~50 ta transition test.
+Invariant 1 — Custody State Machine transition testlari.
 DEV_PLAN §17.1 ga mos.
 
 Har bir test: qaysi transition ruxsat etilgan va qaysi taqiqlangan.
+Zanjir: China → Tashkent → Carrier → TR → Orderer.
 """
 import pytest
-from app.domain.enums import HolderType
-from app.domain.state_machines.custody import CustodyStateMachine
+
 from app.core.exceptions import InvalidCustodyTransitionError
+from app.domain.enums import CustodyEventType, HolderType
+from app.domain.state_machines.custody import (
+    VALID_TRANSITIONS,
+    CustodyStateMachine,
+)
 
 sm = CustodyStateMachine()
+
 
 # ─── Ruxsat etilgan transition'lar ────────────────────────────────────────────
 
 class TestValidTransitions:
     """Barcha legal state o'tishlari tekshiriladi."""
 
-    def test_china_to_carrier(self):
-        sm.validate_transition(HolderType.CHINA_WORKER, HolderType.CARRIER)
+    # China oqimi (zanjir boshi)
+    def test_create_at_china(self):
+        sm.validate_transition(
+            from_holder=None,
+            to_holder=HolderType.CHINA_SUPPLIER,
+            event_type=CustodyEventType.CREATED,
+        )
 
-    def test_carrier_to_warehouse_uz(self):
-        sm.validate_transition(HolderType.CARRIER, HolderType.WAREHOUSE_UZ)
+    def test_china_to_transit(self):
+        sm.validate_transition(
+            from_holder=HolderType.CHINA_SUPPLIER,
+            to_holder=HolderType.IN_TRANSIT_CN_UZ,
+            event_type=CustodyEventType.SHIPPED_FROM_CHINA,
+        )
 
-    def test_warehouse_uz_to_warehouse_tr(self):
-        sm.validate_transition(HolderType.WAREHOUSE_UZ, HolderType.WAREHOUSE_TR)
+    def test_transit_to_tashkent(self):
+        sm.validate_transition(
+            from_holder=HolderType.IN_TRANSIT_CN_UZ,
+            to_holder=HolderType.TASHKENT_WH,
+            event_type=CustodyEventType.RECEIVED_AT_TASHKENT,
+        )
 
-    def test_warehouse_tr_to_courier_tr(self):
-        sm.validate_transition(HolderType.WAREHOUSE_TR, HolderType.COURIER_TR)
+    # UZ oqimi
+    def test_create_at_tashkent(self):
+        sm.validate_transition(
+            from_holder=None,
+            to_holder=HolderType.TASHKENT_WH,
+            event_type=CustodyEventType.CREATED,
+        )
 
-    def test_courier_tr_to_orderer(self):
-        sm.validate_transition(HolderType.COURIER_TR, HolderType.ORDERER)
+    def test_tashkent_to_carrier(self):
+        sm.validate_transition(
+            from_holder=HolderType.TASHKENT_WH,
+            to_holder=HolderType.CARRIER,
+            event_type=CustodyEventType.DELIVERED_TO_CARRIER,
+        )
 
-    def test_warehouse_uz_to_courier_uz(self):
-        """Mahalliy yetkazib berish (Toshkent ichida)."""
-        sm.validate_transition(HolderType.WAREHOUSE_UZ, HolderType.COURIER_UZ)
+    def test_tashkent_to_courier_uz(self):
+        sm.validate_transition(
+            from_holder=HolderType.TASHKENT_WH,
+            to_holder=HolderType.COURIER_UZ,
+            event_type=CustodyEventType.PICKED_BY_COURIER,
+        )
 
-    def test_courier_uz_to_orderer(self):
-        sm.validate_transition(HolderType.COURIER_UZ, HolderType.ORDERER)
+    def test_courier_uz_to_carrier(self):
+        sm.validate_transition(
+            from_holder=HolderType.COURIER_UZ,
+            to_holder=HolderType.CARRIER,
+            event_type=CustodyEventType.DELIVERED_TO_CARRIER,
+        )
+
+    # TR oqimi
+    def test_carrier_to_courier_tr(self):
+        sm.validate_transition(
+            from_holder=HolderType.CARRIER,
+            to_holder=HolderType.COURIER_TR,
+            event_type=CustodyEventType.HANDED_TO_TR_COURIER,
+        )
+
+    def test_courier_tr_to_tr_wh(self):
+        sm.validate_transition(
+            from_holder=HolderType.COURIER_TR,
+            to_holder=HolderType.TR_WH,
+            event_type=CustodyEventType.HANDED_TO_TR_WH,
+        )
+
+    def test_carrier_to_tr_wh_direct(self):
+        sm.validate_transition(
+            from_holder=HolderType.CARRIER,
+            to_holder=HolderType.TR_WH,
+            event_type=CustodyEventType.HANDED_TO_TR_WH,
+        )
+
+    def test_tr_wh_to_orderer(self):
+        sm.validate_transition(
+            from_holder=HolderType.TR_WH,
+            to_holder=HolderType.ORDERER,
+            event_type=CustodyEventType.DELIVERED_TO_ORDERER,
+        )
+
+    # Reys (holder o'zgarmaydi)
+    def test_carrier_departed_same_holder(self):
+        sm.validate_transition(
+            from_holder=HolderType.CARRIER,
+            to_holder=HolderType.CARRIER,
+            event_type=CustodyEventType.DEPARTED,
+        )
+
+    def test_admin_override_anywhere(self):
+        sm.validate_transition(
+            from_holder=HolderType.ORDERER,
+            to_holder=HolderType.CHINA_SUPPLIER,
+            event_type=CustodyEventType.ADMIN_OVERRIDE,
+        )
 
 
 # ─── Taqiqlangan transition'lar ───────────────────────────────────────────────
@@ -44,126 +123,143 @@ class TestValidTransitions:
 class TestInvalidTransitions:
     """Illegal transition'lar InvalidCustodyTransitionError ko'tarishi shart."""
 
-    def test_carrier_to_china(self):
+    def test_china_to_tashkent_skip_transit(self):
+        """China'dan to'g'ridan Tashkent'ga (transit'ni o'tkazib) — mumkin emas."""
+        with pytest.raises(InvalidCustodyTransitionError):
+            sm.validate_transition(
+                from_holder=HolderType.CHINA_SUPPLIER,
+                to_holder=HolderType.TASHKENT_WH,
+                event_type=CustodyEventType.RECEIVED_AT_TASHKENT,
+            )
+
+    def test_china_to_carrier(self):
+        """China'dan to'g'ridan carrier'ga — Tashkent'ni o'tkazib bo'lmaydi."""
+        with pytest.raises(InvalidCustodyTransitionError):
+            sm.validate_transition(
+                from_holder=HolderType.CHINA_SUPPLIER,
+                to_holder=HolderType.CARRIER,
+                event_type=CustodyEventType.DELIVERED_TO_CARRIER,
+            )
+
+    def test_tashkent_to_china_backwards(self):
         """Orqaga qaytish taqiqlangan."""
         with pytest.raises(InvalidCustodyTransitionError):
-            sm.validate_transition(HolderType.CARRIER, HolderType.CHINA_WORKER)
+            sm.validate_transition(
+                from_holder=HolderType.TASHKENT_WH,
+                to_holder=HolderType.CHINA_SUPPLIER,
+                event_type=CustodyEventType.CREATED,
+            )
+
+    def test_china_to_transit_wrong_event(self):
+        """To'g'ri yo'nalish, lekin noto'g'ri event_type."""
+        with pytest.raises(InvalidCustodyTransitionError):
+            sm.validate_transition(
+                from_holder=HolderType.CHINA_SUPPLIER,
+                to_holder=HolderType.IN_TRANSIT_CN_UZ,
+                event_type=CustodyEventType.CREATED,
+            )
 
     def test_orderer_to_carrier(self):
-        """Orderer hech kimga transfer qila olmaydi."""
+        """Orderer — terminal, hech kimga transfer qila olmaydi."""
         with pytest.raises(InvalidCustodyTransitionError):
-            sm.validate_transition(HolderType.ORDERER, HolderType.CARRIER)
+            sm.validate_transition(
+                from_holder=HolderType.ORDERER,
+                to_holder=HolderType.CARRIER,
+                event_type=CustodyEventType.DELIVERED_TO_CARRIER,
+            )
 
-    def test_orderer_to_warehouse_uz(self):
+    def test_carrier_to_tashkent_skip(self):
+        """Carrier → Tashkent (orqaga) — mumkin emas."""
         with pytest.raises(InvalidCustodyTransitionError):
-            sm.validate_transition(HolderType.ORDERER, HolderType.WAREHOUSE_UZ)
+            sm.validate_transition(
+                from_holder=HolderType.CARRIER,
+                to_holder=HolderType.TASHKENT_WH,
+                event_type=CustodyEventType.DELIVERED_TO_CARRIER,
+            )
 
-    def test_china_to_warehouse_uz_skip_carrier(self):
-        """Carrier'ni o'tkazib yuborish mumkin emas."""
+    def test_same_holder_without_flight_event(self):
+        """Bir xil egadan o'tish faqat DEPARTED/LANDED uchun; boshqasi mumkin emas."""
         with pytest.raises(InvalidCustodyTransitionError):
-            sm.validate_transition(HolderType.CHINA_WORKER, HolderType.WAREHOUSE_UZ)
-
-    def test_china_to_orderer_direct(self):
-        """To'g'ridan-to'g'ri delivery mumkin emas."""
-        with pytest.raises(InvalidCustodyTransitionError):
-            sm.validate_transition(HolderType.CHINA_WORKER, HolderType.ORDERER)
-
-    def test_carrier_to_courier_tr(self):
-        """Carrier → Courier TR (warehouse'ni o'tkazib)."""
-        with pytest.raises(InvalidCustodyTransitionError):
-            sm.validate_transition(HolderType.CARRIER, HolderType.COURIER_TR)
-
-    def test_warehouse_tr_to_china(self):
-        """Orqaga zanjir yo'q."""
-        with pytest.raises(InvalidCustodyTransitionError):
-            sm.validate_transition(HolderType.WAREHOUSE_TR, HolderType.CHINA_WORKER)
-
-    def test_warehouse_uz_to_orderer_direct(self):
-        """Warehouse UZ → Orderer (courier'ni o'tkazib)."""
-        with pytest.raises(InvalidCustodyTransitionError):
-            sm.validate_transition(HolderType.WAREHOUSE_UZ, HolderType.ORDERER)
-
-    def test_carrier_to_warehouse_tr_skip_uz(self):
-        """Carrier → Warehouse TR (Toshkent'ni o'tkazib)."""
-        with pytest.raises(InvalidCustodyTransitionError):
-            sm.validate_transition(HolderType.CARRIER, HolderType.WAREHOUSE_TR)
-
-    def test_courier_tr_to_warehouse_uz(self):
-        """Courier TR → Warehouse UZ — orqaga."""
-        with pytest.raises(InvalidCustodyTransitionError):
-            sm.validate_transition(HolderType.COURIER_TR, HolderType.WAREHOUSE_UZ)
-
-    def test_courier_uz_to_warehouse_tr(self):
-        with pytest.raises(InvalidCustodyTransitionError):
-            sm.validate_transition(HolderType.COURIER_UZ, HolderType.WAREHOUSE_TR)
-
-    def test_same_holder_transition(self):
-        """Bir xil egadan o'tish mantiqsiz."""
-        for holder in HolderType:
-            with pytest.raises(InvalidCustodyTransitionError):
-                sm.validate_transition(holder, holder)
+            sm.validate_transition(
+                from_holder=HolderType.TASHKENT_WH,
+                to_holder=HolderType.TASHKENT_WH,
+                event_type=CustodyEventType.DELIVERED_TO_CARRIER,
+            )
 
 
 # ─── can_transition va get_valid_next_holders ─────────────────────────────────
 
 class TestHelperMethods:
     def test_can_transition_valid(self):
-        assert sm.can_transition(HolderType.CHINA_WORKER, HolderType.CARRIER) is True
+        assert sm.can_transition(
+            from_holder=HolderType.CHINA_SUPPLIER,
+            to_holder=HolderType.IN_TRANSIT_CN_UZ,
+            event_type=CustodyEventType.SHIPPED_FROM_CHINA,
+        ) is True
 
     def test_can_transition_invalid(self):
-        assert sm.can_transition(HolderType.ORDERER, HolderType.CARRIER) is False
+        assert sm.can_transition(
+            from_holder=HolderType.ORDERER,
+            to_holder=HolderType.CARRIER,
+            event_type=CustodyEventType.DELIVERED_TO_CARRIER,
+        ) is False
 
-    def test_get_valid_next_holders_china(self):
-        nexts = sm.get_valid_next_holders(HolderType.CHINA_WORKER)
-        assert HolderType.CARRIER in nexts
-        assert HolderType.WAREHOUSE_UZ not in nexts
+    def test_next_holders_china(self):
+        nexts = sm.get_valid_next_holders(HolderType.CHINA_SUPPLIER)
+        assert HolderType.IN_TRANSIT_CN_UZ in nexts
+        assert HolderType.LOST in nexts
+        assert HolderType.TASHKENT_WH not in nexts
 
-    def test_get_valid_next_holders_carrier(self):
-        nexts = sm.get_valid_next_holders(HolderType.CARRIER)
-        assert HolderType.WAREHOUSE_UZ in nexts
-        assert len(nexts) == 1  # faqat bitta yo'l
+    def test_next_holders_transit(self):
+        nexts = sm.get_valid_next_holders(HolderType.IN_TRANSIT_CN_UZ)
+        assert HolderType.TASHKENT_WH in nexts
+        assert HolderType.CARRIER not in nexts
 
-    def test_get_valid_next_holders_warehouse_uz(self):
-        nexts = sm.get_valid_next_holders(HolderType.WAREHOUSE_UZ)
-        assert HolderType.WAREHOUSE_TR in nexts
-        assert HolderType.COURIER_UZ in nexts
-
-    def test_get_valid_next_holders_orderer_is_empty(self):
+    def test_next_holders_orderer_is_empty(self):
         """Orderer — terminal state."""
-        nexts = sm.get_valid_next_holders(HolderType.ORDERER)
-        assert len(nexts) == 0
+        assert len(sm.get_valid_next_holders(HolderType.ORDERER)) == 0
 
     def test_validate_returns_none_on_success(self):
-        """validate_transition muvaffaqiyatda None qaytarishi shart."""
-        result = sm.validate_transition(HolderType.CARRIER, HolderType.WAREHOUSE_UZ)
+        result = sm.validate_transition(
+            from_holder=HolderType.CARRIER,
+            to_holder=HolderType.TR_WH,
+            event_type=CustodyEventType.HANDED_TO_TR_WH,
+        )
         assert result is None
 
     def test_error_message_contains_holders(self):
-        """Xato xabarida from/to holderlar ko'rsatilishi shart."""
         with pytest.raises(InvalidCustodyTransitionError) as exc_info:
-            sm.validate_transition(HolderType.ORDERER, HolderType.CARRIER)
-        assert "ORDERER" in str(exc_info.value) or "orderer" in str(exc_info.value).lower()
+            sm.validate_transition(
+                from_holder=HolderType.ORDERER,
+                to_holder=HolderType.CARRIER,
+                event_type=CustodyEventType.DELIVERED_TO_CARRIER,
+            )
+        msg = str(exc_info.value).lower()
+        assert "orderer" in msg
 
 
 # ─── VALID_TRANSITIONS frozenset tekshiruvi ────────────────────────────────────
 
 class TestTransitionSet:
     def test_valid_transitions_is_frozenset(self):
-        from app.domain.state_machines.custody import VALID_TRANSITIONS
         assert isinstance(VALID_TRANSITIONS, frozenset)
 
     def test_valid_transitions_not_empty(self):
-        from app.domain.state_machines.custody import VALID_TRANSITIONS
         assert len(VALID_TRANSITIONS) >= 5
 
     def test_no_self_loops_in_transitions(self):
-        from app.domain.state_machines.custody import VALID_TRANSITIONS
-        for (frm, to) in VALID_TRANSITIONS:
-            assert frm != to, f"Self-loop detected: {frm}"
+        for t in VALID_TRANSITIONS:
+            assert t.from_holder != t.to_holder, f"Self-loop: {t.from_holder}"
 
-    def test_all_pairs_are_holder_types(self):
-        from app.domain.state_machines.custody import VALID_TRANSITIONS
-        holder_values = {h.value for h in HolderType}
-        for (frm, to) in VALID_TRANSITIONS:
-            assert frm.value in holder_values
-            assert to.value in holder_values
+    def test_all_holders_are_valid_types(self):
+        for t in VALID_TRANSITIONS:
+            if t.from_holder is not None:
+                assert isinstance(t.from_holder, HolderType)
+            assert isinstance(t.to_holder, HolderType)
+
+    def test_china_chain_present(self):
+        """China zanjiri to'liq mavjudligini tasdiqlash."""
+        froms_tos = {(t.from_holder, t.to_holder) for t in VALID_TRANSITIONS}
+        assert (None, HolderType.CHINA_SUPPLIER) in froms_tos
+        assert (HolderType.CHINA_SUPPLIER, HolderType.IN_TRANSIT_CN_UZ) in froms_tos
+        assert (HolderType.IN_TRANSIT_CN_UZ, HolderType.TASHKENT_WH) in froms_tos

@@ -111,7 +111,7 @@ export default function WarehouseUzScanSession() {
           {scanned.slice(0, 20).map((item, idx) => (
             <Card
               key={idx}
-              className={`py-2 ${item.status === 'error' ? 'border border-red-300' : ''}`}
+              className={`py-2 ${item.status === 'error' ? 'border border-white/10' : ''}`}
             >
               <div className="flex items-center justify-between">
                 <span className="font-mono text-sm">{item.short_code}</span>

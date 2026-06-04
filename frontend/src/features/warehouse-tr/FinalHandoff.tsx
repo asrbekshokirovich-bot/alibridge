@@ -71,24 +71,37 @@ export default function WarehouseTrCustomerPickup() {
     },
   });
 
+  const qrPickupMutation = useMutation({
+    mutationFn: async (qr: string) => {
+      const { data } = await api.post<{ short_code: string }>(
+        '/warehouse/tr/customer-pickup-qr',
+        { qr_payload: qr },
+      );
+      return data;
+    },
+    onSuccess: (data) => {
+      haptic('success');
+      queryClient.invalidateQueries({ queryKey: ['tr-ready-pickup'] });
+      queryClient.invalidateQueries({ queryKey: ['warehouse-tr-stats'] });
+      setScanLog((prev) => [
+        { short_code: data.short_code, ok: true, msg: '✓ Mijozga topshirildi' },
+        ...prev,
+      ]);
+    },
+    onError: (error, qr) => {
+      haptic('error');
+      setScanLog((prev) => [
+        { short_code: qr.slice(0, 10), ok: false, msg: extractErrorMessage(error) },
+        ...prev,
+      ]);
+    },
+  });
+
   const { scannerRef, isScanning, startScan, stopScan } = useScanner({
     onScan: (qr) => {
       if (qr === lastQr) return;
       setLastQr(qr);
-      // QR orqali kelganida — ro'yxatdan id topib, customer-pickup ga yuboramiz
-      const found = products?.find((p) => p.short_code === qr);
-      if (found) {
-        pickupMutation.mutate(found.id);
-      } else {
-        // QR payload bo'lishi mumkin — direct customer-pickup endpoint ga urinib ko'ramiz
-        // Biz product_id ni bilmaymiz, shuning uchun ro'yxatni refresh qilib topamiz
-        // Sodda variant: foydalanuvchiga xabar beramiz
-        haptic('error');
-        setScanLog((prev) => [
-          { short_code: qr.slice(0, 10), ok: false, msg: 'Mahsulot ro\'yxatda topilmadi' },
-          ...prev,
-        ]);
-      }
+      qrPickupMutation.mutate(qr);
       setTimeout(() => setLastQr(null), 1500);
     },
   });
@@ -170,7 +183,7 @@ export default function WarehouseTrCustomerPickup() {
                 </Button>
               )}
               {okCount > 0 && (
-                <span className="flex-shrink-0 rounded-lg bg-green-100 px-3 py-2 text-sm font-bold text-green-700">
+                <span className="flex-shrink-0 rounded-lg bg-emerald-500/20 px-3 py-2 text-sm font-bold text-emerald-400">
                   ✓ {okCount}
                 </span>
               )}
@@ -178,7 +191,7 @@ export default function WarehouseTrCustomerPickup() {
           </Card>
 
           {scanLog.map((entry, idx) => (
-            <Card key={idx} className={`py-2 ${!entry.ok ? 'border border-red-300' : ''}`}>
+            <Card key={idx} className={`py-2 ${!entry.ok ? 'border border-white/10' : ''}`}>
               <div className="flex items-center justify-between text-sm">
                 <span className="font-mono font-semibold">{entry.short_code}</span>
                 <span className={entry.ok ? 'text-green-500' : 'text-red-500'}>{entry.msg}</span>

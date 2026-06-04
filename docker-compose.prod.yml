@@ -1,167 +1,129 @@
-version: "3.9"
-
-# Production Docker Compose konfiguratsiyasi.
-# Farqlari dev'dan:
-# - No volume mounts (images must contain code)
-# - Resource limits set
-# - restart: always
-# - Frontend served via Nginx (no Vite dev server)
-# - MinIO replaced by real S3 in env vars
-
-x-logging: &default-logging
-  driver: "json-file"
-  options:
-    max-size: "50m"
-    max-file: "5"
+# ============================================
+# ALI BRIDGE — Production overrides (Oracle Cloud)
+#
+# Ishlatish:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# .env ga qo'shish kerak:
+#   DOMAIN=alibridge.duckdns.org
+#   APP_ENV=production
+# ============================================
 
 services:
-  # ─── Database ───────────────────────────────────────────────────────────────
-  db:
-    image: postgres:16-alpine
-    restart: always
-    environment:
-      POSTGRES_DB: ali_bridge
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  # ============================================
+  # Caddy — SSL terminatsiya + reverse proxy
+  # Let's Encrypt sertifikatini AVTOMATIK oladi
+  # ============================================
+  caddy:
+    image: caddy:2-alpine
+    container_name: alibridge-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"    # HTTP/3 (QUIC)
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./infra/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ali_bridge"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    logging: *default-logging
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - caddy_logs:/var/log/caddy
+    environment:
+      DOMAIN: ${DOMAIN}
+    networks:
+      - alibridge-network
+    depends_on:
+      - backend
+      - frontend
+
+  # ============================================
+  # Backend — production mode (4 worker, no --reload)
+  # ============================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app
+             --host 0.0.0.0 --port 8000
+             --workers 4
+             --proxy-headers
+             --forwarded-allow-ips '*'"
+    volumes:
+      - backend_logs:/app/logs
+    ports: []    # Caddy ichki tarmoq orqali ulaydi
+    environment:
+      APP_ENV: production
     deploy:
       resources:
         limits:
           memory: 1G
 
-  # ─── Redis ──────────────────────────────────────────────────────────────────
-  redis:
-    image: redis:7-alpine
-    restart: always
-    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-    logging: *default-logging
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-
-  # ─── Backend ────────────────────────────────────────────────────────────────
-  backend:
-    image: ${REGISTRY}/ali-bridge-backend:${VERSION:-latest}
+  # ============================================
+  # Worker — production mode
+  # ============================================
+  worker:
     build:
       context: ./backend
+      dockerfile: Dockerfile
       target: production
-    restart: always
-    environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/ali_bridge
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
-      BOT_TOKEN: ${BOT_TOKEN}
-      JWT_SECRET: ${JWT_SECRET}
-      QR_HMAC_SECRET: ${QR_HMAC_SECRET}
-      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
-      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL}
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
-      S3_SECRET_KEY: ${S3_SECRET_KEY}
-      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
-      ESKIZ_EMAIL: ${ESKIZ_EMAIL}
-      ESKIZ_PASSWORD: ${ESKIZ_PASSWORD}
-      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/google_credentials
-      WEBHOOK_URL: https://${DOMAIN}/api/v1/telegram/webhook
-      ENVIRONMENT: production
-      LOG_LEVEL: INFO
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    secrets:
-      - google_credentials
-    logging: *default-logging
+    volumes:
+      - backend_logs:/app/logs
     deploy:
-      replicas: 2
       resources:
         limits:
           memory: 512M
-      update_config:
-        parallelism: 1
-        delay: 30s
-        order: start-first
 
-  # ─── Worker (arq) ───────────────────────────────────────────────────────────
-  worker:
-    image: ${REGISTRY}/ali-bridge-backend:${VERSION:-latest}
-    command: python -m arq app.workers.main.WorkerSettings
-    restart: always
-    environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/ali_bridge
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
-      BOT_TOKEN: ${BOT_TOKEN}
-      ENVIRONMENT: production
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    logging: *default-logging
+  # ============================================
+  # Frontend — host porti yo'q (Caddy orqali)
+  # ============================================
+  frontend:
+    ports: []
+
+  # ============================================
+  # Cloudflared — production'da ishlamaydi
+  # ============================================
+  cloudflared:
+    profiles:
+      - dev    # faqat "docker compose --profile dev up" bilan
+
+  # ============================================
+  # PostgreSQL — host portini berkitish
+  # ============================================
+  postgres:
+    ports: []
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ============================================
+  # Redis — host portini berkitish
+  # ============================================
+  redis:
+    ports: []
     deploy:
       resources:
         limits:
           memory: 256M
 
-  # ─── Nginx + Frontend ───────────────────────────────────────────────────────
-  nginx:
-    image: ${REGISTRY}/ali-bridge-frontend:${VERSION:-latest}
-    build:
-      context: ./frontend
-      target: production
-    restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - letsencrypt:/etc/letsencrypt:ro
-      - certbot_webroot:/var/www/certbot:ro
-    depends_on:
-      - backend
-    logging: *default-logging
+  # ============================================
+  # MinIO — host portini berkitish
+  # (production'da real S3 ishlatilsa bu service
+  #  profiles: ["dev"] ga o'tkazilishi mumkin)
+  # ============================================
+  minio:
+    ports: []
     deploy:
       resources:
         limits:
-          memory: 128M
-
-  # ─── Certbot (SSL auto-renewal) ───────────────────────────────────────────
-  certbot:
-    image: certbot/certbot:latest
-    volumes:
-      - letsencrypt:/etc/letsencrypt
-      - certbot_webroot:/var/www/certbot
-    entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;"
-    restart: always
-    logging: *default-logging
+          memory: 512M
 
 volumes:
-  postgres_data:
-  redis_data:
-  letsencrypt:
-  certbot_webroot:
-
-secrets:
-  google_credentials:
-    file: ./secrets/google_credentials.json
+  caddy_data:
+    name: alibridge-caddy-data
+  caddy_config:
+    name: alibridge-caddy-config
+  caddy_logs:
+    name: alibridge-caddy-logs

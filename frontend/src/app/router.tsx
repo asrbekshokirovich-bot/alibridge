@@ -6,9 +6,9 @@ import { RoleGuard } from '@features/auth/RoleGuard';
 // Lazy-load role-specific routes for smaller initial bundle
 const OrdererRoutes = lazy(() => import('@features/orderer/routes'));
 const CarrierRoutes = lazy(() => import('@features/carrier/routes'));
+const ChinaRoutes = lazy(() => import('@features/china/routes'));
 const WarehouseUzRoutes = lazy(() => import('@features/warehouse-uz/routes'));
 const WarehouseTrRoutes = lazy(() => import('@features/warehouse-tr/routes'));
-const ChinaRoutes = lazy(() => import('@features/china/routes'));
 const CourierRoutes = lazy(() => import('@features/couriers/routes'));
 const AdminRoutes = lazy(() => import('@features/admin/routes'));
 
@@ -42,6 +42,15 @@ export function AppRouter() {
         />
 
         <Route
+          path="/china/*"
+          element={
+            <RoleGuard allowedRoles={['china_worker']}>
+              <ChinaRoutes />
+            </RoleGuard>
+          }
+        />
+
+        <Route
           path="/warehouse-uz/*"
           element={
             <RoleGuard allowedRoles={['warehouse_uz']}>
@@ -55,15 +64,6 @@ export function AppRouter() {
           element={
             <RoleGuard allowedRoles={['warehouse_tr']}>
               <WarehouseTrRoutes />
-            </RoleGuard>
-          }
-        />
-
-        <Route
-          path="/china/*"
-          element={
-            <RoleGuard allowedRoles={['china_worker']}>
-              <ChinaRoutes />
             </RoleGuard>
           }
         />

@@ -1,10 +1,11 @@
-"""Umumiy bot router — /start, /help."""
+"""Umumiy bot router — /start, /help, fallback."""
 
 from __future__ import annotations
 
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.filters import CommandStart, Command
 from aiogram.types import (
+    CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     Message,
@@ -12,8 +13,10 @@ from aiogram.types import (
 )
 
 from app.core.config import settings
+from app.core.logger import get_logger
 from app.i18n.translator import Translator
 
+log = get_logger(__name__)
 router = Router(name="common")
 
 
@@ -67,3 +70,24 @@ async def cmd_help(message: Message, t: Translator) -> None:
         f'Asosiy ilovani <a href="{settings.miniapp_url}">bu yerdan</a> oching.'
     )
     await message.answer(text)
+
+
+# ============================================
+# Fallback — hech qanday handler mos kelmasa
+# ============================================
+@router.message()
+async def fallback_message(message: Message, t: Translator) -> None:
+    """Har qanday mos kelmagan xabar uchun fallback."""
+    log.debug("unhandled_message", user_id=message.from_user.id if message.from_user else None)
+    await message.answer(
+        f"👋 <b>ALI BRIDGE</b>\n\n"
+        f"Ilovani ochish uchun /start buyrug'ini yuboring\n"
+        f'yoki <a href="{settings.miniapp_url}">bu havolani</a> bosing.',
+    )
+
+
+@router.callback_query()
+async def fallback_callback(callback: CallbackQuery) -> None:
+    """Mos kelmagan callback query uchun fallback."""
+    log.debug("unhandled_callback", data=callback.data, user_id=callback.from_user.id if callback.from_user else None)
+    await callback.answer("⚠️ Bu tugma endi ishlamaydi. /start ni bosing.", show_alert=True)

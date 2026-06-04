@@ -19,8 +19,8 @@ interface UserListItem {
 }
 
 const ALL_ROLES = [
-  'orderer', 'carrier', 'warehouse_uz', 'warehouse_tr',
-  'china_worker', 'courier_uz', 'courier_tr', 'admin',
+  'orderer', 'china_worker', 'carrier', 'warehouse_uz', 'warehouse_tr',
+  'courier_uz', 'courier_tr', 'admin',
 ];
 
 export default function AdminUserRoles() {

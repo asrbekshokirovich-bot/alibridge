@@ -24,6 +24,7 @@ log = get_logger(__name__)
 # Engine — single instance per process
 # ============================================
 _connect_args: dict = {"ssl": "require"} if settings.db_use_ssl else {}
+_connect_args["statement_cache_size"] = 0  # pgbouncer transaction mode fix
 
 engine: AsyncEngine = create_async_engine(
     settings.db_url,
@@ -31,7 +32,8 @@ engine: AsyncEngine = create_async_engine(
     pool_size=10,
     max_overflow=20,
     pool_pre_ping=True,
-    pool_recycle=3600,
+    pool_recycle=1800,   # Supabase pooler idle timeout'idan past
+    pool_use_lifo=True,  # eng yangi (issiq) ulanishni qayta ishlatish — uzoq DB uchun
     connect_args=_connect_args,
 )
 

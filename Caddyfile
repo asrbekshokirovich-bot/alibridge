@@ -1,0 +1,36 @@
+# ALI BRIDGE — Caddy reverse proxy (production)
+# Let's Encrypt SSL'ni avtomatik boshqaradi
+# DOMAIN env variable: docker compose -f docker-compose.prod.yml up -d
+# yoki .env faylida DOMAIN=alibridge.duckdns.org
+
+{$DOMAIN} {
+    encode gzip
+
+    # Telegram webhook
+    handle /api/v1/telegram/webhook* {
+        reverse_proxy backend:8000
+    }
+
+    # REST API
+    handle /api/* {
+        reverse_proxy backend:8000
+    }
+
+    # Health check
+    handle /health {
+        reverse_proxy backend:8000
+    }
+
+    # Mini App frontend (barcha qolgan so'rovlar)
+    handle {
+        reverse_proxy frontend:80
+    }
+
+    # Access log
+    log {
+        output file /var/log/caddy/access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}

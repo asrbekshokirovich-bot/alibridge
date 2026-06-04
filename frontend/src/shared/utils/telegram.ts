@@ -34,6 +34,8 @@ export interface TelegramWebApp {
   ready: () => void;
   expand: () => void;
   close: () => void;
+  setHeaderColor: (color: string) => void;
+  setBackgroundColor: (color: string) => void;
   enableClosingConfirmation: () => void;
   disableClosingConfirmation: () => void;
   showAlert: (message: string, callback?: () => void) => void;
@@ -129,6 +131,14 @@ export function initTelegramApp(): void {
   tg.ready();
   tg.expand();
   tg.enableClosingConfirmation();
+
+  // Premium dark chrome — header va background app fonига mos
+  try {
+    tg.setHeaderColor('#0a0a0f');
+    tg.setBackgroundColor('#0a0a0f');
+  } catch {
+    // eski Telegram versiyalarida method bo'lmasligi mumkin
+  }
 }
 
 /**

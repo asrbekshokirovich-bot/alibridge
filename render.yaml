@@ -17,7 +17,7 @@ services:
       - key: BOT_WEBHOOK_URL
         value: https://alibridge-backend.onrender.com/api/v1/telegram/webhook
       - key: BOT_WEBHOOK_SECRET
-        value: alibridge-webhook-secret-2024
+        sync: false   # Dashboard'da kuchli tasodifiy qiymat o'rnating (commit qilmang)
       - key: MINIAPP_URL
         value: https://alibridge-frontend.onrender.com
       - key: CORS_ORIGINS

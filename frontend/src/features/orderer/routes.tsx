@@ -5,6 +5,7 @@ const Dashboard = lazy(() => import('./Dashboard'));
 const OrderList = lazy(() => import('./OrderList'));
 const OrderCreate = lazy(() => import('./OrderCreate'));
 const TrackOrder = lazy(() => import('./TrackOrder'));
+const MyPicks = lazy(() => import('./MyPicks'));
 
 export default function OrdererRoutes() {
   return (
@@ -13,6 +14,7 @@ export default function OrdererRoutes() {
       <Route path="orders" element={<OrderList />} />
       <Route path="orders/new" element={<OrderCreate />} />
       <Route path="orders/:orderId" element={<TrackOrder />} />
+      <Route path="my-picks" element={<MyPicks />} />
     </Routes>
   );
 }

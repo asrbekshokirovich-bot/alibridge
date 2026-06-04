@@ -20,30 +20,30 @@ def signer2():
 
 class TestEncodeDecodeRoundtrip:
     def test_encode_returns_string(self, signer):
-        product_id = str(uuid.uuid4())
+        product_id = uuid.uuid4()
         payload = signer.encode(product_id)
         assert isinstance(payload, str)
         assert len(payload) > 0
 
     def test_decode_returns_original_uuid(self, signer):
-        product_id = str(uuid.uuid4())
+        product_id = uuid.uuid4()
         payload = signer.encode(product_id)
         decoded = signer.decode(payload)
         assert decoded == product_id
 
     def test_multiple_roundtrips(self, signer):
         for _ in range(20):
-            pid = str(uuid.uuid4())
+            pid = uuid.uuid4()
             assert signer.decode(signer.encode(pid)) == pid
 
     def test_different_ids_produce_different_payloads(self, signer):
-        id1 = str(uuid.uuid4())
-        id2 = str(uuid.uuid4())
+        id1 = uuid.uuid4()
+        id2 = uuid.uuid4()
         assert signer.encode(id1) != signer.encode(id2)
 
     def test_payload_is_url_safe(self, signer):
         """Payload QR-ga kiritilganda URL-safe bo'lishi shart."""
-        pid = str(uuid.uuid4())
+        pid = uuid.uuid4()
         payload = signer.encode(pid)
         # base64url: faqat A-Z, a-z, 0-9, -, _
         import re
@@ -52,7 +52,7 @@ class TestEncodeDecodeRoundtrip:
 
 class TestTamperDetection:
     def test_modified_payload_raises(self, signer):
-        product_id = str(uuid.uuid4())
+        product_id = uuid.uuid4()
         payload = signer.encode(product_id)
         # Oxirgi belgini o'zgartirish
         tampered = payload[:-1] + ('A' if payload[-1] != 'A' else 'B')
@@ -60,7 +60,7 @@ class TestTamperDetection:
             signer.decode(tampered)
 
     def test_truncated_payload_raises(self, signer):
-        product_id = str(uuid.uuid4())
+        product_id = uuid.uuid4()
         payload = signer.encode(product_id)
         with pytest.raises(InvalidQrPayloadError):
             signer.decode(payload[:10])
@@ -75,14 +75,14 @@ class TestTamperDetection:
 
     def test_wrong_key_raises(self, signer, signer2):
         """Bir signer bilan encode qilingan payload boshqa signer bilan decode bo'lmasin."""
-        product_id = str(uuid.uuid4())
+        product_id = uuid.uuid4()
         payload = signer.encode(product_id)
         with pytest.raises(InvalidQrPayloadError):
             signer2.decode(payload)
 
     def test_swapped_segments_raises(self, signer):
         """UUID va HMAC qismlarini almashtirish."""
-        pid = str(uuid.uuid4())
+        pid = uuid.uuid4()
         payload = signer.encode(pid)
         # payload'ni ikkiga bo'lib almashtirish
         mid = len(payload) // 2

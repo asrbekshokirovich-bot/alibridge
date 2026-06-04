@@ -29,17 +29,17 @@
   },
   "roles": {
     "orderer": "Buyurtmachi",
+    "china_worker": "Xitoy ta'minotchi",
     "carrier": "Yo'lovchi",
     "warehouse_uz": "Toshkent ombori",
     "warehouse_tr": "Turkiya ombori",
-    "china_worker": "Xitoy xodimi",
     "courier_uz": "O'zbekiston kuryeri",
     "courier_tr": "Turkiya kuryeri",
     "courier": "Kuryer",
     "admin": "Administrator"
   },
   "catalog": {
-    "title": "Katalog",
+    "title": "Mahsulotlar",
     "search": "Mahsulot qidirish",
     "filter": "Filtr",
     "weight": "Mavjud og'irlik",
@@ -55,7 +55,7 @@
     "title": "Savat",
     "empty": "Savat bo'sh",
     "total": "Jami",
-    "checkout": "Buyurtma berish",
+    "checkout": "Omborga topshirish →",
     "remove": "Olib tashlash"
   },
   "picks": {
@@ -121,7 +121,11 @@
     "print": "Chop etish",
     "reprint": "Qayta chop etish",
     "no_labels": "Chop etiladigan label yo'q",
-    "products": "ta mahsulot"
+    "products": "ta mahsulot",
+    "intake_done": "Qabul muvaffaqiyatli bajarildi!",
+    "label_prompt": "Endi har bir mahsulotga QR label bosib yopishtirilsin. Shundan so'ng mahsulotlar yo'lovchilar katalogida ko'rinadi.",
+    "go_to_labels": "Labellarni bosish",
+    "skip_for_now": "Keyinroq bosaman"
   },
   "warehouse_tr": {
     "receive": "Reysni kutib olish",
@@ -140,12 +144,6 @@
     "fill_all": "Barcha maydonlarni to'ldiring",
     "confirm": "Topshirish",
     "nothing_ready": "Topshiriladigan mahsulot yo'q"
-  },
-  "china": {
-    "no_tickets": "Xarid so'rovlari yo'q",
-    "needed": "Kerak",
-    "sourced": "Topildi",
-    "price_cny": "Narxi (¥)"
   },
   "carrier": {
     "my_picks": "Mening pick'larim",

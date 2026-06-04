@@ -102,7 +102,7 @@ export default function WarehouseTrReceiveCarrier() {
       {received.map((item, idx) => (
         <Card
           key={idx}
-          className={`py-2 ${!item.ok ? 'border border-red-300' : ''}`}
+          className={`py-2 ${!item.ok ? 'border border-white/10' : ''}`}
         >
           <div className="flex items-center justify-between">
             <span className="font-mono text-sm font-semibold">{item.short_code}</span>

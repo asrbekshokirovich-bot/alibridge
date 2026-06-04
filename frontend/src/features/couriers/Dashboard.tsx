@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@shared/api/client';
-import { Card } from '@shared/components/Card';
 import { LanguageSelector } from '@shared/components/LanguageSelector';
+import { ActionTile } from '@shared/components/ActionTile';
+import { useAuthStore } from '@shared/store/auth';
 
 interface CourierStats {
   pending_pickup: number;
@@ -13,56 +13,76 @@ interface CourierStats {
 
 export default function CourierDashboard() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { user } = useAuthStore();
+  const isTrCourier = user?.roles.includes('courier_tr') ?? false;
 
-  const { data: stats } = useQuery<CourierStats>({
+  const { data: stats, isLoading } = useQuery<CourierStats>({
     queryKey: ['courier-stats'],
     queryFn: async () => {
       const { data } = await api.get<CourierStats>('/courier/stats');
       return data;
     },
+    refetchInterval: 30_000,
   });
 
-  const items = [
-    { icon: '📋', label: t('courier.queue'), path: '/couriers/queue', desc: t('courier.queue_desc') },
-    { icon: '📷', label: t('scan.title'), path: '/couriers/scan', desc: t('courier.scan_desc') },
-  ];
+  const inDelivery = stats?.in_delivery ?? 0;
 
   return (
-    <div className="space-y-3 p-4">
-      <h1 className="px-1 text-xl font-bold">{t('roles.courier')}</h1>
-
-      {stats && (
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { label: t('courier.pending'), value: stats.pending_pickup, emoji: '📦' },
-            { label: t('courier.in_delivery'), value: stats.in_delivery, emoji: '🛵' },
-            { label: t('courier.today'), value: stats.delivered_today, emoji: '✅' },
-          ].map((stat) => (
-            <Card key={stat.label} className="text-center">
-              <p className="text-xl">{stat.emoji}</p>
-              <p className="text-2xl font-bold">{stat.value}</p>
-              <p className="text-xs text-tg-hint">{stat.label}</p>
-            </Card>
-          ))}
+    <div className="space-y-5 p-5 pb-8">
+      <div className="flex items-center justify-between pt-2 animate-fade-in">
+        <div>
+          <p className="text-sm text-tg-hint">Salom 👋</p>
+          <h1 className="text-2xl font-extrabold tracking-tight">
+            {isTrCourier ? 'Turkiya kuryeri' : "O'zbekiston kuryeri"}
+          </h1>
         </div>
-      )}
+        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/5 text-2xl ring-1 ring-white/10">
+          {isTrCourier ? '🚚' : '🛵'}
+        </span>
+      </div>
 
-      {items.map((item) => (
-        <Card
-          key={item.path}
-          className="cursor-pointer active:scale-95"
-          onClick={() => navigate(item.path)}
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">{item.icon}</span>
-            <div>
-              <p className="font-medium">{item.label}</p>
-              <p className="text-xs text-tg-hint">{item.desc}</p>
-            </div>
+      <div className="grid grid-cols-3 gap-3 animate-scale-in">
+        {[
+          { label: "Qo'lida", value: isLoading ? '…' : inDelivery, emoji: '📦', color: 'text-accent-blue' },
+          { label: 'Bugun', value: isLoading ? '…' : (stats?.delivered_today ?? 0), emoji: '✅', color: 'text-accent-lime' },
+          { label: 'Jami', value: isLoading ? '…' : (inDelivery + (stats?.delivered_today ?? 0)), emoji: '📊', color: 'text-accent-violet' },
+        ].map((s) => (
+          <div key={s.label} className="rounded-4xl bg-tg-sectionBg p-3 text-center shadow-card ring-1 ring-white/[0.06]">
+            <p className="text-xl">{s.emoji}</p>
+            <p className={`text-2xl font-extrabold ${s.color}`}>{s.value}</p>
+            <p className="text-[11px] text-tg-hint">{s.label}</p>
           </div>
-        </Card>
-      ))}
+        ))}
+      </div>
+
+      <div>
+        <p className="section-title">Amallar</p>
+        <div className="grid grid-cols-2 gap-3">
+          <ActionTile
+            icon="📷"
+            label={isTrCourier ? "Yo'lovchidan qabul" : 'Ombordan olish'}
+            desc="QR kod bilan qabul"
+            color="blue"
+            onClick={() => navigate('/couriers/scan')}
+          />
+          <ActionTile
+            icon="📋"
+            label="Qo'limdagi yuklar"
+            desc="Yetkazish navbati"
+            color="violet"
+            badge={inDelivery}
+            onClick={() => navigate('/couriers/queue')}
+          />
+          <ActionTile
+            icon="✅"
+            label="Yetkazilgan yuklar"
+            desc={stats?.delivered_today ? `Bugun ${stats.delivered_today} ta` : 'Tarix'}
+            color="lime"
+            onClick={() => navigate('/couriers/history')}
+            className="col-span-2"
+          />
+        </div>
+      </div>
 
       <LanguageSelector />
     </div>

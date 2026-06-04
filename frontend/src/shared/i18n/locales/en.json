@@ -12,10 +12,10 @@
   },
   "roles": {
     "orderer": "Orderer",
+    "china_worker": "China Supplier",
     "carrier": "Carrier",
     "warehouse_uz": "Tashkent Warehouse",
     "warehouse_tr": "Istanbul Warehouse",
-    "china_worker": "China Worker",
     "courier": "Courier",
     "courier_uz": "Uzbekistan Courier",
     "courier_tr": "Turkey Courier",
@@ -27,7 +27,7 @@
     "logging_in": "Logging in..."
   },
   "catalog": {
-    "title": "Catalog",
+    "title": "Products",
     "weight": "Available weight",
     "add_to_basket": "Add to Basket",
     "no_items": "No items available"
@@ -35,8 +35,9 @@
   "basket": {
     "title": "Basket",
     "empty": "Basket is empty",
+    "total": "Total",
     "remove": "Remove",
-    "checkout": "Checkout"
+    "checkout": "Hand off to warehouse →"
   },
   "picks": {
     "empty": "No active picks",
@@ -89,7 +90,11 @@
     "print": "Print",
     "reprint": "Reprint",
     "no_labels": "No labels to print",
-    "products": "products"
+    "products": "products",
+    "intake_done": "Intake completed successfully!",
+    "label_prompt": "Now print and attach a QR label to each item. Once labeled, products will appear in the carrier catalog.",
+    "go_to_labels": "Print Labels",
+    "skip_for_now": "Skip for now"
   },
   "warehouse_tr": {
     "receive": "Receive Goods",
@@ -108,12 +113,6 @@
     "fill_all": "Please fill all fields",
     "confirm": "Hand Off",
     "nothing_ready": "No items ready for handoff"
-  },
-  "china": {
-    "no_tickets": "No sourcing tickets",
-    "needed": "Needed",
-    "sourced": "Sourced",
-    "price_cny": "Price (¥)"
   },
   "carrier": {
     "my_picks": "My Picks",

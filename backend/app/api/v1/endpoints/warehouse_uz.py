@@ -981,22 +981,19 @@ async def download_spec_labels_pdf(
 
             date_str = _fmt_date(product.created_at)
             title_short = _fit(spec_title, 26)
-            qty = product.box_items_count or 1
-            qty_str = f"{qty} dona" if qty > 1 else ""
 
             # Label chegarasi
             c.setStrokeColor(colors.lightgrey)
             c.setLineWidth(0.3)
             c.rect(x, y, LABEL_W, LABEL_H)
 
-            # ── Tepada: nomi + sana + soni ──
+            # ── Tepada: nomi + sana ──
             c.setFillColor(colors.black)
             c.setFont("Helvetica-Bold", 7)
             c.drawCentredString(cx, y + LABEL_H - 5 * mm, title_short)
             c.setFont("Helvetica", 6)
             c.setFillColor(colors.grey)
-            top_meta = f"{date_str}  ·  {qty_str}" if qty_str else date_str
-            c.drawCentredString(cx, y + LABEL_H - 8.5 * mm, top_meta)
+            c.drawCentredString(cx, y + LABEL_H - 8.5 * mm, date_str)
 
             # ── O'rtada: Code128 barcode ──
             bc = Code128(
@@ -1018,13 +1015,13 @@ async def download_spec_labels_pdf(
                 bc_w = bc.width
             bc.drawOn(c, x + (LABEL_W - bc_w) / 2, y + LABEL_H / 2 - 5 * mm)
 
-            # ── Pastda: nomi + sana + soni (takror) ──
+            # ── Pastda: nomi + sana (takror) ──
             c.setFillColor(colors.black)
             c.setFont("Helvetica-Bold", 7)
             c.drawCentredString(cx, y + 5 * mm, title_short)
             c.setFont("Helvetica", 6)
             c.setFillColor(colors.grey)
-            c.drawCentredString(cx, y + 2 * mm, top_meta)
+            c.drawCentredString(cx, y + 2 * mm, date_str)
 
         if page_start + COLS * ROWS < len(rows):
             c.showPage()

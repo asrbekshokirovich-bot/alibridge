@@ -507,23 +507,19 @@ export default function WarehouseUzQuickIntake() {
         </div>
       </Card>
 
-      {/* Bitta barcode yorliq — nomi + sana + soni + barcode */}
+      {/* Bitta barcode yorliq — nomi + sana + barcode */}
       {label && (
         <Card>
           <div className="flex flex-col items-center gap-2 py-2">
             <p className="text-center text-base font-bold text-tg-text">{label.name}</p>
-            <p className="text-xs text-tg-hint">
-              {label.date}{label.qty > 1 ? `  ·  ${label.qty} dona` : ''}
-            </p>
+            <p className="text-xs text-tg-hint">{label.date}</p>
             <img
               src={`data:image/png;base64,${label.barcode_image_b64}`}
               alt={label.short_code}
               className="my-1 w-full max-w-[280px] rounded bg-white p-2"
             />
             <p className="text-center text-base font-bold text-tg-text">{label.name}</p>
-            <p className="text-xs text-tg-hint">
-              {label.date}{label.qty > 1 ? `  ·  ${label.qty} dona` : ''}
-            </p>
+            <p className="text-xs text-tg-hint">{label.date}</p>
           </div>
         </Card>
       )}

@@ -42,7 +42,7 @@ export default function WarehouseUzQuickIntake() {
   const [category, setCategory] = useState('');
   const [quantity, setQuantity] = useState('');
   const [weightG, setWeightG] = useState('');
-  const [mode, setMode] = useState<'piece' | 'box' | 'textile'>('piece');
+  const [mode, setMode] = useState<'piece' | 'textile'>('piece');
   const [itemsPerContainer, setItemsPerContainer] = useState('');
   const [grossKg, setGrossKg] = useState('');
   const [tareKg, setTareKg] = useState('');
@@ -133,7 +133,7 @@ export default function WarehouseUzQuickIntake() {
 
   // Rejimga oid hisoblar (box/textile sof vazn kalkulyatori)
   const isContainer = mode !== 'piece';
-  const containerWord = mode === 'textile' ? "to'plam" : 'quti';
+  const containerWord = "to'plam";
   const qtyNum = parseInt(quantity) || 0;
   const grossNum = parseFloat(grossKg.replace(',', '.')) || 0;
   const tareNum = parseFloat(tareKg.replace(',', '.')) || 0;
@@ -211,10 +211,9 @@ export default function WarehouseUzQuickIntake() {
             {/* Rejim selektori — mahsulot turi */}
             <div>
               <label className="mb-1 block text-xs font-medium text-tg-hint">Mahsulot turi</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {([
                   { key: 'piece', icon: '🔢', label: 'Dona' },
-                  { key: 'box', icon: '📦', label: 'Quti' },
                   { key: 'textile', icon: '🧵', label: 'Tekstil' },
                 ] as const).map((m) => (
                   <button
@@ -330,10 +329,10 @@ export default function WarehouseUzQuickIntake() {
               />
             </div>
 
-            {/* Soni — rejimga qarab dona/quti/to'plam */}
+            {/* Soni — rejimga qarab dona/to'plam */}
             <div>
               <label className="mb-1 block text-xs font-medium text-tg-hint">
-                {mode === 'box' ? 'Quti soni' : mode === 'textile' ? "To'plam soni" : 'Soni (dona)'}
+                {mode === 'textile' ? "To'plam soni" : 'Soni (dona)'}
               </label>
               <input
                 type="number"
@@ -355,7 +354,7 @@ export default function WarehouseUzQuickIntake() {
                 <input
                   type="number"
                   min={1}
-                  placeholder={mode === 'textile' ? '5' : '20'}
+                  placeholder="5"
                   value={itemsPerContainer}
                   onChange={(e) => setItemsPerContainer(e.target.value)}
                   className="w-full rounded-lg border border-tg-secondary-bg bg-tg-secondary-bg px-3 py-2 text-sm text-tg-text outline-none focus:border-tg-button"

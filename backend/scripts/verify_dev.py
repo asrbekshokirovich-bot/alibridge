@@ -88,6 +88,16 @@ async def seed_tokens() -> tuple[dict[str, str], dict]:
                     onboarding_channel=OnboardingChannel.SELF_SERVE.value,
                 )
             )
+
+        # Idempotentlik: test carrier'ning oldingi run'dagi picks'larini
+        # tozalash — savat ham carrier_picks (handoff_status=IN_BASKET).
+        # Aks holda uq_one_carrier_per_product qayta-run'da buziladi.
+        from sqlalchemy import text
+
+        await s.execute(
+            text("DELETE FROM carrier_picks WHERE carrier_user_id = :cid"),
+            {"cid": carrier_id},
+        )
         await s.commit()
     return tokens, ids
 

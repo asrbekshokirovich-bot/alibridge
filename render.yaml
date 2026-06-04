@@ -8,7 +8,7 @@ services:
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
-    plan: free
+    plan: starter
     envVars:
       - key: BOT_TOKEN
         sync: false
@@ -45,6 +45,8 @@ services:
         value: production
       - key: LOG_FORMAT
         value: json
+      - key: RUN_WORKER_IN_PROCESS
+        value: "true"
       - key: POSTGRES_USER
         value: postgres.wiqjhquaojlrtgnkpcdi
       - key: POSTGRES_PASSWORD

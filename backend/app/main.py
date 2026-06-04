@@ -127,6 +127,36 @@ async def _miniapp_url_watcher() -> None:
             log.debug("miniapp_url_watcher_error", error=str(e))
 
 
+async def _run_in_process_worker():
+    """arq Worker'ni backend process'i ichida ishga tushiradi (alohida servis o'rniga).
+
+    Render Starter'da bitta servis uchun — fon cron vazifalari (basket TTL,
+    landing ping, FX kurslari, dispute eslatma) shu yerda bajariladi.
+    Worker'ni faqat bitta instance ishga tushirishi kerak; agar autoscaling
+    yoqilsa, alohida `type: worker` servisiga ko'chirilsin.
+    """
+    from arq.worker import Worker
+
+    from app.workers.main import WorkerSettings
+
+    worker = Worker(
+        functions=WorkerSettings.functions,
+        cron_jobs=WorkerSettings.cron_jobs,
+        redis_settings=WorkerSettings.redis_settings,
+        max_jobs=WorkerSettings.max_jobs,
+        job_timeout=WorkerSettings.job_timeout,
+        handle_signals=False,  # FastAPI lifespan signallarni boshqaradi
+    )
+    log.info("in_process_worker_starting")
+    try:
+        await worker.async_run()
+    except asyncio.CancelledError:
+        await worker.close()
+        raise
+    except Exception as e:
+        log.error("in_process_worker_error", error=str(e))
+
+
 # ============================================
 # Lifespan: startup / shutdown
 # ============================================
@@ -230,12 +260,24 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     if "trycloudflare.com" in settings.miniapp_url:
         _url_watcher_task = asyncio.create_task(_miniapp_url_watcher())
 
+    # arq fon worker'i — alohida servis o'rniga shu process'da (Render Starter).
+    _worker_task: asyncio.Task | None = None
+    if settings.run_worker_in_process:
+        _worker_task = asyncio.create_task(_run_in_process_worker())
+
     log.info("application_ready")
 
     yield
 
     # ---------- Shutdown ----------
     log.info("application_shutting_down")
+
+    if _worker_task and not _worker_task.done():
+        _worker_task.cancel()
+        try:
+            await _worker_task
+        except (asyncio.CancelledError, Exception):
+            pass
 
     if _url_watcher_task and not _url_watcher_task.done():
         _url_watcher_task.cancel()

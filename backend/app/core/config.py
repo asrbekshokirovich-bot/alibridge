@@ -181,6 +181,9 @@ class AppSettings(BaseSettings):
     landing_ping_interval: int = 60
     basket_ttl_minutes: int = 20
     payout_check_interval: int = 300
+    # arq worker'ni backend process'i ichida ishga tushirish (alohida servis o'rniga).
+    # Render Starter (bitta servis) uchun true. Alohida worker servisi bo'lsa false.
+    run_worker_in_process: bool = False
 
     # ============================================
     # Feature flags

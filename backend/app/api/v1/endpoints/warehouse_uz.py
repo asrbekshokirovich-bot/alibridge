@@ -918,16 +918,18 @@ async def download_spec_labels_pdf(
 ):
     """Barcha mahsulotlar uchun label PDF — barcode printer uchun.
 
-    Har bir sahifada 4 ustun x 8 qator = 32 ta label.
-    Har bir labelda: QR kod + short_code + tovar nomi.
+    Har bir yorliq bir xil formatda:
+      - Tepada: mahsulot nomi + kiritilgan sana
+      - O'rtada: Code128 barcode (tagida o'qiladigan kod)
+      - Pastda: mahsulot nomi + kiritilgan sana (takror)
+    Har sahifada 3 ustun x 8 qator = 24 ta yorliq.
     """
     from io import BytesIO
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import mm
-    from reportlab.lib.utils import ImageReader
     from reportlab.pdfgen import canvas
     from reportlab.lib import colors
-    from app.infra.qr.signer import generate_qr_image
+    from reportlab.graphics.barcode.code128 import Code128
     from fastapi.responses import StreamingResponse
 
     stmt = (
@@ -947,16 +949,23 @@ async def download_spec_labels_pdf(
 
     spec_title = rows[0].spec_title or "Mahsulot"
 
+    def _fmt_date(dt: datetime | None) -> str:
+        if not dt:
+            return ""
+        return dt.strftime("%d.%m.%Y")
+
+    def _fit(text: str, max_len: int) -> str:
+        return (text[: max_len - 1] + "…") if len(text) > max_len else text
+
     # ── PDF yaratish ──────────────────────────────────────────────
     buf = BytesIO()
     page_w, page_h = A4  # 595 x 842 pt
 
-    COLS = 4
+    COLS = 3
     ROWS = 8
     MARGIN = 10 * mm
     LABEL_W = (page_w - 2 * MARGIN) / COLS
     LABEL_H = (page_h - 2 * MARGIN) / ROWS
-    QR_SIZE = min(LABEL_W, LABEL_H) * 0.55
 
     c = canvas.Canvas(buf, pagesize=A4)
 
@@ -970,30 +979,51 @@ async def download_spec_labels_pdf(
 
             x = MARGIN + col * LABEL_W
             y = page_h - MARGIN - (row_idx + 1) * LABEL_H
+            cx = x + LABEL_W / 2
+
+            date_str = _fmt_date(product.created_at)
+            title_short = _fit(spec_title, 26)
 
             # Label chegarasi
             c.setStrokeColor(colors.lightgrey)
             c.setLineWidth(0.3)
             c.rect(x, y, LABEL_W, LABEL_H)
 
-            # QR rasm
-            qr_bytes = generate_qr_image(product.qr_payload, box_size=6, border=1)
-            qr_buf = BytesIO(qr_bytes)
-            qr_img = ImageReader(qr_buf)
-            qr_x = x + (LABEL_W - QR_SIZE) / 2
-            qr_y = y + LABEL_H - QR_SIZE - 2 * mm
-            c.drawImage(qr_img, qr_x, qr_y, QR_SIZE, QR_SIZE)
-
-            # Short code
-            c.setFont("Helvetica-Bold", 8)
+            # ── Tepada: nomi + sana ──
             c.setFillColor(colors.black)
-            c.drawCentredString(x + LABEL_W / 2, y + 6 * mm, product.short_code)
-
-            # Tovar nomi (qisqa)
-            title_short = spec_title[:22] if len(spec_title) > 22 else spec_title
+            c.setFont("Helvetica-Bold", 7)
+            c.drawCentredString(cx, y + LABEL_H - 5 * mm, title_short)
             c.setFont("Helvetica", 6)
             c.setFillColor(colors.grey)
-            c.drawCentredString(x + LABEL_W / 2, y + 2.5 * mm, title_short)
+            c.drawCentredString(cx, y + LABEL_H - 8.5 * mm, date_str)
+
+            # ── O'rtada: Code128 barcode ──
+            bc = Code128(
+                product.barcode_payload or product.short_code,
+                barHeight=10 * mm,
+                barWidth=0.32 * mm,
+                humanReadable=True,
+            )
+            bc_w = bc.width
+            # Yorliqqa sig'masa barWidth'ni kichraytirish
+            if bc_w > LABEL_W - 6 * mm:
+                scale = (LABEL_W - 6 * mm) / bc_w
+                bc = Code128(
+                    product.barcode_payload or product.short_code,
+                    barHeight=10 * mm,
+                    barWidth=0.32 * mm * scale,
+                    humanReadable=True,
+                )
+                bc_w = bc.width
+            bc.drawOn(c, x + (LABEL_W - bc_w) / 2, y + LABEL_H / 2 - 5 * mm)
+
+            # ── Pastda: nomi + sana (takror) ──
+            c.setFillColor(colors.black)
+            c.setFont("Helvetica-Bold", 7)
+            c.drawCentredString(cx, y + 5 * mm, title_short)
+            c.setFont("Helvetica", 6)
+            c.setFillColor(colors.grey)
+            c.drawCentredString(cx, y + 2 * mm, date_str)
 
         if page_start + COLS * ROWS < len(rows):
             c.showPage()

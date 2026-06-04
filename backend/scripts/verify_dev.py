@@ -241,6 +241,12 @@ async def run_checks(tokens: dict[str, str], ids: dict) -> None:
             json={"name": "Verify tekstil", "quantity": 5, "weight_g": 5000, "mode": "textile",
                   "cargo_price": 10, "total_value": 100, "photos": []})
         check("textile intake (items_per_container'siz)", r.status_code in (200, 201), r)
+        # Barcode PDF — nomi + sana bilan (bir xil format)
+        textile_spec = r.json().get("spec_id") if r.status_code in (200, 201) else None
+        if textile_spec:
+            r = await c.get(f"{BASE}/warehouse/uz/products/specs/{textile_spec}/pdf", headers=hdr(tokens["warehouse_uz"]))
+            is_pdf = r.status_code == 200 and r.content[:4] == b"%PDF"
+            check("barcode PDF yaratiladi (%PDF)", is_pdf, r)
         r = await c.post(f"{BASE}/warehouse/uz/quick-intake", headers=hdr(tokens["warehouse_uz"]),
             json={"name": "Verify quti", "quantity": 3, "weight_g": 8000, "mode": "box",
                   "items_per_container": 20, "cargo_price": 5, "total_value": 50, "photos": []})

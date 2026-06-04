@@ -102,7 +102,7 @@ async def list_catalog_specs(
             COUNT(p.id)    AS available_count,
             MIN(p.unit_weight_g)              AS min_weight_g,
             MIN(p.cargo_price_uz_to_tr)       AS min_price,
-            MAX(p.cargo_currency)             AS currency
+            MIN(p.cargo_currency)             AS currency
         FROM sourcing_specs ss
         JOIN products p ON p.sourcing_spec_id = ss.id
         WHERE p.status = 'at_tashkent_wh'

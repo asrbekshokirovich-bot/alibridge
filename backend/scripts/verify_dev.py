@@ -264,6 +264,44 @@ async def run_checks(tokens: dict[str, str], ids: dict) -> None:
         has_mode = r.status_code == 200 and (len(r.json()) == 0 or "sourcing_mode" in r.json()[0])
         check("wh specs returns sourcing_mode", has_mode, r)
 
+        # ── Tara (quti) vazni: textile saqlanadi, WH/admin ko'radi, carrier KO'RMAYDI ──
+        r = await c.post(f"{BASE}/warehouse/uz/quick-intake", headers=hdr(tokens["warehouse_uz"]),
+            json={"name": "Verify tara", "quantity": 100, "weight_g": 8500, "mode": "textile",
+                  "tare_weight_g": 500, "cargo_price": 7, "cargo_currency": "UZS",
+                  "total_value": 100, "total_value_currency": "UZS", "photos": []})
+        tara_spec = r.json().get("spec_id") if r.status_code in (200, 201) else None
+        check("textile tara intake (200)", bool(tara_spec), r)
+        if tara_spec:
+            r = await c.get(f"{BASE}/warehouse/uz/products/specs", headers=hdr(tokens["warehouse_uz"]))
+            g = next((s for s in r.json() if s["spec_id"] == tara_spec), None) if r.status_code == 200 else None
+            check("wh specs returns total_tare_weight_g=500", bool(g) and g.get("total_tare_weight_g") == 500, r)
+            r = await c.get(f"{BASE}/warehouse/uz/products/specs/{tara_spec}/items", headers=hdr(tokens["warehouse_uz"]))
+            it_ok = r.status_code == 200 and len(r.json()) >= 1 and r.json()[0].get("tare_weight_g") == 500
+            check("wh spec items returns tare_weight_g", it_ok, r)
+            # Carrier katalogi tara FIELDINI qaytarmasligi kerak
+            r = await c.get(f"{BASE}/catalog/specs", headers=hdr(tokens["carrier"]))
+            no_tara = r.status_code == 200 and all("tare_weight_g" not in s for s in r.json())
+            check("carrier catalog tara'ni KO'RMAYDI", no_tara, r)
+
+        # ── Bitta valyuta majburlash: aralash valyuta savatga qo'shilmaydi ──
+        r = await c.post(f"{BASE}/warehouse/uz/quick-intake", headers=hdr(tokens["warehouse_uz"]),
+            json={"name": "Verify USD mahsulot", "quantity": 1, "weight_g": 200,
+                  "cargo_price": 5, "cargo_currency": "USD", "total_value": 50, "photos": []})
+        usd_spec = r.json().get("spec_id") if r.status_code in (200, 201) else None
+        r = await c.post(f"{BASE}/warehouse/uz/quick-intake", headers=hdr(tokens["warehouse_uz"]),
+            json={"name": "Verify UZS mahsulot", "quantity": 1, "weight_g": 200,
+                  "cargo_price": 60000, "cargo_currency": "UZS", "total_value": 600000, "photos": []})
+        uzs_spec = r.json().get("spec_id") if r.status_code in (200, 201) else None
+        if usd_spec and uzs_spec:
+            await c.post(f"{BASE}/basket/add-by-spec", headers=hdr(tokens["carrier"]), json={"spec_id": usd_spec})
+            r = await c.post(f"{BASE}/basket/add-by-spec", headers=hdr(tokens["carrier"]), json={"spec_id": uzs_spec})
+            check("aralash valyuta savatga qo'shilmaydi (4xx)", 400 <= r.status_code < 500, r)
+            # Savatni tozalash — keyingi checklarga xalaqit bermasin
+            rb = await c.get(f"{BASE}/basket", headers=hdr(tokens["carrier"]))
+            if rb.status_code == 200:
+                for it in rb.json():
+                    await c.delete(f"{BASE}/basket/{it['id']}", headers=hdr(tokens["carrier"]))
+
         # ── DELETE guard: omboridagi o'chsin, carrier'dagi bloklansin ────
         r = await c.post(f"{BASE}/warehouse/uz/quick-intake", headers=hdr(tokens["warehouse_uz"]),
             json={"name": "Verify delete OK", "quantity": 1, "weight_g": 200,

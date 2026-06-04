@@ -6,6 +6,7 @@ import { LoadingScreen } from '@shared/components/LoadingScreen';
 import { EmptyState } from '@shared/components/EmptyState';
 import { useBackButton, haptic } from '@shared/hooks/useTelegram';
 import { useAuthStore } from '@shared/store/auth';
+import { formatMoney } from '@shared/utils/format';
 
 interface CatalogSpec {
   spec_id: string;
@@ -259,7 +260,7 @@ export default function CarrierCatalog({ readOnly = false }: { readOnly?: boolea
                     <p className="font-semibold text-sm leading-tight line-clamp-2">{spec.title}</p>
                     <p className="text-xs text-tg-hint mt-0.5">{spec.available_count} ta mavjud</p>
                     <p className="text-sm font-bold text-tg-button mt-1">
-                      {price > 0 ? `${+price.toFixed(2)} ${spec.currency}` : '—'}
+                      {price > 0 ? formatMoney(price, spec.currency) : '—'}
                     </p>
 
                     {isCarrier && !soldOut && (

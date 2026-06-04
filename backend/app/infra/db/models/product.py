@@ -124,6 +124,10 @@ class Product(Base, UUIDPrimaryKeyMixin):
     # Quti (box) rejimi: ichidagi dona soni. NULL = oddiy dona-mahsulot.
     box_items_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
+    # Tara (quti/qadoq) vazni, gramm. Tekstil rejimida kiritiladi. NULL = tarasiz.
+    # Faqat admin / UZ skladchi / TR ombor ko'radi (carrier/orderer KO'RMAYDI).
+    tare_weight_g: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
     # Condition at intake
     condition_on_intake: Mapped[str] = mapped_column(
         condition_enum,

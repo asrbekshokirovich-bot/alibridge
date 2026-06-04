@@ -444,6 +444,12 @@ async def list_product_specs(
             func.count(Product.id).filter(
                 Product.status.in_(active_statuses)
             ).label("total_count"),
+            func.coalesce(
+                func.sum(Product.unit_weight_g).filter(Product.status.in_(warehouse_statuses)), 0
+            ).label("total_weight_g"),
+            func.coalesce(
+                func.sum(Product.tare_weight_g).filter(Product.status.in_(warehouse_statuses)), 0
+            ).label("total_tare_weight_g"),
             func.max(Product.created_at).label("last_created"),
         )
         .join(Product, Product.sourcing_spec_id == SourcingSpec.id)
@@ -462,6 +468,8 @@ async def list_product_specs(
             "photo": (list(r.photos)[0] if r.photos else None),
             "count": r.count,
             "total_count": r.total_count,
+            "total_weight_g": int(r.total_weight_g or 0),
+            "total_tare_weight_g": int(r.total_tare_weight_g or 0),
             "last_created": r.last_created.isoformat(),
         }
         for r in rows
@@ -486,6 +494,8 @@ async def list_spec_products(
             "id": str(p.id),
             "short_code": p.short_code,
             "status": p.status,
+            "unit_weight_g": p.unit_weight_g,
+            "tare_weight_g": p.tare_weight_g,
             "label_printed": p.label_printed_at is not None,
             "created_at": p.created_at.isoformat(),
             "qr_payload": p.qr_payload,

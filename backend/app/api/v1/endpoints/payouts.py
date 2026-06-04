@@ -81,6 +81,15 @@ async def request_payout(
     if not eligible:
         raise HTTPException(status_code=400, detail="To'lanadigan yuk yo'q")
 
+    # Aralash valyuta taqiqlanadi — payout bitta valyutada bo'lishi kerak
+    currencies = {(p.locked_currency or "USD") for p in eligible}
+    if len(currencies) > 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Yuklar turli valyutada — har valyuta uchun alohida payout qiling",
+        )
+    payout_currency = currencies.pop()
+
     total = sum(p.locked_cargo_price for p in eligible)
 
     if total <= 0:
@@ -90,7 +99,7 @@ async def request_payout(
         id=uuid.uuid4(),
         carrier_user_id=user.id,
         amount=total,
-        currency=body.currency,
+        currency=payout_currency,
         method=body.method.value,
         payment_reference=body.payment_reference,
         status=PayoutStatus.REQUESTED.value,
@@ -112,7 +121,7 @@ async def request_payout(
     return {
         "payout_id": str(payout.id),
         "amount": str(total),
-        "currency": body.currency,
+        "currency": payout_currency,
         "pick_count": len(eligible),
         "status": PayoutStatus.REQUESTED.value,
     }

@@ -177,6 +177,7 @@ async def list_warehouse_specs(
             func.count(Product.id).label("count"),
             func.max(Product.box_items_count).label("box_items_count"),
             func.coalesce(func.sum(Product.unit_weight_g), 0).label("total_weight_g"),
+            func.coalesce(func.sum(Product.tare_weight_g), 0).label("total_tare_weight_g"),
             func.max(Product.created_at).label("last_created"),
         )
         .join(Product, Product.sourcing_spec_id == SourcingSpec.id)
@@ -194,6 +195,7 @@ async def list_warehouse_specs(
             "sourcing_mode": r.sourcing_mode or "piece",
             "box_items_count": r.box_items_count,   # quti/to'plamdagi dona soni (NULL = dona rejimi)
             "total_weight_g": int(r.total_weight_g or 0),
+            "total_tare_weight_g": int(r.total_tare_weight_g or 0),  # jami quti(tara) vazni
             "count": r.count,                       # dona soni (piece) yoki konteyner soni (box/textile)
             "last_created": r.last_created.isoformat() if r.last_created else None,
         }
@@ -226,6 +228,7 @@ async def list_warehouse_spec_items(
             "short_code": p.short_code,
             "status": p.status,
             "unit_weight_g": p.unit_weight_g,
+            "tare_weight_g": p.tare_weight_g,
             "label_printed": p.label_printed_at is not None,
             "created_at": p.created_at.isoformat() if p.created_at else None,
             "qr_payload": p.qr_payload,
@@ -512,6 +515,7 @@ async def pending_pickups(
                 "all_picked": False,  # barcha mahsulotlar CARRIER_HAS_CUSTODY ga o'tganmi
                 "pending_approval": False,  # WH tasdig'i kutilmoqdami
                 "approved": False,          # WH tasdiqlaganmi
+                "_picks": [],               # flag hisoblash uchun (javobdan olib tashlanadi)
                 # Yetkazib berish tafsilotlari (birinchi pick'dan — bir checkout bir xil)
                 "uz_method": pick.handoff_mode,
                 "uz_address": pick.delivery_address_uz,
@@ -530,18 +534,21 @@ async def pending_pickups(
             "picked": pick.handoff_status == HandoffStatus.CARRIER_HAS_CUSTODY.value,
         })
         groups[cid]["total_weight_g"] += product.unit_weight_g if product else 0
-        # Tasdiq holati
-        if (
-            pick.handoff_status == HandoffStatus.AWAITING_HANDOFF.value
-            and pick.wh_approved_at is None
-            and pick.wh_rejected_at is None
-        ):
-            groups[cid]["pending_approval"] = True
-        if pick.wh_approved_at is not None:
-            groups[cid]["approved"] = True
+        groups[cid]["_picks"].append(pick)
 
-    # all_picked: faqat CARRIER_HAS_CUSTODY bo'lsa True
+    # Flaglar — o'zaro izchil (ANY emas, ALL). Aralash guruh (ikki checkout) chalkashmaydi:
+    #   pending_approval = HAMMA pick hali tasdiq/rad bo'lmagan (yangi buyurtma)
+    #   approved         = HAMMA pick tasdiqlangan
+    #   all_picked       = HAMMA mahsulot carrier qo'lida (CARRIER_HAS_CUSTODY)
     for g in groups.values():
+        gp = g.pop("_picks")
+        g["pending_approval"] = all(
+            p.handoff_status == HandoffStatus.AWAITING_HANDOFF.value
+            and p.wh_approved_at is None
+            and p.wh_rejected_at is None
+            for p in gp
+        )
+        g["approved"] = all(p.wh_approved_at is not None for p in gp)
         g["all_picked"] = all(item["picked"] for item in g["items"])
 
     return list(groups.values())
@@ -567,6 +574,7 @@ async def _pending_picks_for_carrier(session: AsyncSession, carrier_id: uuid.UUI
             CarrierPick.wh_approved_at.is_(None),
             CarrierPick.wh_rejected_at.is_(None),
         )
+        .with_for_update(of=CarrierPick)  # approve/reject ↔ scan race oldini olish
     )
     return list((await session.execute(stmt)).scalars().all())
 
@@ -619,12 +627,14 @@ async def reject_carrier_picks(
             p.product.status = ProductStatus.AT_TASHKENT_WH.value
     await session.commit()
 
+    import html
+
     from app.infra.telegram.notify import notify_user_id
 
     await notify_user_id(
         session,
         carrier_id,
-        f"❌ Buyurtmangiz ombor tomonidan rad etildi.\nSabab: {reason}",
+        f"❌ Buyurtmangiz ombor tomonidan rad etildi.\nSabab: {html.escape(reason)}",
     )
     return {"rejected": len(picks)}
 
@@ -689,6 +699,8 @@ class QuickIntakeRequest(BaseModel):
     mode: Literal["piece", "box", "textile"] = "piece"
     # box/textile: har konteyner (quti/to'plam) ichidagi dona soni
     items_per_container: int | None = Field(default=None, gt=0)
+    # Tara (quti/qadoq) vazni, gramm — tekstilda kiritiladi (faqat WH/admin/TR ko'radi)
+    tare_weight_g: int | None = Field(default=None, ge=0)
 
 
 @router.post("/quick-intake")
@@ -738,6 +750,7 @@ async def quick_intake(
         barcode_payload=code,
         unit_weight_g=body.weight_g,
         box_items_count=body.quantity,   # ← umumiy dona soni (1 yorliq, N dona)
+        tare_weight_g=(body.tare_weight_g if body.mode == "textile" else None),
         cargo_price_uz_to_tr=body.cargo_price,
         cargo_currency=body.cargo_currency,
         declared_value=body.total_value or None,

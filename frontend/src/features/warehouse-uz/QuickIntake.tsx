@@ -29,6 +29,23 @@ async function openPdf(specId: string) {
   }
 }
 
+function CurrencyToggle({ value, onChange }: { value: 'USD' | 'UZS'; onChange: (c: 'USD' | 'UZS') => void }) {
+  return (
+    <div className="flex shrink-0 overflow-hidden rounded-lg border border-tg-secondary-bg">
+      {(['USD', 'UZS'] as const).map((c) => (
+        <button
+          key={c}
+          type="button"
+          onClick={() => { onChange(c); haptic('light'); }}
+          className={`px-3 py-2 text-sm font-medium ${value === c ? 'bg-tg-button text-white' : 'bg-tg-secondary-bg text-tg-hint'}`}
+        >
+          {c === 'USD' ? '$' : "so'm"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 interface QuickIntakeResponse {
   spec_id: string;
   count: number;
@@ -65,7 +82,9 @@ export default function WarehouseUzQuickIntake() {
   const [grossKg, setGrossKg] = useState('');
   const [tareKg, setTareKg] = useState('');
   const [price, setPrice] = useState('');
+  const [priceCurrency, setPriceCurrency] = useState<'USD' | 'UZS'>('USD');
   const [totalValue, setTotalValue] = useState('');
+  const [valueCurrency, setValueCurrency] = useState<'USD' | 'UZS'>('USD');
   const [photos, setPhotos] = useState<string[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -134,20 +153,22 @@ export default function WarehouseUzQuickIntake() {
     setGrossKg('');
     setTareKg('');
     setPrice('');
+    setPriceCurrency('USD');
     setTotalValue('');
+    setValueCurrency('USD');
     setPhotos([]);
     setPhotoPreviews([]);
     setError(null);
   };
 
-  // Tekstil: sof vazn = to'la − karobka(lar) jami. 1 dona vazni = sof / soni.
+  // Tekstil: mahsulot(sof) vazni va quti(tara) vazni ALOHIDA kiritiladi.
+  // weight_g (unit_weight_g) = sof jami; tare_weight_g = quti jami. Brutto = sof + tara (ko'rsatuv).
   const isContainer = mode !== 'piece';
-  const qtyNum = parseInt(quantity) || 0;
-  const grossNum = parseFloat(grossKg.replace(',', '.')) || 0;
-  const tareNum = parseFloat(tareKg.replace(',', '.')) || 0;  // karobka(lar) jami vazni
-  const netTotalKg = Math.max(0, grossNum - tareNum);
-  const perUnitKg = qtyNum > 0 ? netTotalKg / qtyNum : 0;
-  const unitWeightG = Math.round(perUnitKg * 1000);
+  const netKg = parseFloat(grossKg.replace(',', '.')) || 0;   // mahsulot (sof) jami vazni
+  const tareNum = parseFloat(tareKg.replace(',', '.')) || 0;  // quti(lar) jami vazni
+  const grossTotalKg = netKg + tareNum;                        // brutto (sof + tara)
+  const netWeightG = Math.round(netKg * 1000);
+  const tareWeightG = Math.round(tareNum * 1000);
 
   const intakeMutation = useMutation({
     mutationFn: async () => {
@@ -156,13 +177,14 @@ export default function WarehouseUzQuickIntake() {
       if (!qty || qty < 1 || qty > 10000) throw new Error("Soni 1–10000 oralig'ida bo'lishi kerak");
 
       let wg: number;
+      let tareG: number | null = null;
       if (isContainer) {
-        // Tekstil: to'la vazndan karobka ayrilib, 1 dona vazni topiladi
-        if (!grossNum || grossNum <= 0) throw new Error("To'la vaznni kiriting (kg)");
-        if (tareNum < 0) throw new Error("Karobka vazni manfiy bo'lmaydi");
-        if (netTotalKg <= 0) throw new Error("To'la vazn karobka vaznidan katta bo'lishi kerak");
-        wg = unitWeightG;
+        // Tekstil: mahsulot(sof) vazni va quti(tara) vazni alohida kiritiladi
+        if (!netKg || netKg <= 0) throw new Error("Mahsulot (sof) vaznini kiriting (kg)");
+        if (tareNum < 0) throw new Error("Quti vazni manfiy bo'lmaydi");
+        wg = netWeightG;
         if (!wg || wg < 1) throw new Error("Sof vazn juda kichik — qiymatlarni tekshiring");
+        tareG = tareWeightG;
       } else {
         wg = parseInt(weightG);
         if (!wg || wg < 1) throw new Error("Bir dona og'irligini (gramm) kiriting");
@@ -180,7 +202,10 @@ export default function WarehouseUzQuickIntake() {
           weight_g: wg,
           category: mode === 'textile' ? 'Tekstil' : (category.trim() || null),
           cargo_price: cargoPrice,
+          cargo_currency: priceCurrency,
           total_value: declaredValue,
+          total_value_currency: valueCurrency,
+          tare_weight_g: tareG,
           photos,
           mode,
         }
@@ -367,25 +392,25 @@ export default function WarehouseUzQuickIntake() {
               </div>
             ) : (
               <div className="space-y-2 rounded-xl border border-tg-secondary-bg p-3">
-                <p className="text-xs font-semibold text-tg-text">⚖️ Sof vazn hisoblash</p>
+                <p className="text-xs font-semibold text-tg-text">⚖️ Vazn (alohida)</p>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="mb-1 block text-[11px] text-tg-hint">To'la vazn (jami, kg)</label>
+                    <label className="mb-1 block text-[11px] text-tg-hint">Mahsulot vazni (sof, kg)</label>
                     <input
                       type="text"
                       inputMode="decimal"
-                      placeholder="120"
+                      placeholder="8500"
                       value={grossKg}
                       onChange={(e) => { const v = e.target.value.replace(',', '.'); if (/^\d*\.?\d{0,3}$/.test(v) || v === '') setGrossKg(v); }}
                       className="w-full rounded-lg border border-tg-secondary-bg bg-tg-secondary-bg px-3 py-2 text-sm text-tg-text outline-none focus:border-tg-button"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-[11px] text-tg-hint">Karobka(lar) vazni (kg)</label>
+                    <label className="mb-1 block text-[11px] text-tg-hint">Quti(lar) vazni (kg)</label>
                     <input
                       type="text"
                       inputMode="decimal"
-                      placeholder="5"
+                      placeholder="500"
                       value={tareKg}
                       onChange={(e) => { const v = e.target.value.replace(',', '.'); if (/^\d*\.?\d{0,3}$/.test(v) || v === '') setTareKg(v); }}
                       className="w-full rounded-lg border border-tg-secondary-bg bg-tg-secondary-bg px-3 py-2 text-sm text-tg-text outline-none focus:border-tg-button"
@@ -393,11 +418,8 @@ export default function WarehouseUzQuickIntake() {
                   </div>
                 </div>
                 <div className="rounded-lg bg-tg-secondary-bg px-3 py-2 text-xs text-tg-text">
-                  Sof jami: <b>{netTotalKg.toFixed(2)} kg</b>
-                  {qtyNum > 0 && netTotalKg > 0 && <> · 1 dona: <b>{perUnitKg.toFixed(3)} kg</b></>}
-                  {grossNum > 0 && tareNum > 0 && netTotalKg === 0 && (
-                    <span className="text-red-500"> — karobka vazni to'la vazndan katta</span>
-                  )}
+                  Brutto (sof + quti): <b>{grossTotalKg.toFixed(2)} kg</b>
+                  {tareNum > 0 && <> · quti: <b>{tareNum.toFixed(2)} kg</b></>}
                 </div>
               </div>
             )}
@@ -405,37 +427,43 @@ export default function WarehouseUzQuickIntake() {
             {/* Kargo narxi — carrier katalogida ko'rinadi */}
             <div>
               <label className="mb-1 block text-xs font-medium text-tg-hint">
-                Olib ketish narxi (USD, bir dona)
+                Olib ketish narxi ({mode === 'textile' ? 'jami' : 'bir dona'})
               </label>
-              <input
-                type="text"
-                inputMode="decimal"
-                placeholder="5.00"
-                value={price}
-                onChange={(e) => {
-                  const val = e.target.value.replace(',', '.');
-                  if (/^\d*\.?\d{0,2}$/.test(val) || val === '') setPrice(val);
-                }}
-                className="w-full rounded-lg border border-tg-secondary-bg bg-tg-secondary-bg px-3 py-2 text-sm text-tg-text outline-none focus:border-tg-button"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder={priceCurrency === 'USD' ? '5.00' : '60000'}
+                  value={price}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(',', '.');
+                    if (/^\d*\.?\d{0,2}$/.test(val) || val === '') setPrice(val);
+                  }}
+                  className="flex-1 rounded-lg border border-tg-secondary-bg bg-tg-secondary-bg px-3 py-2 text-sm text-tg-text outline-none focus:border-tg-button"
+                />
+                <CurrencyToggle value={priceCurrency} onChange={(c) => { setPriceCurrency(c); setPrice(''); }} />
+              </div>
             </div>
 
             {/* Mahsulot qiymati — yo'qotilsa/zararlansa yo'lovchi qarzi shu summa */}
             <div>
               <label className="mb-1 block text-xs font-medium text-tg-hint">
-                Mahsulotning narxi (1 dona qiymati, USD)
+                Mahsulotning narxi (1 dona qiymati)
               </label>
-              <input
-                type="text"
-                inputMode="decimal"
-                placeholder="100.00"
-                value={totalValue}
-                onChange={(e) => {
-                  const val = e.target.value.replace(',', '.');
-                  if (/^\d*\.?\d{0,2}$/.test(val) || val === '') setTotalValue(val);
-                }}
-                className="w-full rounded-lg border border-tg-secondary-bg bg-tg-secondary-bg px-3 py-2 text-sm text-tg-text outline-none focus:border-tg-button"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder={valueCurrency === 'USD' ? '100.00' : '1200000'}
+                  value={totalValue}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(',', '.');
+                    if (/^\d*\.?\d{0,2}$/.test(val) || val === '') setTotalValue(val);
+                  }}
+                  className="flex-1 rounded-lg border border-tg-secondary-bg bg-tg-secondary-bg px-3 py-2 text-sm text-tg-text outline-none focus:border-tg-button"
+                />
+                <CurrencyToggle value={valueCurrency} onChange={setValueCurrency} />
+              </div>
               <p className="mt-1 text-[11px] text-tg-hint">
                 Yo'lovchi yukni yo'qotsa/zararlasa shu summa qarz sifatida yoziladi
               </p>

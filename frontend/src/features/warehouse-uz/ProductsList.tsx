@@ -31,6 +31,7 @@ interface Spec {
   sourcing_mode: string;
   box_items_count: number | null;
   total_weight_g: number;
+  total_tare_weight_g: number;
   count: number;
   last_created: string | null;
 }
@@ -42,6 +43,7 @@ interface WarehouseProduct {
   short_code: string;
   status: string;
   unit_weight_g: number;
+  tare_weight_g: number | null;
   label_printed: boolean;
   created_at: string | null;
   qr_payload: string;
@@ -163,6 +165,9 @@ function SpecsView({ onSelect }: { onSelect: (spec: Spec) => void }) {
                   {spec.sourcing_mode !== 'piece' && spec.box_items_count ? (
                     <p className="text-xs font-medium text-tg-button">
                       {spec.sourcing_mode === 'textile' ? '🧵' : '📦'} {spec.box_items_count} dona/{MODE_UNIT[spec.sourcing_mode]} · {(spec.total_weight_g / 1000).toFixed(1)} kg
+                      {spec.total_tare_weight_g > 0 && (
+                        <span className="text-tg-hint"> · quti {(spec.total_tare_weight_g / 1000).toFixed(1)} kg</span>
+                      )}
                     </p>
                   ) : null}
                   {spec.last_created && (
@@ -386,7 +391,9 @@ function ItemsView({ spec, onBack }: { spec: Spec; onBack: () => void }) {
                 <p className="text-sm font-medium">
                   #{idx + 1} — <span className="font-mono">{item.short_code}</span>
                 </p>
-                <p className="text-xs text-tg-hint">{item.unit_weight_g}g</p>
+                <p className="text-xs text-tg-hint">
+                  {item.unit_weight_g}g{item.tare_weight_g ? ` · quti ${item.tare_weight_g}g` : ''}
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 {/* QR tugma */}

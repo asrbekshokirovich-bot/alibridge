@@ -7,6 +7,7 @@ import { Button } from '@shared/components/Button';
 import { LoadingScreen } from '@shared/components/LoadingScreen';
 import { EmptyState } from '@shared/components/EmptyState';
 import { useBackButton, haptic } from '@shared/hooks/useTelegram';
+import { formatMoney } from '@shared/utils/format';
 import { CarrierDetailModal } from '@features/carrier/CarrierDetailModal';
 
 interface PickItem {
@@ -193,7 +194,7 @@ function PickDetailView({
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <p className="text-xs font-semibold text-tg-button">
-                {item.locked_cargo_price} {item.locked_currency}
+                {formatMoney(item.locked_cargo_price, item.locked_currency)}
               </p>
               {item.picked
                 ? <span className="text-sm text-green-500">✅</span>

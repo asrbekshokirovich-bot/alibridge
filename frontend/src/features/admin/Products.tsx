@@ -56,6 +56,8 @@ interface SpecGroup {
   photo: string | null;
   count: number;       // omborda (AT_TASHKENT_WH + IN_BASKET)
   total_count: number; // jami tizimda
+  total_weight_g: number;
+  total_tare_weight_g: number;
   last_created: string;
 }
 
@@ -63,6 +65,8 @@ interface ProductItem {
   id: string;
   short_code: string;
   status: string;
+  unit_weight_g: number;
+  tare_weight_g: number | null;
   label_printed: boolean;
   created_at: string;
   qr_payload: string;
@@ -176,6 +180,11 @@ function SpecsView({
               onClick={() => { haptic('light'); onSelect(spec); }}
             >
               <p className="truncate font-semibold">{spec.title}</p>
+              {spec.total_tare_weight_g > 0 && (
+                <p className="mt-0.5 text-xs font-medium text-tg-button">
+                  {(spec.total_weight_g / 1000).toFixed(1)} kg · quti {(spec.total_tare_weight_g / 1000).toFixed(1)} kg
+                </p>
+              )}
               <p className="mt-0.5 text-xs text-tg-hint">
                 {new Date(spec.last_created).toLocaleDateString('uz-UZ', {
                   day: '2-digit', month: '2-digit', year: 'numeric',
@@ -450,6 +459,11 @@ function ItemsView({
               onClick={(e) => { if (!selectMode) { e.stopPropagation(); haptic('light'); onSelect(item); } }}
             >
               <p className="font-mono font-bold tracking-wider">{item.short_code}</p>
+              {item.tare_weight_g ? (
+                <p className="mt-0.5 text-xs text-tg-hint">
+                  {item.unit_weight_g}g · quti {item.tare_weight_g}g
+                </p>
+              ) : null}
               <div className="mt-0.5 flex items-center gap-1 flex-wrap">
                 <span className={`rounded-full px-2 py-0.5 text-xs font-semibold
                   ${STATUS_COLORS[item.status] ?? 'bg-white/5 text-tg-hint'}`}>

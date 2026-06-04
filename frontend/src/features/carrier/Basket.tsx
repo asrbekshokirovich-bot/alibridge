@@ -8,6 +8,7 @@ import { Button } from '@shared/components/Button';
 import { LoadingScreen } from '@shared/components/LoadingScreen';
 import { EmptyState } from '@shared/components/EmptyState';
 import { useBackButton, haptic } from '@shared/hooks/useTelegram';
+import { formatMoney } from '@shared/utils/format';
 
 interface BasketPick {
   id: string;
@@ -156,7 +157,7 @@ export default function CarrierBasket() {
                 <p className="font-medium text-sm leading-tight truncate">{group.spec_title}</p>
                 <p className="text-xs text-tg-hint mt-0.5">{totalWeight} g</p>
                 <p className="text-sm font-semibold text-accent-blue mt-0.5">
-                  {totalPrice > 0 ? `${totalPrice.toFixed(2)} ${currency}` : '—'}
+                  {totalPrice > 0 ? formatMoney(totalPrice, currency) : '—'}
                 </p>
               </div>
 
@@ -180,7 +181,7 @@ export default function CarrierBasket() {
         <div className="flex justify-between text-sm text-tg-hint">
           <span>{t('basket.total', 'Jami')}:</span>
           <span className="font-bold text-base text-tg-text">
-            {total.toFixed(2)} {currency}
+            {formatMoney(total, currency)}
           </span>
         </div>
         <Button

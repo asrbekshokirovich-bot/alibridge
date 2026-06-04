@@ -59,6 +59,26 @@ async def _assert_weight_within_limit(
         )
 
 
+async def _assert_currency_matches_basket(
+    session: AsyncSession, user_id, product: Product
+) -> None:
+    """Savatda allaqachon boshqa valyutadagi mahsulot bo'lmasin (aralash valyuta taqiqlanadi)."""
+    from app.core.exceptions import ValidationError
+
+    existing = await session.scalar(
+        select(CarrierPick.locked_currency)
+        .where(
+            CarrierPick.carrier_user_id == user_id,
+            CarrierPick.handoff_status == HandoffStatus.IN_BASKET.value,
+        )
+        .limit(1)
+    )
+    if existing and (product.cargo_currency or "USD") != existing:
+        raise ValidationError(
+            message="Savatda boshqa valyutadagi mahsulot bor — avval uni tasdiqlang yoki o'chiring"
+        )
+
+
 class BasketItemResponse(BaseModel):
     id: str
     product_id: str
@@ -164,6 +184,7 @@ async def add_to_basket(
     if product is None:
         raise ValidationError(message="Mahsulot topilmadi")
     await _assert_weight_within_limit(session, user.id, product)
+    await _assert_currency_matches_basket(session, user.id, product)
 
     repo = ProductRepository(session)
     pick = await repo.lock_for_basket(
@@ -202,6 +223,7 @@ async def add_to_basket_by_spec(
 
     # 2. Vazn cheki (umumiy helper)
     await _assert_weight_within_limit(session, user.id, product)
+    await _assert_currency_matches_basket(session, user.id, product)
 
     repo = ProductRepository(session)
     pick = await repo.lock_for_basket(
@@ -288,9 +310,11 @@ async def checkout_basket(
     await session.commit()
 
     # WH UZ xodimlarini xabardor qilish (best-effort — polling'ni to'ldiradi)
+    import html
+
     from app.infra.telegram.notify import notify_role
 
-    name = user.full_name or user.telegram_username or "Yo'lovchi"
+    name = html.escape(user.full_name or user.telegram_username or "Yo'lovchi")
     await notify_role(
         session,
         Role.WAREHOUSE_UZ,

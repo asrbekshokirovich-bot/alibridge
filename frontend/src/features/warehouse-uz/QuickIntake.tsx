@@ -43,7 +43,6 @@ export default function WarehouseUzQuickIntake() {
   const [quantity, setQuantity] = useState('');
   const [weightG, setWeightG] = useState('');
   const [mode, setMode] = useState<'piece' | 'textile'>('piece');
-  const [itemsPerContainer, setItemsPerContainer] = useState('');
   const [grossKg, setGrossKg] = useState('');
   const [tareKg, setTareKg] = useState('');
   const [price, setPrice] = useState('');
@@ -121,7 +120,6 @@ export default function WarehouseUzQuickIntake() {
     setCategory('');
     setQuantity('');
     setWeightG('');
-    setItemsPerContainer('');
     setGrossKg('');
     setTareKg('');
     setPrice('');
@@ -131,15 +129,14 @@ export default function WarehouseUzQuickIntake() {
     setError(null);
   };
 
-  // Rejimga oid hisoblar (box/textile sof vazn kalkulyatori)
+  // Tekstil: sof vazn = to'la − karobka(lar) jami. 1 dona vazni = sof / soni.
   const isContainer = mode !== 'piece';
-  const containerWord = "to'plam";
   const qtyNum = parseInt(quantity) || 0;
   const grossNum = parseFloat(grossKg.replace(',', '.')) || 0;
-  const tareNum = parseFloat(tareKg.replace(',', '.')) || 0;
-  const netTotalKg = Math.max(0, grossNum - tareNum * qtyNum);
-  const perContainerKg = qtyNum > 0 ? netTotalKg / qtyNum : 0;
-  const containerWeightG = Math.round(perContainerKg * 1000);
+  const tareNum = parseFloat(tareKg.replace(',', '.')) || 0;  // karobka(lar) jami vazni
+  const netTotalKg = Math.max(0, grossNum - tareNum);
+  const perUnitKg = qtyNum > 0 ? netTotalKg / qtyNum : 0;
+  const unitWeightG = Math.round(perUnitKg * 1000);
 
   const intakeMutation = useMutation({
     mutationFn: async () => {
@@ -148,12 +145,13 @@ export default function WarehouseUzQuickIntake() {
       if (!qty || qty < 1 || qty > 10000) throw new Error("Soni 1–10000 oralig'ida bo'lishi kerak");
 
       let wg: number;
-      let itemsPer: number | null = null;
       if (isContainer) {
-        itemsPer = parseInt(itemsPerContainer);
-        if (!itemsPer || itemsPer < 1) throw new Error(`Har ${containerWord}dagi dona sonini kiriting`);
-        wg = containerWeightG;
-        if (!wg || wg < 1) throw new Error("Sof vaznni to'g'ri kiriting (to'la vazn bo'sh quti×sonidan katta bo'lsin)");
+        // Tekstil: to'la vazndan karobka ayrilib, 1 dona vazni topiladi
+        if (!grossNum || grossNum <= 0) throw new Error("To'la vaznni kiriting (kg)");
+        if (tareNum < 0) throw new Error("Karobka vazni manfiy bo'lmaydi");
+        if (netTotalKg <= 0) throw new Error("To'la vazn karobka vaznidan katta bo'lishi kerak");
+        wg = unitWeightG;
+        if (!wg || wg < 1) throw new Error("Sof vazn juda kichik — qiymatlarni tekshiring");
       } else {
         wg = parseInt(weightG);
         if (!wg || wg < 1) throw new Error("Bir dona og'irligini (gramm) kiriting");
@@ -174,7 +172,6 @@ export default function WarehouseUzQuickIntake() {
           total_value: declaredValue,
           photos,
           mode,
-          items_per_container: itemsPer,
         }
       );
       return data;
@@ -329,38 +326,21 @@ export default function WarehouseUzQuickIntake() {
               />
             </div>
 
-            {/* Soni — rejimga qarab dona/to'plam */}
+            {/* Soni (dona) — umumiy mahsulot soni */}
             <div>
               <label className="mb-1 block text-xs font-medium text-tg-hint">
-                {mode === 'textile' ? "To'plam soni" : 'Soni (dona)'}
+                Soni (dona)
               </label>
               <input
                 type="number"
                 min={1}
                 max={10000}
-                placeholder={isContainer ? '10' : '30'}
+                placeholder="30"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
                 className="w-full rounded-lg border border-tg-secondary-bg bg-tg-secondary-bg px-3 py-2 text-sm text-tg-text outline-none focus:border-tg-button"
               />
             </div>
-
-            {/* Har konteyner (quti/to'plam) dagi dona soni */}
-            {isContainer && (
-              <div>
-                <label className="mb-1 block text-xs font-medium text-tg-hint">
-                  Har {containerWord}dagi dona soni
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  placeholder="5"
-                  value={itemsPerContainer}
-                  onChange={(e) => setItemsPerContainer(e.target.value)}
-                  className="w-full rounded-lg border border-tg-secondary-bg bg-tg-secondary-bg px-3 py-2 text-sm text-tg-text outline-none focus:border-tg-button"
-                />
-              </div>
-            )}
 
             {/* Vazn — dona: bir dona (g); quti/tekstil: sof vazn kalkulyatori */}
             {!isContainer ? (
@@ -393,11 +373,11 @@ export default function WarehouseUzQuickIntake() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-[11px] text-tg-hint">1 ta bo'sh {containerWord} (kg)</label>
+                    <label className="mb-1 block text-[11px] text-tg-hint">Karobka(lar) vazni (kg)</label>
                     <input
                       type="text"
                       inputMode="decimal"
-                      placeholder="0.5"
+                      placeholder="5"
                       value={tareKg}
                       onChange={(e) => { const v = e.target.value.replace(',', '.'); if (/^\d*\.?\d{0,3}$/.test(v) || v === '') setTareKg(v); }}
                       className="w-full rounded-lg border border-tg-secondary-bg bg-tg-secondary-bg px-3 py-2 text-sm text-tg-text outline-none focus:border-tg-button"
@@ -405,9 +385,10 @@ export default function WarehouseUzQuickIntake() {
                   </div>
                 </div>
                 <div className="rounded-lg bg-tg-secondary-bg px-3 py-2 text-xs text-tg-text">
-                  Sof jami: <b>{netTotalKg.toFixed(2)} kg</b> · 1 {containerWord}: <b>{perContainerKg.toFixed(2)} kg</b>
-                  {grossNum > 0 && qtyNum > 0 && netTotalKg === 0 && (
-                    <span className="text-red-500"> — to'la vazn yetarli emas</span>
+                  Sof jami: <b>{netTotalKg.toFixed(2)} kg</b>
+                  {qtyNum > 0 && netTotalKg > 0 && <> · 1 dona: <b>{perUnitKg.toFixed(3)} kg</b></>}
+                  {grossNum > 0 && tareNum > 0 && netTotalKg === 0 && (
+                    <span className="text-red-500"> — karobka vazni to'la vazndan katta</span>
                   )}
                 </div>
               </div>

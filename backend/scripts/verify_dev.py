@@ -236,10 +236,11 @@ async def run_checks(tokens: dict[str, str], ids: dict) -> None:
             check("checkout rejects missing address (4xx)", 400 <= r.status_code < 500, r)
 
         # ── Intake rejimlari: tekstil / quti / validatsiya ──────────────
+        # Tekstil endi items_per_container'siz (har Product = 1 dona, vazn frontda hisoblanadi)
         r = await c.post(f"{BASE}/warehouse/uz/quick-intake", headers=hdr(tokens["warehouse_uz"]),
             json={"name": "Verify tekstil", "quantity": 5, "weight_g": 5000, "mode": "textile",
-                  "items_per_container": 5, "cargo_price": 10, "total_value": 100, "photos": []})
-        check("textile intake (201/200)", r.status_code in (200, 201), r)
+                  "cargo_price": 10, "total_value": 100, "photos": []})
+        check("textile intake (items_per_container'siz)", r.status_code in (200, 201), r)
         r = await c.post(f"{BASE}/warehouse/uz/quick-intake", headers=hdr(tokens["warehouse_uz"]),
             json={"name": "Verify quti", "quantity": 3, "weight_g": 8000, "mode": "box",
                   "items_per_container": 20, "cargo_price": 5, "total_value": 50, "photos": []})

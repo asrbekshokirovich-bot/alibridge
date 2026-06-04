@@ -707,14 +707,15 @@ async def quick_intake(
 
     signer = QrSigner(secret=settings.qr_hmac_secret)
 
-    # Rejim: box/textile → har Product = 1 konteyner (ichida items_per_container dona)
-    is_container = body.mode in ("box", "textile")
-    if is_container and not body.items_per_container:
+    # box (legacy): har Product = 1 konteyner, ichida items_per_container dona.
+    # piece/textile: har Product = 1 dona (weight_g = 1 dona vazni). Tekstilda
+    # vazn frontda to'la−karobka dan hisoblanadi.
+    box_items = body.items_per_container if body.mode == "box" else None
+    if body.mode == "box" and not box_items:
         raise HTTPException(
             status_code=400,
-            detail="Quti/to'plam rejimi uchun ichidagi dona sonini kiriting",
+            detail="Quti rejimi uchun ichidagi dona sonini kiriting",
         )
-    box_items = body.items_per_container if is_container else None
     # Tekstil avtomatik "Tekstil" kategoriyasiga tushadi
     category = "Tekstil" if body.mode == "textile" else body.category
 

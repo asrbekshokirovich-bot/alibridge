@@ -45,6 +45,14 @@ from app.infra.db.models.user import User
 from app.services.intake_shipment import IntakeShipmentService
 
 
+# Faqat shu holatlardagi mahsulotni WH xodimi o'chira oladi — ya'ni hali
+# omborda turgan. Carrier olib ketgan (WITH_CARRIER) va undan keyingi holatlar
+# custody/payout/dispute tarixiga bog'liq, o'chirilsa moliyaviy yozuvlar buziladi.
+_DELETABLE_STATUSES: frozenset[str] = frozenset(
+    {ProductStatus.AT_TASHKENT_WH.value, ProductStatus.IN_BASKET.value}
+)
+
+
 def _generate_short_code() -> str:
     """8 ta alphanumeric kod — kriptografik xavfsiz PRNG (MED-1 fix).
     I, O, 0, 1 chalkashmasligi uchun chiqarilgan."""
@@ -784,9 +792,18 @@ async def delete_spec_and_products(
     from app.infra.db.models.dispute import Dispute
     from app.infra.db.models.payout import PayoutLine
 
-    product_ids = (await session.execute(
+    # Spec ichida carrier olib ketgan mahsulot bo'lsa — butun katalogni
+    # o'chirish custody/payout tarixini buzadi. Faqat omboridagilarni o'chiramiz.
+    all_ids = (await session.execute(
         select(Product.id).where(Product.sourcing_spec_id == spec_id)
     )).scalars().all()
+    product_ids = (await session.execute(
+        select(Product.id).where(
+            Product.sourcing_spec_id == spec_id,
+            Product.status.in_(_DELETABLE_STATUSES),
+        )
+    )).scalars().all()
+    remaining = len(all_ids) - len(product_ids)
 
     if product_ids:
         pick_ids = (await session.execute(
@@ -799,11 +816,13 @@ async def delete_spec_and_products(
         await session.execute(sa_delete(Dispute).where(Dispute.product_id.in_(product_ids)))
         await session.execute(sa_delete(Product).where(Product.id.in_(product_ids)))
 
-    spec = await session.get(SourcingSpec, spec_id)
-    if spec:
-        await session.delete(spec)
+    # Spec'ni faqat unga bog'liq mahsulot qolmagandagina o'chiramiz.
+    if remaining == 0:
+        spec = await session.get(SourcingSpec, spec_id)
+        if spec:
+            await session.delete(spec)
     await session.commit()
-    return {"deleted": True, "products_count": len(product_ids)}
+    return {"deleted": True, "products_count": len(product_ids), "remaining": remaining}
 
 
 @router.delete("/products/bulk", status_code=200)
@@ -823,22 +842,32 @@ async def bulk_delete_warehouse_products(
     if len(raw_ids) > 500:   # MED-9 fix: maksimal 500 ta
         raise HTTPException(status_code=400, detail="Bir vaqtda maksimal 500 ta o'chirish mumkin")
     try:
-        product_ids = [uuid.UUID(i) for i in raw_ids]
+        requested_ids = [uuid.UUID(i) for i in raw_ids]
     except ValueError:
         raise HTTPException(status_code=400, detail="UUID format noto'g'ri")
 
-    pick_ids = (await session.execute(
-        select(CarrierPick.id).where(CarrierPick.product_id.in_(product_ids))
+    # Faqat omborda turgan mahsulotlarni o'chirish — carrier'dagilar o'tkazib
+    # yuboriladi (custody/payout tarixi buzilmasligi uchun).
+    product_ids = (await session.execute(
+        select(Product.id).where(
+            Product.id.in_(requested_ids),
+            Product.status.in_(_DELETABLE_STATUSES),
+        )
     )).scalars().all()
-    if pick_ids:
-        await session.execute(sa_delete(PayoutLine).where(PayoutLine.carrier_pick_id.in_(pick_ids)))
+    skipped = len(requested_ids) - len(product_ids)
 
-    await session.execute(sa_delete(CarrierPick).where(CarrierPick.product_id.in_(product_ids)))
-    await session.execute(sa_delete(CustodyEvent).where(CustodyEvent.product_id.in_(product_ids)))
-    await session.execute(sa_delete(Dispute).where(Dispute.product_id.in_(product_ids)))
-    result = await session.execute(sa_delete(Product).where(Product.id.in_(product_ids)))
+    if product_ids:
+        pick_ids = (await session.execute(
+            select(CarrierPick.id).where(CarrierPick.product_id.in_(product_ids))
+        )).scalars().all()
+        if pick_ids:
+            await session.execute(sa_delete(PayoutLine).where(PayoutLine.carrier_pick_id.in_(pick_ids)))
+        await session.execute(sa_delete(CarrierPick).where(CarrierPick.product_id.in_(product_ids)))
+        await session.execute(sa_delete(CustodyEvent).where(CustodyEvent.product_id.in_(product_ids)))
+        await session.execute(sa_delete(Dispute).where(Dispute.product_id.in_(product_ids)))
+        await session.execute(sa_delete(Product).where(Product.id.in_(product_ids)))
     await session.commit()
-    return {"deleted": result.rowcount}
+    return {"deleted": len(product_ids), "skipped": skipped}
 
 
 @router.delete("/products/{product_id}", status_code=200)
@@ -855,6 +884,15 @@ async def delete_product(
     product = await session.get(Product, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Mahsulot topilmadi")
+
+    # Faqat omborda turgan mahsulotni o'chirish mumkin. Carrier olib ketgan
+    # (yoki undan keyingi holat) mahsulotni o'chirish custody/payout/dispute
+    # tarixini buzadi — bloklanadi.
+    if product.status not in _DELETABLE_STATUSES:
+        raise HTTPException(
+            status_code=409,
+            detail="Bu mahsulot omborda emas (yo'lovchida/yetkazilmoqda) — o'chirib bo'lmaydi",
+        )
 
     pick_ids = (await session.execute(
         select(CarrierPick.id).where(CarrierPick.product_id == product_id)

@@ -139,22 +139,33 @@ async def _run_in_process_worker():
 
     from app.workers.main import WorkerSettings
 
-    worker = Worker(
-        functions=WorkerSettings.functions,
-        cron_jobs=WorkerSettings.cron_jobs,
-        redis_settings=WorkerSettings.redis_settings,
-        max_jobs=WorkerSettings.max_jobs,
-        job_timeout=WorkerSettings.job_timeout,
-        handle_signals=False,  # FastAPI lifespan signallarni boshqaradi
-    )
     log.info("in_process_worker_starting")
-    try:
-        await worker.async_run()
-    except asyncio.CancelledError:
-        await worker.close()
-        raise
-    except Exception as e:
-        log.error("in_process_worker_error", error=str(e))
+    backoff = 5
+    # Worker crash bo'lsa (masalan Redis vaqtincha uzilsa) qayta ishga tushadi —
+    # aks holda fon cron'lar (basket TTL, FX) jim o'lib qoladi.
+    while True:
+        worker = Worker(
+            functions=WorkerSettings.functions,
+            cron_jobs=WorkerSettings.cron_jobs,
+            redis_settings=WorkerSettings.redis_settings,
+            max_jobs=WorkerSettings.max_jobs,
+            job_timeout=WorkerSettings.job_timeout,
+            handle_signals=False,  # FastAPI lifespan signallarni boshqaradi
+        )
+        try:
+            await worker.async_run()
+            break  # toza shutdown (CancelledError tashqaridan keladi)
+        except asyncio.CancelledError:
+            await worker.close()
+            raise
+        except Exception as e:
+            log.error("in_process_worker_error", error=str(e), hint="qayta ishga tushirilmoqda")
+            try:
+                await worker.close()
+            except Exception:
+                pass
+            await asyncio.sleep(backoff)
+            backoff = min(backoff * 2, 60)
 
 
 # ============================================

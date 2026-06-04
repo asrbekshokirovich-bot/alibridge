@@ -251,6 +251,34 @@ async def run_checks(tokens: dict[str, str], ids: dict) -> None:
             json={"name": "Verify bad box", "quantity": 2, "weight_g": 1000, "mode": "box", "photos": []})
         check("box intake without items rejected (4xx)", 400 <= r.status_code < 500, r)
 
+        # ── DELETE guard: omboridagi o'chsin, carrier'dagi bloklansin ────
+        r = await c.post(f"{BASE}/warehouse/uz/quick-intake", headers=hdr(tokens["warehouse_uz"]),
+            json={"name": "Verify delete OK", "quantity": 1, "weight_g": 200,
+                  "category": "Test", "cargo_price": 1, "total_value": 10, "photos": []})
+        del_prod = r.json().get("products", [{}])[0].get("id") if r.status_code in (200, 201) else None
+        if del_prod:
+            r = await c.delete(f"{BASE}/warehouse/uz/products/{del_prod}", headers=hdr(tokens["warehouse_uz"]))
+            check("delete omboridagi mahsulot (200)", r.status_code == 200, r)
+
+        # Yangi mahsulot → carrier savatiga → checkout (WITH... emas, lekin IN_BASKET emas:
+        # approve qilingach pick bor, lekin o'chirish guard product.status bo'yicha).
+        # Carrier'ga berilgan (WITH_CARRIER) holatni simulyatsiya qilish uchun DB'da status o'zgartiramiz.
+        r = await c.post(f"{BASE}/warehouse/uz/quick-intake", headers=hdr(tokens["warehouse_uz"]),
+            json={"name": "Verify delete BLOCK", "quantity": 1, "weight_g": 200,
+                  "category": "Test", "cargo_price": 1, "total_value": 10, "photos": []})
+        block_prod = r.json().get("products", [{}])[0].get("id") if r.status_code in (200, 201) else None
+        if block_prod:
+            from app.infra.db.session import AsyncSessionLocal as _S
+            from app.infra.db.models.product import Product as _P
+            from app.domain.enums import ProductStatus as _PS
+            import uuid as _uuid
+            async with _S() as _s:
+                _p = await _s.get(_P, _uuid.UUID(block_prod))
+                _p.status = _PS.WITH_CARRIER.value
+                await _s.commit()
+            r = await c.delete(f"{BASE}/warehouse/uz/products/{block_prod}", headers=hdr(tokens["warehouse_uz"]))
+            check("delete carrier'dagi mahsulot bloklandi (409)", r.status_code == 409, r)
+
         # ── Role-guard smoke ────────────────────────────────────────────
         r = await c.get(f"{BASE}/admin/debts?status=all", headers=hdr(tokens["orderer"]))
         check("role-guard: orderer → admin (403)", r.status_code == 403, r)

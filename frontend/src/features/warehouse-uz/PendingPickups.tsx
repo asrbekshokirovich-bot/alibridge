@@ -113,7 +113,8 @@ function PickDetailView({
   busy: boolean;
   error: string | null;
 }) {
-  useBackButton(onBack);
+  // Orqaga tugmasi asosiy komponentda boshqariladi (poyga oldini olish uchun).
+  // Bu yerda ekran ichida ko'rinadigan qo'l bilan qaytish tugmasi ham bor.
   const pickedCount = group.items.filter((i) => i.picked).length;
   const total = group.items.length;
   const allDone = group.all_picked;
@@ -123,6 +124,14 @@ function PickDetailView({
 
   return (
     <div className="space-y-3 p-4 pb-8">
+      {/* Ekran ichidagi orqaga tugmasi — Telegram back tugmasiga qo'shimcha */}
+      <button
+        onClick={() => { haptic('light'); onBack(); }}
+        className="flex items-center gap-1 text-sm font-semibold text-accent-blue active:opacity-70"
+      >
+        ← Orqaga
+      </button>
+
       {/* Sarlavha — yo'lovchi + ma'lumot tugmasi */}
       <Card className="border border-white/10 bg-tg-sectionBg">
         <div className="flex items-center justify-between">
@@ -271,7 +280,16 @@ export default function PendingPickups() {
   const [openedCarrier, setOpenedCarrier] = useState<string | null>(null);  // ochilgan mahsulotlar ekrani
   const [actionError, setActionError] = useState<string | null>(null);
 
-  useBackButton(() => navigate(-1));
+  // Orqaga tugmasi BITTA joyda boshqariladi (global handlerRef poyga qilmasin):
+  // mahsulotlar ekrani ochiq bo'lsa → ro'yxatga qayt; aks holda → menyuga.
+  useBackButton(() => {
+    if (openedCarrier) {
+      setOpenedCarrier(null);
+      setActionError(null);
+    } else {
+      navigate(-1);
+    }
+  });
 
   const { data, isLoading } = useQuery<CarrierGroup[]>({
     queryKey: ['pending-pickups'],

@@ -170,3 +170,4 @@ site/
 .next/
 .nuxt/
 .svelte-kit/
+RENDER_DEPLOY.md

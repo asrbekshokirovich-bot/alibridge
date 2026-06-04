@@ -707,16 +707,8 @@ async def quick_intake(
 
     signer = QrSigner(secret=settings.qr_hmac_secret)
 
-    # box (legacy): har Product = 1 konteyner, ichida items_per_container dona.
-    # piece/textile: har Product = 1 dona (weight_g = 1 dona vazni). Tekstilda
-    # vazn frontda to'la−karobka dan hisoblanadi.
-    box_items = body.items_per_container if body.mode == "box" else None
-    if body.mode == "box" and not box_items:
-        raise HTTPException(
-            status_code=400,
-            detail="Quti rejimi uchun ichidagi dona sonini kiriting",
-        )
-    # Tekstil avtomatik "Tekstil" kategoriyasiga tushadi
+    # Tezkor qabul: BITTA yorliq (to'plam). box_items_count = umumiy dona soni.
+    # Tekstil avtomatik "Tekstil" kategoriyasiga tushadi.
     category = "Tekstil" if body.mode == "textile" else body.category
 
     # 1. SourcingSpec — bu batch uchun "katalog" yozuvi
@@ -731,54 +723,47 @@ async def quick_intake(
     session.add(spec)
     await session.flush()  # spec.id olish uchun
 
-    # 2. N ta Product yaratish
-    products_out = []
-    for _ in range(body.quantity):
-        pid = uuid.uuid4()
-        code = _generate_short_code()
-        qr_payload = signer.encode(pid)
-
-        now = datetime.now(timezone.utc)
-        session.add(Product(
-            id=pid,
-            sourcing_spec_id=spec.id,
-            order_line_id=None,  # standalone — ordersiz
-            short_code=code,
-            qr_payload=qr_payload,
-            barcode_payload=code,
-            unit_weight_g=body.weight_g,
-            box_items_count=box_items,
-            cargo_price_uz_to_tr=body.cargo_price,
-            cargo_currency=body.cargo_currency,
-            declared_value=body.total_value or None,
-            declared_currency=body.total_value_currency,
-            intake_photo_url=(body.photos[0] if body.photos else None),
-            status=ProductStatus.AT_TASHKENT_WH.value,
-            custody_holder_type=HolderType.TASHKENT_WH.value,
-            custody_holder_id=current_user.id,
-            label_attached_at=now,   # QR yaratilgan = label tayyor
-        ))
-        session.add(CustodyEvent(
-            id=uuid.uuid4(),
-            product_id=pid,
-            event_type=CustodyEventType.CREATED.value,
-            from_holder_type=None,
-            from_holder_id=None,
-            to_holder_type=HolderType.TASHKENT_WH.value,
-            to_holder_id=current_user.id,
-            actor_user_id=current_user.id,
-        ))
-        products_out.append({
-            "id": str(pid),
-            "short_code": code,
-            "qr_payload": qr_payload,
-        })
+    # 2. BITTA Product — to'plam sifatida. box_items_count = umumiy dona soni.
+    # Har dona uchun alohida yorliq emas, bitta yorliq (nomi+sana+soni+barcode).
+    pid = uuid.uuid4()
+    code = _generate_short_code()
+    qr_payload = signer.encode(pid)
+    now = datetime.now(timezone.utc)
+    session.add(Product(
+        id=pid,
+        sourcing_spec_id=spec.id,
+        order_line_id=None,  # standalone — ordersiz
+        short_code=code,
+        qr_payload=qr_payload,
+        barcode_payload=code,
+        unit_weight_g=body.weight_g,
+        box_items_count=body.quantity,   # ← umumiy dona soni (1 yorliq, N dona)
+        cargo_price_uz_to_tr=body.cargo_price,
+        cargo_currency=body.cargo_currency,
+        declared_value=body.total_value or None,
+        declared_currency=body.total_value_currency,
+        intake_photo_url=(body.photos[0] if body.photos else None),
+        status=ProductStatus.AT_TASHKENT_WH.value,
+        custody_holder_type=HolderType.TASHKENT_WH.value,
+        custody_holder_id=current_user.id,
+        label_attached_at=now,
+    ))
+    session.add(CustodyEvent(
+        id=uuid.uuid4(),
+        product_id=pid,
+        event_type=CustodyEventType.CREATED.value,
+        from_holder_type=None,
+        from_holder_id=None,
+        to_holder_type=HolderType.TASHKENT_WH.value,
+        to_holder_id=current_user.id,
+        actor_user_id=current_user.id,
+    ))
 
     await session.commit()
     return {
         "spec_id": str(spec.id),
         "count": body.quantity,
-        "products": products_out,
+        "products": [{"id": str(pid), "short_code": code, "qr_payload": qr_payload}],
     }
 
 
@@ -983,19 +968,22 @@ async def download_spec_labels_pdf(
 
             date_str = _fmt_date(product.created_at)
             title_short = _fit(spec_title, 26)
+            qty = product.box_items_count or 1
+            qty_str = f"{qty} dona" if qty > 1 else ""
 
             # Label chegarasi
             c.setStrokeColor(colors.lightgrey)
             c.setLineWidth(0.3)
             c.rect(x, y, LABEL_W, LABEL_H)
 
-            # ── Tepada: nomi + sana ──
+            # ── Tepada: nomi + sana + soni ──
             c.setFillColor(colors.black)
             c.setFont("Helvetica-Bold", 7)
             c.drawCentredString(cx, y + LABEL_H - 5 * mm, title_short)
             c.setFont("Helvetica", 6)
             c.setFillColor(colors.grey)
-            c.drawCentredString(cx, y + LABEL_H - 8.5 * mm, date_str)
+            top_meta = f"{date_str}  ·  {qty_str}" if qty_str else date_str
+            c.drawCentredString(cx, y + LABEL_H - 8.5 * mm, top_meta)
 
             # ── O'rtada: Code128 barcode ──
             bc = Code128(
@@ -1017,13 +1005,13 @@ async def download_spec_labels_pdf(
                 bc_w = bc.width
             bc.drawOn(c, x + (LABEL_W - bc_w) / 2, y + LABEL_H / 2 - 5 * mm)
 
-            # ── Pastda: nomi + sana (takror) ──
+            # ── Pastda: nomi + sana + soni (takror) ──
             c.setFillColor(colors.black)
             c.setFont("Helvetica-Bold", 7)
             c.drawCentredString(cx, y + 5 * mm, title_short)
             c.setFont("Helvetica", 6)
             c.setFillColor(colors.grey)
-            c.drawCentredString(cx, y + 2 * mm, date_str)
+            c.drawCentredString(cx, y + 2 * mm, top_meta)
 
         if page_start + COLS * ROWS < len(rows):
             c.showPage()
@@ -1039,35 +1027,55 @@ async def download_spec_labels_pdf(
     )
 
 
+def _barcode_png(payload: str) -> bytes:
+    """Code128 barcode'ni PNG bytes sifatida qaytaradi (ekranda ko'rsatish uchun)."""
+    from io import BytesIO
+    import barcode
+    from barcode.writer import ImageWriter
+
+    bc = barcode.get("code128", payload, writer=ImageWriter())
+    buf = BytesIO()
+    bc.write(buf, options={
+        "module_height": 12.0,
+        "font_size": 10,
+        "text_distance": 3.0,
+        "quiet_zone": 2.0,
+    })
+    return buf.getvalue()
+
+
 @router.get("/quick-intake/{spec_id}/labels")
 async def quick_intake_labels(
     spec_id: str,
     _: User = Depends(require_role(Role.WAREHOUSE_UZ)),
     session: AsyncSession = Depends(get_db_session),
 ) -> list[dict]:
-    """Tezkor qabul uchun QR kod rasmlari (PNG base64).
+    """Tezkor qabul uchun barcode rasmlari (PNG base64).
 
-    Har bir mahsulot uchun: id, short_code, qr_image_b64
+    Har bir yorliq uchun: id, short_code, name, date, qty, barcode_image_b64
     """
-    from app.infra.qr.signer import generate_qr_image
-
     stmt = (
-        select(Product)
+        select(Product, SourcingSpec.title.label("spec_title"))
+        .outerjoin(SourcingSpec, Product.sourcing_spec_id == SourcingSpec.id)
         .where(Product.sourcing_spec_id == uuid.UUID(spec_id))
         .order_by(Product.created_at.asc())
     )
-    products = (await session.execute(stmt)).scalars().all()
+    rows = (await session.execute(stmt)).all()
 
-    if not products:
+    if not rows:
         raise HTTPException(status_code=404, detail="Bu spec uchun mahsulot topilmadi")
 
     result = []
-    for p in products:
-        png_bytes = generate_qr_image(p.qr_payload, box_size=8, border=2)
+    for row in rows:
+        p = row.Product
+        png_bytes = _barcode_png(p.barcode_payload or p.short_code)
         result.append({
             "id": str(p.id),
             "short_code": p.short_code,
-            "qr_image_b64": base64.b64encode(png_bytes).decode("ascii"),
+            "name": row.spec_title or "Mahsulot",
+            "date": p.created_at.strftime("%d.%m.%Y") if p.created_at else "",
+            "qty": p.box_items_count or 1,
+            "barcode_image_b64": base64.b64encode(png_bytes).decode("ascii"),
         })
     return result
 

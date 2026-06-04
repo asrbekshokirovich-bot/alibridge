@@ -247,16 +247,22 @@ async def run_checks(tokens: dict[str, str], ids: dict) -> None:
             r = await c.get(f"{BASE}/warehouse/uz/products/specs/{textile_spec}/pdf", headers=hdr(tokens["warehouse_uz"]))
             is_pdf = r.status_code == 200 and r.content[:4] == b"%PDF"
             check("barcode PDF yaratiladi (%PDF)", is_pdf, r)
+        # Tezkor qabul endi BITTA Product (to'plam): box_items_count = soni
         r = await c.post(f"{BASE}/warehouse/uz/quick-intake", headers=hdr(tokens["warehouse_uz"]),
-            json={"name": "Verify quti", "quantity": 3, "weight_g": 8000, "mode": "box",
-                  "items_per_container": 20, "cargo_price": 5, "total_value": 50, "photos": []})
-        check("box intake (201/200)", r.status_code in (200, 201), r)
+            json={"name": "Verify dona-500", "quantity": 500, "weight_g": 200,
+                  "cargo_price": 5, "total_value": 50, "photos": []})
+        single_ok = r.status_code in (200, 201) and len(r.json().get("products", [])) == 1
+        check("500 dona → 1 yorliq (bitta Product)", single_ok, r)
+        bulk_spec = r.json().get("spec_id") if r.status_code in (200, 201) else None
+        # Barcode labels endpoint — barcode_image_b64 + qty qaytarsin
+        if bulk_spec:
+            r = await c.get(f"{BASE}/warehouse/uz/quick-intake/{bulk_spec}/labels", headers=hdr(tokens["warehouse_uz"]))
+            lbl_ok = (r.status_code == 200 and len(r.json()) == 1
+                      and "barcode_image_b64" in r.json()[0] and r.json()[0].get("qty") == 500)
+            check("barcode labels (qty=500, barcode rasm)", lbl_ok, r)
         r = await c.get(f"{BASE}/warehouse/uz/products/specs", headers=hdr(tokens["warehouse_uz"]))
         has_mode = r.status_code == 200 and (len(r.json()) == 0 or "sourcing_mode" in r.json()[0])
         check("wh specs returns sourcing_mode", has_mode, r)
-        r = await c.post(f"{BASE}/warehouse/uz/quick-intake", headers=hdr(tokens["warehouse_uz"]),
-            json={"name": "Verify bad box", "quantity": 2, "weight_g": 1000, "mode": "box", "photos": []})
-        check("box intake without items rejected (4xx)", 400 <= r.status_code < 500, r)
 
         # ── DELETE guard: omboridagi o'chsin, carrier'dagi bloklansin ────
         r = await c.post(f"{BASE}/warehouse/uz/quick-intake", headers=hdr(tokens["warehouse_uz"]),

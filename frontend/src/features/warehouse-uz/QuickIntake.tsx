@@ -12,6 +12,22 @@ import { Card } from '@shared/components/Card';
 import { Button } from '@shared/components/Button';
 import { LoadingScreen } from '@shared/components/LoadingScreen';
 import { useBackButton, haptic } from '@shared/hooks/useTelegram';
+import { useAuthStore } from '@shared/store/auth';
+
+async function openPdf(specId: string) {
+  if (!useAuthStore.getState().token) { alert('Avval login qiling'); return; }
+  try {
+    const { data } = await api.post<{ token: string }>('/auth/download-token');
+    const url = `${window.location.origin}/api/v1/warehouse/uz/products/specs/${specId}/pdf?token=${encodeURIComponent(data.token)}`;
+    if ((window as any).Telegram?.WebApp?.openLink) {
+      (window as any).Telegram.WebApp.openLink(url);
+    } else {
+      window.open(url, '_blank');
+    }
+  } catch {
+    alert("Yuklab olishda xatolik. Qayta urinib ko'ring.");
+  }
+}
 
 interface QuickIntakeResponse {
   spec_id: string;
@@ -22,7 +38,10 @@ interface QuickIntakeResponse {
 interface LabelItem {
   id: string;
   short_code: string;
-  qr_image_b64: string;
+  name: string;
+  date: string;
+  qty: number;
+  barcode_image_b64: string;
 }
 
 export default function WarehouseUzQuickIntake() {
@@ -53,14 +72,6 @@ export default function WarehouseUzQuickIntake() {
   const [specId, setSpecId] = useState<string | null>(null);
   const [createdCount, setCreatedCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
-
-  // Bulk tanlov
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [selectMode, setSelectMode] = useState(false);
-  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
-  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   useBackButton(() => {
     if (step === 'result') {
@@ -180,9 +191,6 @@ export default function WarehouseUzQuickIntake() {
       haptic('success');
       setSpecId(data.spec_id);
       setCreatedCount(data.count);
-      setDeletedIds(new Set());
-      setSelectedIds(new Set());
-      setSelectMode(false);
       resetForm();
       setStep('result');
     },
@@ -199,7 +207,7 @@ export default function WarehouseUzQuickIntake() {
         <div className="py-2">
           <h2 className="text-lg font-bold">⚡ Tezkor qabul</h2>
           <p className="text-sm text-tg-hint">
-            Mahsulot ma'lumotlarini kiriting — QR kodlar avtomatik yaratiladi
+            Mahsulot ma'lumotlarini kiriting — barcode avtomatik yaratiladi
           </p>
         </div>
 
@@ -447,57 +455,19 @@ export default function WarehouseUzQuickIntake() {
           loading={intakeMutation.isPending}
           onClick={() => intakeMutation.mutate()}
         >
-          ✅ Qabul qilish va QR yaratish
+          ✅ Qabul qilish va barcode yaratish
         </Button>
       </div>
     );
   }
 
-  // ── Result ekrani — QR kodlar ───────────────────────────────────────────────
+  // ── Result ekrani — bitta barcode yorliq ────────────────────────────────────
   if (labelsLoading) return <LoadingScreen />;
 
-  const visibleLabels = labels?.filter((item) => !deletedIds.has(item.id)) ?? [];
-  const allSelected = visibleLabels.length > 0 && selectedIds.size === visibleLabels.length;
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
-
-  const toggleSelectAll = () => {
-    if (allSelected) setSelectedIds(new Set());
-    else setSelectedIds(new Set(visibleLabels.map((i) => i.id)));
-    haptic('light');
-  };
-
-  const handleBulkDelete = async () => {
-    setBulkDeleting(true);
-    haptic('warning');
-    try {
-      await Promise.all(
-        [...selectedIds].map((id) => api.delete(`/warehouse/uz/products/${id}`))
-      );
-      haptic('success');
-      setDeletedIds((prev) => {
-        const next = new Set(prev);
-        selectedIds.forEach((id) => next.add(id));
-        return next;
-      });
-      setSelectedIds(new Set());
-      setSelectMode(false);
-      setConfirmBulkDelete(false);
-    } catch {
-      haptic('error');
-    } finally {
-      setBulkDeleting(false);
-    }
-  };
+  const label = labels?.[0] ?? null;
 
   return (
-    <div className="flex flex-col gap-3 p-4 pb-32">
+    <div className="flex flex-col gap-3 p-4 pb-8">
       {/* Sarlavha */}
       <Card className="bg-emerald-500/15">
         <div className="text-center">
@@ -505,173 +475,53 @@ export default function WarehouseUzQuickIntake() {
           <p className="mt-1 font-bold text-emerald-400">
             Mahsulot muvaffaqiyatli qabul qilindi!
           </p>
-          <p className="text-sm text-emerald-400">{createdCount} ta QR kod yaratildi</p>
-          <p className="mt-1 text-xs text-tg-hint">
-            QR kodlarni mahsulotlarga yoprishtiring
-          </p>
+          <p className="text-sm text-emerald-400">{createdCount} dona · 1 ta yorliq</p>
         </div>
       </Card>
 
-      {/* Tanlov boshqaruv satri */}
-      {visibleLabels.length > 0 && (
-        <div className="flex items-center justify-between rounded-xl bg-tg-secondary-bg px-4 py-2.5">
-          {selectMode ? (
-            <>
-              <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  onChange={toggleSelectAll}
-                  className="h-4 w-4 accent-tg-button"
-                />
-                {allSelected ? 'Barchasini bekor qilish' : 'Barchasini belgilash'}
-              </label>
-              <div className="flex items-center gap-2">
-                {selectedIds.size > 0 && (
-                  <span className="text-xs font-semibold text-tg-button">
-                    {selectedIds.size} ta
-                  </span>
-                )}
-                <button
-                  onClick={() => { setSelectMode(false); setSelectedIds(new Set()); setConfirmBulkDelete(false); haptic('light'); }}
-                  className="rounded-lg bg-white/10 px-2 py-1 text-xs font-semibold text-tg-hint active:scale-95"
-                >
-                  ✕ Bekor
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <span className="text-xs text-tg-hint">{visibleLabels.length} ta mahsulot</span>
-              <button
-                onClick={() => { setSelectMode(true); haptic('light'); }}
-                className="rounded-lg bg-tg-button px-3 py-1 text-xs font-semibold text-white active:scale-95"
-              >
-                ☑ Tanlash
-              </button>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* QR kodlar ro'yxati */}
-      {visibleLabels.map((item) => (
-        <Card
-          key={item.id}
-          className={`transition-all ${selectMode && selectedIds.has(item.id) ? 'ring-2 ring-tg-button' : ''}`}
-          onClick={selectMode ? () => { toggleSelect(item.id); haptic('light'); } : undefined}
-        >
-          <div className="flex items-center gap-3">
-            {/* Checkbox */}
-            {selectMode && (
-              <input
-                type="checkbox"
-                checked={selectedIds.has(item.id)}
-                onChange={() => toggleSelect(item.id)}
-                onClick={(e) => e.stopPropagation()}
-                className="h-4 w-4 flex-shrink-0 accent-tg-button"
-              />
-            )}
-            {/* QR rasm */}
+      {/* Bitta barcode yorliq — nomi + sana + soni + barcode */}
+      {label && (
+        <Card>
+          <div className="flex flex-col items-center gap-2 py-2">
+            <p className="text-center text-base font-bold text-tg-text">{label.name}</p>
+            <p className="text-xs text-tg-hint">
+              {label.date}{label.qty > 1 ? `  ·  ${label.qty} dona` : ''}
+            </p>
             <img
-              src={`data:image/png;base64,${item.qr_image_b64}`}
-              alt={item.short_code}
-              className="h-20 w-20 flex-shrink-0 rounded"
+              src={`data:image/png;base64,${label.barcode_image_b64}`}
+              alt={label.short_code}
+              className="my-1 w-full max-w-[280px] rounded bg-white p-2"
             />
-            {/* Ma'lumotlar + bitta o'chirish */}
-            <div className="flex flex-1 items-center justify-between">
-              <div>
-                <p className="font-mono text-xl font-bold tracking-wider">
-                  {item.short_code}
-                </p>
-                <p className="text-xs text-tg-hint">{name}</p>
-              </div>
-              {!selectMode && (
-                deletingId === item.id ? (
-                  <div className="flex flex-col gap-1">
-                    <button
-                      onClick={async () => {
-                        try {
-                          await api.delete(`/warehouse/uz/products/${item.id}`);
-                          haptic('success');
-                          setDeletedIds((prev) => new Set(prev).add(item.id));
-                        } catch { haptic('error'); }
-                        setDeletingId(null);
-                      }}
-                      className="rounded px-2 py-1 text-xs font-medium bg-red-500 text-white active:scale-95"
-                    >
-                      ✓ Ha
-                    </button>
-                    <button
-                      onClick={() => setDeletingId(null)}
-                      className="rounded px-2 py-1 text-xs font-medium bg-white/10 text-tg-hint active:scale-95"
-                    >
-                      Yo'q
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => { haptic('light'); setDeletingId(item.id); }}
-                    className="rounded-lg px-2 py-1.5 text-xs font-medium text-red-500 bg-red-500/15 active:scale-95"
-                  >
-                    🗑
-                  </button>
-                )
-              )}
-            </div>
+            <p className="text-center text-base font-bold text-tg-text">{label.name}</p>
+            <p className="text-xs text-tg-hint">
+              {label.date}{label.qty > 1 ? `  ·  ${label.qty} dona` : ''}
+            </p>
           </div>
         </Card>
-      ))}
+      )}
 
-      {/* Yangi qabul tugmasi */}
-      {!selectMode && (
+      {/* Chop etish (PDF) */}
+      {specId && (
         <Button
           fullWidth
-          variant="secondary"
-          onClick={() => {
-            setStep('form');
-            setSpecId(null);
-            resetForm();
-          }}
+          onClick={() => { haptic('light'); openPdf(specId); }}
         >
-          ⚡ Yangi qabul
+          🖨️ Yorliqni chop etish (PDF)
         </Button>
       )}
 
-      {/* Sticky bottom — bulk delete */}
-      {selectMode && selectedIds.size > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-tg-sectionBg p-4 shadow-xl">
-          {confirmBulkDelete ? (
-            <div className="flex flex-col gap-2">
-              <p className="text-center text-sm font-semibold text-red-400">
-                {selectedIds.size} ta mahsulot o'chirilsinmi?
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setConfirmBulkDelete(false)}
-                  className="flex-1 rounded-xl bg-white/5 py-3 text-sm font-semibold text-tg-hint active:scale-95"
-                >
-                  Bekor
-                </button>
-                <button
-                  onClick={handleBulkDelete}
-                  disabled={bulkDeleting}
-                  className="flex-1 rounded-xl bg-red-500 py-3 text-sm font-semibold text-white active:scale-95 disabled:opacity-50"
-                >
-                  {bulkDeleting ? "⏳ O'chirilmoqda..." : "🗑 Ha, o'chirish"}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => { setConfirmBulkDelete(true); haptic('warning'); }}
-              className="w-full rounded-xl bg-red-500 py-3 text-sm font-semibold text-white active:scale-95"
-            >
-              🗑 {selectedIds.size} ta mahsulotni o'chirish
-            </button>
-          )}
-        </div>
-      )}
+      {/* Yangi qabul */}
+      <Button
+        fullWidth
+        variant="secondary"
+        onClick={() => {
+          setStep('form');
+          setSpecId(null);
+          resetForm();
+        }}
+      >
+        ⚡ Yangi qabul
+      </Button>
     </div>
   );
 }

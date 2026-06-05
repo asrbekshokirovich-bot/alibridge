@@ -24,7 +24,7 @@ const mockOrders: CarrierOrder[] = [
 // POST javoblari uchun mock (URL bo'yicha)
 export function getMockPost(url: string): unknown {
   if (url.includes('/warehouse-uz/receive')) {
-    return { barcode: 'KRS-' + Math.floor(1000 + 9000 * 0.5), print_url: '#', quantity: 600 }
+    return { barcode: 'ALB-100001', name: 'Yangi mahsulot', received_date: '06.06.2026', print_url: '#', quantity: 600 }
   }
   // boshqa POST'lar oddiy ok
   return { ok: true }

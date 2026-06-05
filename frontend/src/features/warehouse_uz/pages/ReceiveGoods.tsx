@@ -8,6 +8,8 @@ type ProductType = 'piece' | 'weight'
 
 interface ReceiveResult {
   barcode: string
+  name: string
+  received_date: string
   print_url: string
   quantity: number
 }
@@ -39,7 +41,14 @@ export default function ReceiveGoods() {
       notify('success')
       // Backend yaratgan barkodni ko'rsatamiz (donali ham, kiloli ham)
       const data = res.data
-      setResult(data?.barcode ? data : { barcode: 'BC-' + form.name.slice(0, 3).toUpperCase(), print_url: '#', quantity: parseInt(form.quantity, 10) })
+      const today = new Date().toLocaleDateString('ru-RU') // dd.mm.yyyy
+      setResult(data?.barcode ? data : {
+        barcode: 'ALB-' + Math.floor(100000 + 900000 * 0.5),
+        name: form.name,
+        received_date: today,
+        print_url: '#',
+        quantity: parseInt(form.quantity, 10),
+      })
     } catch (err) { setError(extractErrorMessage(err)); notify('error') }
     finally { setLoading(false) }
   }
@@ -57,23 +66,22 @@ export default function ReceiveGoods() {
         <h2 className="text-xl font-bold text-slate-900 mb-1">Yuk qabul qilindi!</h2>
         <p className="text-sm text-slate-500 mb-5">Barkod yaratildi — chiqaring va yopishtiring</p>
 
-        <div className="w-full bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-3">
-          <div className="flex justify-between"><span className="text-sm text-slate-500">Mahsulot</span>
-            <span className="font-semibold text-slate-900">{form.name}</span></div>
-          <div className="flex justify-between"><span className="text-sm text-slate-500">Barkod</span>
-            <span className="font-mono font-bold text-slate-900">{result.barcode}</span></div>
-          <div className="flex justify-between"><span className="text-sm text-slate-500">Nusxa soni</span>
-            <span className="font-semibold text-slate-900">{result.quantity} dona</span></div>
-        </div>
-
-        {/* Barkod vizual (text bilan) */}
-        <div className="w-full bg-white rounded-2xl border-2 border-dashed border-slate-200 p-5 mt-3 text-center">
-          <div className="flex justify-center gap-[2px] mb-2">
-            {Array.from({ length: 32 }).map((_, i) => (
-              <div key={i} className="bg-slate-900" style={{ width: i % 3 === 0 ? 3 : 1.5, height: 48 }} />
+        {/* Yorliq (label) — printerdan chiqadigan ko'rinish: nom + sana tepada, shtrix pastda */}
+        <div className="w-full bg-white rounded-2xl border-2 border-dashed border-slate-300 p-5 mt-1 text-center">
+          <p className="text-base font-bold text-slate-900 truncate">{result.name}</p>
+          <p className="text-xs text-slate-500 mb-3">{result.received_date}</p>
+          <div className="flex justify-center items-end gap-[2px] mb-1.5 h-14">
+            {Array.from({ length: 40 }).map((_, i) => (
+              <div key={i} className="bg-slate-900" style={{ width: i % 4 === 0 ? 3 : i % 3 === 0 ? 1 : 2, height: '100%' }} />
             ))}
           </div>
-          <p className="font-mono text-sm font-bold tracking-widest">{result.barcode}</p>
+          <p className="font-mono text-sm font-bold tracking-widest text-slate-900">{result.barcode}</p>
+        </div>
+
+        {/* Nusxa soni */}
+        <div className="w-full mt-3 px-1 flex justify-between text-sm">
+          <span className="text-slate-500">Chop etiladigan nusxa</span>
+          <span className="font-bold text-slate-900">{result.quantity} dona</span>
         </div>
 
         <a href={result.print_url} target="_blank" rel="noopener noreferrer"

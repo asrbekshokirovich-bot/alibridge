@@ -1,25 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  /* Brand — qizil gradient */
-  --brand: #ef4444;
-  --brand-dark: #dc2626;
-  --brand-light: #fca5a5;
-  --brand-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  --brand-gradient-soft: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  /* Brand — qizil gradient (aksent) */
+  --brand: #ff4757;
+  --brand-dark: #e0334a;
+  --brand-light: #ff6b7a;
+  --brand-gradient: linear-gradient(135deg, #ff4757 0%, #e0334a 100%);
+  --brand-gradient-soft: linear-gradient(135deg, rgba(255,71,87,0.18) 0%, rgba(224,51,74,0.12) 100%);
 
-  /* Surface */
-  --bg: #f8fafc;
-  --card: #ffffff;
-  --text: #0f172a;
-  --text-muted: #64748b;
-  --border: #e2e8f0;
+  /* Neon aksentlar (rasmdan) */
+  --neon-lime: #d4ff3f;
+  --neon-purple: #a78bfa;
+  --neon-pink: #ff5ca8;
+  --neon-cyan: #4dd4e8;
+
+  /* Surface — dark */
+  --bg: #0c0d12;
+  --card: #16181f;
+  --card-2: #1d2029;
+  --text: #f1f3f8;
+  --text-muted: #8b8fa3;
+  --border: #262a35;
 
   /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
-  --shadow-brand: 0 8px 24px rgba(239, 68, 68, 0.35);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
+  --shadow-brand: 0 8px 28px rgba(255, 71, 87, 0.4);
 }
 
 * {
@@ -91,7 +98,7 @@ body {
 
 /* Skeleton loader */
 .skeleton {
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background: linear-gradient(90deg, #1d2029 25%, #262a35 50%, #1d2029 75%);
   background-size: 800px 100%;
   animation: shimmer 1.5s infinite linear;
   border-radius: 8px;
@@ -112,3 +119,75 @@ body {
 .bg-brand-soft {
   background: var(--brand-gradient-soft);
 }
+
+/* ── Semantik theme klasslari (dark) ────────────────── */
+/* Yuza (karta) */
+.surface { background: var(--card); }
+.surface-2 { background: var(--card-2); }
+/* Matn */
+.txt { color: var(--text); }
+.txt-muted { color: var(--text-muted); }
+/* Chegara */
+.bordered { border-color: var(--border); }
+
+/* Tailwind klasslarini dark'ga moslashtirish (override).
+   Komponentlarda bg-white/slate ishlatilgan joylar avtomatik dark bo'ladi. */
+.bg-white { background-color: var(--card) !important; }
+.bg-slate-50 { background-color: var(--card-2) !important; }
+.bg-slate-100 { background-color: var(--card-2) !important; }
+.bg-slate-50\/50 { background-color: var(--card-2) !important; }
+.bg-slate-50\/60 { background-color: var(--card-2) !important; }
+
+.text-slate-900 { color: var(--text) !important; }
+.text-slate-800 { color: var(--text) !important; }
+.text-slate-700 { color: #c7cbd9 !important; }
+.text-slate-600 { color: var(--text-muted) !important; }
+.text-slate-500 { color: var(--text-muted) !important; }
+.text-slate-400 { color: #6b6f82 !important; }
+.text-slate-300 { color: #4a4e5e !important; }
+
+.border-slate-100 { border-color: var(--border) !important; }
+.border-slate-200 { border-color: var(--border) !important; }
+.border-slate-50 { border-color: var(--border) !important; }
+
+.divide-slate-50 > :not([hidden]) ~ :not([hidden]) { border-color: var(--border) !important; }
+.divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: var(--border) !important; }
+
+/* Input dark fon */
+input, textarea {
+  background-color: var(--card-2) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+input::placeholder, textarea::placeholder {
+  color: #5c6072 !important;
+}
+
+/* Soft rangli fonlar (badge, banner) — dark'da yarim-shaffof */
+.bg-amber-50 { background-color: rgba(245, 158, 11, 0.14) !important; }
+.bg-amber-100 { background-color: rgba(245, 158, 11, 0.18) !important; }
+.bg-red-50 { background-color: rgba(255, 71, 87, 0.14) !important; }
+.bg-red-100 { background-color: rgba(255, 71, 87, 0.18) !important; }
+.bg-red-50\/50, .bg-red-50\/60 { background-color: rgba(255, 71, 87, 0.1) !important; }
+.bg-emerald-50 { background-color: rgba(16, 185, 129, 0.14) !important; }
+.bg-emerald-100 { background-color: rgba(16, 185, 129, 0.18) !important; }
+.bg-blue-50 { background-color: rgba(59, 130, 246, 0.14) !important; }
+.bg-blue-100 { background-color: rgba(59, 130, 246, 0.18) !important; }
+.bg-purple-50 { background-color: rgba(167, 139, 250, 0.14) !important; }
+.bg-purple-100 { background-color: rgba(167, 139, 250, 0.18) !important; }
+.bg-green-50 { background-color: rgba(16, 185, 129, 0.14) !important; }
+.bg-green-100 { background-color: rgba(16, 185, 129, 0.18) !important; }
+.bg-yellow-50 { background-color: rgba(234, 179, 8, 0.14) !important; }
+
+/* Soft fon ustidagi matn yorqinroq bo'lsin (dark uchun) */
+.text-amber-700, .text-amber-600 { color: #fbbf24 !important; }
+.text-red-700, .text-red-600 { color: #ff6b7a !important; }
+.text-emerald-700, .text-emerald-600 { color: #34d399 !important; }
+.text-blue-700, .text-blue-600 { color: #60a5fa !important; }
+.text-purple-700, .text-purple-600 { color: #c4b5fd !important; }
+.text-green-700, .text-green-600 { color: #34d399 !important; }
+.text-yellow-700, .text-yellow-600 { color: #fbbf24 !important; }
+
+/* Header/nav blur fonni dark qilish */
+.bg-white\/80 { background-color: rgba(22, 24, 31, 0.85) !important; }
+.bg-white\/90 { background-color: rgba(22, 24, 31, 0.9) !important; }

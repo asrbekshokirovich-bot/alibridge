@@ -1,0 +1,82 @@
+import { useAuthStore } from '@/shared/store/auth'
+import { useCarrierStore } from '../store'
+import { initials } from '@/shared/lib/format'
+import { Header, IconPlane, IconBag, IconCheck } from '@/shared/ui'
+
+export default function Profile() {
+  const user = useAuthStore((s) => s.user)
+  const ticket = useCarrierStore((s) => s.ticket)
+
+  return (
+    <div className="min-h-screen pb-28 animate-fade-in">
+      <Header title="Profil" />
+
+      {/* Avatar + raqam */}
+      <div className="flex flex-col items-center pt-6 pb-4">
+        <div className="w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl font-extrabold mb-3 shadow-[var(--shadow-brand)]"
+          style={{ background: 'var(--brand-gradient)' }}>
+          {initials(user?.first_name, user?.last_name)}
+        </div>
+        <h2 className="text-xl font-bold text-slate-900">{user?.first_name} {user?.last_name}</h2>
+        {user?.carrier_number != null && (
+          <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-white text-sm font-bold"
+            style={{ background: 'var(--brand-gradient)' }}>
+            Raqamingiz: {user.carrier_number}
+          </div>
+        )}
+      </div>
+
+      {/* Ma'lumotlar */}
+      <div className="px-4 pt-2 space-y-3">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm divide-y divide-slate-50">
+          <Row label="Telefon" value={user?.phone ?? '—'} />
+          <Row label="Rol" value="Yo'lovchi" />
+        </div>
+
+        {/* Joriy bilet */}
+        {ticket && (
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white" style={{ background: 'var(--brand-gradient)' }}>
+                <IconPlane size={16} />
+              </div>
+              <span className="font-bold text-slate-900">Joriy reys</span>
+            </div>
+            <div className="space-y-2">
+              <Row label="Reys" value={ticket.flight_number} flat />
+              <Row label="Sana" value={ticket.flight_date} flat />
+              <Row label="Vazn limiti" value={`${ticket.weight_limit} kg`} flat />
+            </div>
+          </div>
+        )}
+
+        {/* Statistika (mock) */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center">
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto mb-2">
+              <IconCheck size={18} />
+            </div>
+            <p className="text-2xl font-extrabold text-slate-900">0</p>
+            <p className="text-xs text-slate-400">Yetkazilgan</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center">
+            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center mx-auto mb-2">
+              <IconBag size={18} />
+            </div>
+            <p className="text-2xl font-extrabold text-slate-900">0</p>
+            <p className="text-xs text-slate-400">Jami reys</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Row({ label, value, flat }: { label: string; value: string; flat?: boolean }) {
+  return (
+    <div className={`flex items-center justify-between ${flat ? '' : 'px-4 py-3'}`}>
+      <span className="text-sm text-slate-500">{label}</span>
+      <span className="text-sm font-semibold text-slate-900">{value}</span>
+    </div>
+  )
+}

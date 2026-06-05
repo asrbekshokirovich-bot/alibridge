@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**ALI BRIDGE** — Telegram Mini App for cargo logistics (China → Uzbekistan → Turkey). Passengers (carriers) physically carry goods on flights.
+**ALI BRIDGE** — Telegram Mini App for cargo logistics (Uzbekistan → Turkey). Passengers (carriers) physically carry goods on flights.
 
 ## Commands
 
@@ -66,7 +66,17 @@ mypy app/             # type check
 A single backend process runs **FastAPI** (REST for Mini App) + **aiogram** (Telegram bot) together. The bot uses either webhook (`/api/v1/telegram/webhook`) or long-polling depending on `BOT_FORCE_POLLING` env var. Cloudflare tunnel URL is auto-detected from `/cf_shared/tunnel.log` for ephemeral dev HTTPS.
 
 ### User Roles (7 total)
-`orderer` · `china_worker` · `warehouse_uz` · `warehouse_tr` · `carrier` · `courier_uz` · `courier_tr` · `admin`
+`orderer` · `warehouse_uz` · `warehouse_tr` · `china_worker` · `carrier` · `courier_uz` · `courier_tr` · `admin`
+
+Rollar:
+- `orderer` — Buyurtmachi (Turkiyada): o'z buyurtmalari va holati
+- `warehouse_tr` — Turkiya ombori: mahalliy buyurtmalar, yetkazish, to'lovlar
+- `china_worker` — Xitoy ishchisi: sotib olish topshiriqlari
+- `warehouse_uz` — Toshkent ombori: yuk qabul, skanlash, katalog
+- `carrier` — Yo'lovchi: filtrlangan katalog, savatcha, to'lov
+- `courier_uz` — Toshkent kuryeri: yetkazish navbati, skanlash
+- `courier_tr` — Turkiya kuryeri: yetkazish navbati, topshirish kodi
+- `admin` — Admin: hamma narsa
 
 Each role has its own frontend feature module (`frontend/src/features/<role>/`) with separate routes, dashboard, and components. Role is embedded in JWT and enforced via `require_role()` dependency on every backend endpoint and `RoleGuard` on frontend routes.
 

@@ -1,8 +1,8 @@
 # ALI BRIDGE
 
-> Telegram Bot + Mini App: Xitoy → Toshkent → Turkiya kargo zanjiri
+> Telegram Bot + Mini App: Toshkent → Turkiya kargo zanjiri
 
-Yo'lovchilar orqali Xitoydan Turkiyaga kargo yetkazib berish tizimi. Har bir paket barkod orqali kuzatiladi — Xitoy ombordan to'g'ridan-to'g'ri Turkiya omborigacha.
+Yo'lovchilar orqali O'zbekistondan Turkiyaga kargo yetkazib berish tizimi. Har bir paket barkod orqali kuzatiladi — Toshkent ombordan to'g'ridan-to'g'ri Turkiya omborigacha.
 
 ---
 
@@ -22,22 +22,22 @@ Yo'lovchilar orqali Xitoydan Turkiyaga kargo yetkazib berish tizimi. Har bir pak
 ALI BRIDGE — bu **end-to-end** kargo kuzatuv tizimi:
 
 ```
-🇨🇳 Xitoy   →   🇺🇿 Toshkent   →   ✈️ Yo'lovchi   →   🇹🇷 Turkiya
-   (sourcing)    (intake + label)     (carrier)        (delivery)
+🇺🇿 Toshkent   →   ✈️ Yo'lovchi   →   🇹🇷 Turkiya
+  (intake + label)     (carrier)        (delivery)
 ```
 
-### 7 ta foydalanuvchi roli
+### 8 ta foydalanuvchi roli
 
-| Rol | Vazifa |
-|-----|--------|
-| **Orderer** | Buyurtma beradi (TR'da yashaydi) |
-| **China worker** | Xitoyda mahsulot sotib oladi |
-| **Tashkent WH** | Toshkentda qabul qiladi, label yopishtiradi |
-| **Carrier** | Yo'lovchi — Toshkentdan Turkiyaga olib ketadi |
-| **UZ Courier** | Toshkent shahar ichida yetkazadi |
-| **TR Courier** | Turkiyada carrier'dan olib ketadi |
-| **TR WH** | Turkiya omborida yakuniy qabul |
-| **Admin** | Barchasini boshqaradi |
+| Rol | Kod | Ko'radi | Ko'rmaydi |
+|-----|-----|---------|-----------|
+| **Buyurtmachi** | `orderer` | O'z buyurtmalari, holati, mahsulot rasmlari, yakuniy yetkazib berish kodi | Boshqa buyurtmachilar, yo'lovchilar, ichki narxlar, egalik zanjiri |
+| **Turkiya ombori** | `warehouse_tr` | Mahalliy buyurtmalar, Telegramsiz mijozlar, kelayotgan yo'lovchilar, yetkazish jarayoni, to'lovlar | Xitoy sotib olish tafsilotlari, yo'lovchi pasport raqamlari (faqat oxirgi 4 raqam) |
+| **Xitoy ishchisi** | `china_worker` | Sotib olish topshiriqlari (tavsif, soni, og'irligi, yetib kelish sanasi), o'z vazifalari | Buyurtmachi kimligi, mijoz narxi, mahsulot ID, QR kodlar, yo'lovchi ma'lumoti |
+| **Toshkent ombori** | `warehouse_uz` | Yuk qabul, mahsulot kartochkalari, cargo narxi, katalog holati, yo'lovchi topshirish skanlash | Xitoy sotib olish narxlari, buyurtmachi to'lov ma'lumotlari |
+| **Yo'lovchi** | `carrier` | O'z profili, filtrlangan katalog (ishonch + kg-limit), savatcha, to'lovi, nizolari | Buyurtmachi kimligi, boshqa yo'lovchilar savatchasi, ichki marja |
+| **Toshkent kuryeri** | `courier_uz` | O'z yetkazish navbati, qo'lidagi mahsulotlar, skanlash sessiyalari | Katalog, to'lovlar, yo'lovchi shaxsiy ma'lumotlari |
+| **Turkiya kuryeri** | `courier_tr` | O'z yetkazish navbati (yo'lovchi manzili, ismi, rasmi, topshirish kodi), skanlash sessiyalari | Katalog, Xitoy ma'lumotlari, to'lovlar |
+| **Admin** | `admin` | Hamma narsa | — |
 
 ### Asosiy xususiyatlar
 

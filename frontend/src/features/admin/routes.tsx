@@ -1,26 +1,18 @@
-import { Routes, Route } from 'react-router-dom';
-import { lazy } from 'react';
-
-const Dashboard = lazy(() => import('./Dashboard'));
-const UserRoles = lazy(() => import('./UserRoles'));
-const Disputes = lazy(() => import('./Disputes'));
-const Payouts = lazy(() => import('./Payouts'));
-const Products = lazy(() => import('./Products'));
-const CarrierTracker = lazy(() => import('./CarrierTracker'));
-const Debts = lazy(() => import('./Debts'));
-const Catalog = lazy(() => import('@features/carrier/Catalog'));
+import { Routes, Route } from 'react-router-dom'
+import Dashboard from './Dashboard'
+import StaffApproval from './pages/StaffApproval'
+import Carriers from './pages/Carriers'
+import Disputes from './pages/Disputes'
+import Payments from './pages/Payments'
 
 export default function AdminRoutes() {
   return (
     <Routes>
-      <Route index element={<Dashboard />} />
-      <Route path="users" element={<UserRoles />} />
-      <Route path="disputes" element={<Disputes />} />
-      <Route path="payouts" element={<Payouts />} />
-      <Route path="products" element={<Products />} />
-      <Route path="carriers" element={<CarrierTracker />} />
-      <Route path="debts" element={<Debts />} />
-      <Route path="catalog" element={<Catalog />} />
+      <Route path="/" element={<Dashboard />} />
+      <Route path="/staff-approval" element={<StaffApproval />} />
+      <Route path="/carriers" element={<Carriers />} />
+      <Route path="/disputes" element={<Disputes />} />
+      <Route path="/payments" element={<Payments />} />
     </Routes>
-  );
+  )
 }

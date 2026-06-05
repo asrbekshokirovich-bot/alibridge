@@ -1,83 +1,62 @@
-/// <reference types="vite/client" />
-/**
- * API client — barcha backend chaqiruvlari.
- *
- * - Axios instance
- * - JWT token avtomatik header'ga qo'shiladi
- * - Xato handling
- */
+import axios from 'axios'
+import type { ApiError } from '@/shared/types'
+import { getMock, getMockPost } from './mock'
 
-import axios, { AxiosError, AxiosInstance } from 'axios';
-import { useAuthStore } from '@shared/store/auth';
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
-const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
+const client = axios.create({
+  baseURL: import.meta.env.VITE_API_URL ?? '/api/v1',
+  headers: { 'Content-Type': 'application/json' },
+})
 
-export const api: AxiosInstance = axios.create({
-  baseURL: API_URL,
-  timeout: 90000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// ============================================
-// Request interceptor — JWT qo'shish
-// ============================================
-api.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().token;
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// ============================================
-// Response interceptor — xato handling
-// ============================================
-api.interceptors.response.use(
-  (response) => response,
-  (error: AxiosError<ApiError>) => {
-    // 401 — token expired
-    if (error.response?.status === 401) {
-      useAuthStore.getState().logout();
+// DEV: backend yo'q paytda soxta ma'lumot qaytaradi
+if (USE_MOCK) {
+  client.interceptors.request.use((config) => {
+    config.adapter = async () => {
+      await new Promise((r) => setTimeout(r, 300))
+      const data =
+        config.method === 'get'
+          ? getMock(config.url ?? '')
+          : getMockPost(config.url ?? '')
+      return {
+        data,
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config,
+      }
     }
-
-    return Promise.reject(error);
-  },
-);
-
-// ============================================
-// API error tipi
-// ============================================
-export interface ApiError {
-  error: {
-    code: string;
-    message: string;
-    details?: Record<string, unknown>;
-  };
+    return config
+  })
 }
 
-export function extractErrorMessage(error: unknown): string {
-  if (axios.isAxiosError(error)) {
-    const data = error.response?.data as
-      | { error?: { message?: string }; detail?: unknown }
-      | undefined;
-    // AppException format: { error: { message } }
-    if (data?.error?.message) {
-      return data.error.message;
-    }
-    // FastAPI HTTPException format: { detail: "..." }
-    if (typeof data?.detail === 'string') {
-      return data.detail;
-    }
-    // FastAPI validation (422): { detail: [{ msg }] }
-    if (Array.isArray(data?.detail) && (data.detail[0] as { msg?: string })?.msg) {
-      return (data.detail[0] as { msg: string }).msg;
-    }
-    return error.message;
+// JWT token qo'shish
+client.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
   }
-  if (error instanceof Error) {
-    return error.message;
+  return config
+})
+
+// Xato normalizatsiya
+client.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('token')
+      window.location.reload()
+    }
+    return Promise.reject(err)
   }
-  return 'Noma\'lum xato';
+)
+
+export function extractErrorMessage(err: unknown): string {
+  if (axios.isAxiosError(err)) {
+    const data = err.response?.data as ApiError | undefined
+    return data?.error?.message ?? err.message
+  }
+  return 'Xatolik yuz berdi'
 }
+
+export default client

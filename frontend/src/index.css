@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+:root {
+  /* Brand — qizil gradient */
+  --brand: #ef4444;
+  --brand-dark: #dc2626;
+  --brand-light: #fca5a5;
+  --brand-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  --brand-gradient-soft: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+
+  /* Surface */
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.12);
+  --shadow-brand: 0 8px 24px rgba(239, 68, 68, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+#root {
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  background: var(--bg);
+}
+
+/* Scrollbar yashirish */
+::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+/* Animatsiyalar */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.35s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.25s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Skeleton loader */
+.skeleton {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 8px;
+}
+
+/* Press effekt */
+.press {
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.press:active {
+  transform: scale(0.97);
+}
+
+/* Brand gradient utility */
+.bg-brand {
+  background: var(--brand-gradient);
+}
+.bg-brand-soft {
+  background: var(--brand-gradient-soft);
+}

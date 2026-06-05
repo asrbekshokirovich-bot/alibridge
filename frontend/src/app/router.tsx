@@ -1,94 +1,104 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
-import { LoadingScreen } from '@shared/components/LoadingScreen';
-import { RoleGuard } from '@features/auth/RoleGuard';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useAuthStore } from '@/shared/store/auth'
+import { RoleGuard } from '@/shared/components/RoleGuard'
+import { IS_DEV } from '@/shared/config'
 
-// Lazy-load role-specific routes for smaller initial bundle
-const OrdererRoutes = lazy(() => import('@features/orderer/routes'));
-const CarrierRoutes = lazy(() => import('@features/carrier/routes'));
-const ChinaRoutes = lazy(() => import('@features/china/routes'));
-const WarehouseUzRoutes = lazy(() => import('@features/warehouse-uz/routes'));
-const WarehouseTrRoutes = lazy(() => import('@features/warehouse-tr/routes'));
-const CourierRoutes = lazy(() => import('@features/couriers/routes'));
-const AdminRoutes = lazy(() => import('@features/admin/routes'));
+// Pages
+import Welcome from './pages/Welcome'
+import Register from './pages/Register'
+import StaffPending from './pages/StaffPending'
+import DevLogin from './pages/DevLogin'
+import ComingSoon from './pages/ComingSoon'
 
-const HomePage = lazy(() => import('@pages/HomePage'));
-const NotFoundPage = lazy(() => import('@pages/NotFoundPage'));
-const OnboardingPage = lazy(() => import('@pages/OnboardingPage'));
+// Features
+import CarrierRoutes from '@/features/carrier/routes'
+import WarehouseUzRoutes from '@/features/warehouse_uz/routes'
+import WarehouseTrRoutes from '@/features/warehouse_tr/routes'
+import CourierUzRoutes from '@/features/courier_uz/routes'
+import CourierTrRoutes from '@/features/courier_tr/routes'
+import AdminRoutes from '@/features/admin/routes'
 
-export function AppRouter() {
+// Har bir rol uchun bosh sahifa yo'li
+const ROLE_HOME: Record<string, string> = {
+  carrier: '/carrier',
+  warehouse_uz: '/warehouse-uz',
+  warehouse_tr: '/warehouse-tr',
+  courier_uz: '/courier-uz',
+  courier_tr: '/courier-tr',
+  admin: '/admin',
+  orderer: '/orderer',
+  china_worker: '/china-worker',
+}
+
+function RootRedirect() {
+  const user = useAuthStore((s) => s.user)
+  if (!user) {
+    // Test rejimda — to'g'ridan-to'g'ri dev panelga
+    if (IS_DEV) return <Navigate to="/dev" replace />
+    return <Navigate to="/welcome" replace />
+  }
+  return <Navigate to={ROLE_HOME[user.role] ?? '/welcome'} replace />
+}
+
+export default function Router() {
   return (
-    <Suspense fallback={<LoadingScreen />}>
+    <BrowserRouter>
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/onboarding" element={<OnboardingPage />} />
+        {/* Onboarding */}
+        <Route path="/" element={<RootRedirect />} />
+        <Route path="/welcome" element={<Welcome />} />
+        <Route path="/register/:type" element={<Register />} />
+        <Route path="/carrier/register" element={<Register />} />
+        <Route path="/orderer/register" element={<Register />} />
+        <Route path="/staff/register" element={<Register />} />
+        <Route path="/staff/pending" element={<StaffPending />} />
 
-        <Route
-          path="/orderer/*"
-          element={
-            <RoleGuard allowedRoles={['orderer']}>
-              <OrdererRoutes />
-            </RoleGuard>
-          }
-        />
+        {/* DEV — faqat test rejimda ro'yxatga olinadi (production'da yo'q) */}
+        {IS_DEV && <Route path="/dev" element={<DevLogin />} />}
 
-        <Route
-          path="/carrier/*"
-          element={
-            <RoleGuard allowedRoles={['carrier']}>
-              <CarrierRoutes />
-            </RoleGuard>
-          }
-        />
+        {/* Carrier */}
+        <Route path="/carrier/*" element={
+          <RoleGuard role="carrier"><CarrierRoutes /></RoleGuard>
+        } />
 
-        <Route
-          path="/china/*"
-          element={
-            <RoleGuard allowedRoles={['china_worker']}>
-              <ChinaRoutes />
-            </RoleGuard>
-          }
-        />
+        {/* Warehouse UZ */}
+        <Route path="/warehouse-uz/*" element={
+          <RoleGuard role="warehouse_uz"><WarehouseUzRoutes /></RoleGuard>
+        } />
 
-        <Route
-          path="/warehouse-uz/*"
-          element={
-            <RoleGuard allowedRoles={['warehouse_uz']}>
-              <WarehouseUzRoutes />
-            </RoleGuard>
-          }
-        />
+        {/* Warehouse TR */}
+        <Route path="/warehouse-tr/*" element={
+          <RoleGuard role="warehouse_tr"><WarehouseTrRoutes /></RoleGuard>
+        } />
 
-        <Route
-          path="/warehouse-tr/*"
-          element={
-            <RoleGuard allowedRoles={['warehouse_tr']}>
-              <WarehouseTrRoutes />
-            </RoleGuard>
-          }
-        />
+        {/* Courier UZ */}
+        <Route path="/courier-uz/*" element={
+          <RoleGuard role="courier_uz"><CourierUzRoutes /></RoleGuard>
+        } />
 
-        <Route
-          path="/couriers/*"
-          element={
-            <RoleGuard allowedRoles={['courier_uz', 'courier_tr']}>
-              <CourierRoutes />
-            </RoleGuard>
-          }
-        />
+        {/* Courier TR */}
+        <Route path="/courier-tr/*" element={
+          <RoleGuard role="courier_tr"><CourierTrRoutes /></RoleGuard>
+        } />
 
-        <Route
-          path="/admin/*"
-          element={
-            <RoleGuard allowedRoles={['admin']}>
-              <AdminRoutes />
-            </RoleGuard>
-          }
-        />
+        {/* Admin */}
+        <Route path="/admin/*" element={
+          <RoleGuard role="admin"><AdminRoutes /></RoleGuard>
+        } />
 
-        <Route path="*" element={<NotFoundPage />} />
-        <Route path="/404" element={<Navigate to="/" replace />} />
+        {/* Orderer va China worker — hali ishlab chiqilmoqda */}
+        <Route path="/orderer/*" element={
+          <RoleGuard role="orderer"><ComingSoon title="Buyurtmachi paneli" /></RoleGuard>
+        } />
+        <Route path="/china-worker/*" element={
+          <RoleGuard role="china_worker"><ComingSoon title="Xitoy ishchisi paneli" /></RoleGuard>
+        } />
+
+        <Route path="/unauthorized" element={
+          <ComingSoon title="Ruxsat yo'q" subtitle="Bu bo'limga kirish huquqingiz yo'q" />
+        } />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </Suspense>
-  );
+    </BrowserRouter>
+  )
 }

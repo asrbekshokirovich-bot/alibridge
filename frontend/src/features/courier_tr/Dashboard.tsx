@@ -1,0 +1,34 @@
+import { useNavigate } from 'react-router-dom'
+import { useTelegram } from '@/shared/hooks/useTelegram'
+import { useAuthStore } from '@/shared/store/auth'
+import { DashboardHeader, IconBox, IconTruck } from '@/shared/ui'
+
+export default function CourierTrDashboard() {
+  const navigate = useNavigate()
+  const { haptic } = useTelegram()
+  const user = useAuthStore((s) => s.user)
+
+  const actions = [
+    { label: 'O\'zbekistondan kelgan yuklar', desc: 'Qabul qilish va shikast belgilash', path: '/courier-tr/receive-from-uz', icon: <IconBox size={26} />, gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
+    { label: 'Yuklarni yetkazish', desc: 'Buyurtmachiga topshirish', path: '/courier-tr/deliver', icon: <IconTruck size={26} />, gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
+  ]
+
+  return (
+    <div className="min-h-screen animate-fade-in">
+      <DashboardHeader role="Turkiya kuryeri" name={user?.first_name} />
+      <div className="px-4 pt-6 space-y-4">
+        {actions.map((a) => (
+          <button key={a.path}
+            onClick={() => { haptic('light'); navigate(a.path) }}
+            className="press w-full bg-white rounded-3xl p-5 border border-slate-100 shadow-[var(--shadow-md)] text-left">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white mb-3" style={{ background: a.gradient }}>
+              {a.icon}
+            </div>
+            <h3 className="font-bold text-slate-900 text-base">{a.label}</h3>
+            <p className="text-sm text-slate-400 mt-0.5">{a.desc}</p>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}

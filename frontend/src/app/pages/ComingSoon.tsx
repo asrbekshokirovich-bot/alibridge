@@ -1,0 +1,18 @@
+interface Props {
+  title: string
+  subtitle?: string
+}
+
+export default function ComingSoon({ title, subtitle }: Props) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen px-8 text-center animate-scale-in">
+      <div className="w-24 h-24 rounded-full flex items-center justify-center mb-6" style={{ background: 'var(--brand-gradient-soft)' }}>
+        <div className="text-5xl">🚧</div>
+      </div>
+      <h2 className="text-xl font-bold text-slate-900 mb-2">{title}</h2>
+      <p className="text-sm text-slate-500 max-w-[280px]">
+        {subtitle ?? "Bu bo'lim tez orada tayyor bo'ladi."}
+      </p>
+    </div>
+  )
+}

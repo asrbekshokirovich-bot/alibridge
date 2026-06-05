@@ -1,0 +1,129 @@
+# ============================================
+# ALI BRIDGE — Production overrides (Oracle Cloud)
+#
+# Ishlatish:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# .env ga qo'shish kerak:
+#   DOMAIN=alibridge.duckdns.org
+#   APP_ENV=production
+# ============================================
+
+services:
+  # ============================================
+  # Caddy — SSL terminatsiya + reverse proxy
+  # Let's Encrypt sertifikatini AVTOMATIK oladi
+  # ============================================
+  caddy:
+    image: caddy:2-alpine
+    container_name: alibridge-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"    # HTTP/3 (QUIC)
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - caddy_logs:/var/log/caddy
+    environment:
+      DOMAIN: ${DOMAIN}
+    networks:
+      - alibridge-network
+    depends_on:
+      - backend
+      - frontend
+
+  # ============================================
+  # Backend — production mode (4 worker, no --reload)
+  # ============================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app
+             --host 0.0.0.0 --port 8000
+             --workers 4
+             --proxy-headers
+             --forwarded-allow-ips '*'"
+    volumes:
+      - backend_logs:/app/logs
+    ports: []    # Caddy ichki tarmoq orqali ulaydi
+    environment:
+      APP_ENV: production
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  # ============================================
+  # Worker — production mode
+  # ============================================
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    volumes:
+      - backend_logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ============================================
+  # Frontend — host porti yo'q (Caddy orqali)
+  # ============================================
+  frontend:
+    ports: []
+
+  # ============================================
+  # Cloudflared — production'da ishlamaydi
+  # ============================================
+  cloudflared:
+    profiles:
+      - dev    # faqat "docker compose --profile dev up" bilan
+
+  # ============================================
+  # PostgreSQL — host portini berkitish
+  # ============================================
+  postgres:
+    ports: []
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ============================================
+  # Redis — host portini berkitish
+  # ============================================
+  redis:
+    ports: []
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # ============================================
+  # MinIO — host portini berkitish
+  # (production'da real S3 ishlatilsa bu service
+  #  profiles: ["dev"] ga o'tkazilishi mumkin)
+  # ============================================
+  minio:
+    ports: []
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+volumes:
+  caddy_data:
+    name: alibridge-caddy-data
+  caddy_config:
+    name: alibridge-caddy-config
+  caddy_logs:
+    name: alibridge-caddy-logs

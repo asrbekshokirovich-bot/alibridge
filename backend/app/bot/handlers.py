@@ -150,7 +150,7 @@ async def reg_name(message: Message, state: FSMContext) -> None:
                     first_name=first_name,
                     last_name=last_name,
                     phone=phone,
-                    role=Role.ORDERER,
+                    role=Role.NEW,  # rol tanlanmagan — Mini App'da Welcome ko'rsatiladi
                     is_active=True,
                 )
             )

@@ -1,4 +1,5 @@
 export type Role =
+  | 'new'
   | 'orderer'
   | 'warehouse_uz'
   | 'warehouse_tr'
@@ -7,6 +8,7 @@ export type Role =
   | 'courier_uz'
   | 'courier_tr'
   | 'admin'
+  | 'pending'
 
 export interface User {
   id: number

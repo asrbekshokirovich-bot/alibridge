@@ -32,11 +32,12 @@ const ROLE_HOME: Record<string, string> = {
 
 function RootRedirect() {
   const user = useAuthStore((s) => s.user)
-  // Mavjud rol bo'lsa — to'g'ridan-to'g'ri o'z paneliga (hozirgi holat)
+  // Rol tanlangan bo'lsa — to'g'ridan-to'g'ri o'z paneliga.
+  // 'new' (hali rol tanlamagan) ROLE_HOME'da yo'q — Welcome'ga boradi.
   if (user && ROLE_HOME[user.role]) {
     return <Navigate to={ROLE_HOME[user.role]} replace />
   }
-  // Foydalanuvchi yo'q (Telegram tashqarisi) — rol tanlash ekrani
+  // Yangi foydalanuvchi ('new') yoki Telegram tashqarisi — rol tanlash ekrani
   return <Navigate to="/welcome" replace />
 }
 

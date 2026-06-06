@@ -25,8 +25,10 @@ class SelectRoleRequest(BaseModel):
     role: Role
 
 
-# Foydalanuvchi Mini App ichida erkin almashtira oladigan rollar (xodim emas)
+# Foydalanuvchi Mini App ichida erkin tanlay oladigan rollar (xodim emas)
 SELF_ROLES = {Role.ORDERER, Role.CARRIER}
+# Rol almashtirishga ruxsat etilgan holatlar (xodim/admin himoyalangan)
+SWITCHABLE_ROLES = {Role.NEW, Role.ORDERER, Role.CARRIER, Role.PENDING}
 
 
 @router.post("/auth/login", response_model=RegisterResponse)
@@ -92,7 +94,7 @@ async def select_role(
     """
     if body.role not in SELF_ROLES:
         raise AppError("FORBIDDEN", "Bu rolni tanlab bo'lmaydi", status_code=403)
-    if user.role not in SELF_ROLES and user.role != Role.PENDING:
+    if user.role not in SWITCHABLE_ROLES:
         raise AppError("FORBIDDEN", "Rolingizni o'zgartirib bo'lmaydi", status_code=403)
 
     user.role = body.role
@@ -116,7 +118,7 @@ async def staff_request(
     (agar hali kutilayotgan so'rovi bo'lmasa).
     """
     # Xodim/admin allaqachon bo'lsa — qayta so'rovga hojat yo'q
-    if user.role not in SELF_ROLES and user.role != Role.PENDING:
+    if user.role not in SWITCHABLE_ROLES:
         raise AppError("FORBIDDEN", "Siz allaqachon xodim sifatida kirgansiz", status_code=403)
 
     user.role = Role.PENDING

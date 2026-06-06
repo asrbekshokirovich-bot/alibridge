@@ -2,6 +2,7 @@ from enum import StrEnum
 
 
 class Role(StrEnum):
+    NEW = "new"  # botda ro'yxatdan o'tdi, hali rol tanlamagan (Welcome ko'rsatiladi)
     ORDERER = "orderer"
     WAREHOUSE_UZ = "warehouse_uz"
     WAREHOUSE_TR = "warehouse_tr"

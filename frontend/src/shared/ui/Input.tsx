@@ -15,7 +15,7 @@ export function Input({ label, icon, className = '', ...rest }: InputProps) {
         )}
         <input
           {...rest}
-          className={`w-full ${icon ? 'pl-11' : 'pl-4'} pr-4 py-3.5 bg-white border-2 border-slate-200 rounded-2xl text-[15px] placeholder:text-slate-400 focus:border-red-400 focus:outline-none transition-colors ${className}`}
+          className={`w-full ${icon ? 'pl-11' : 'pl-4'} pr-4 h-[52px] bg-white border border-slate-200 rounded-2xl text-[15px] placeholder:text-slate-400 focus:border-red-400 focus:ring-2 focus:ring-red-400/25 focus:outline-none transition-all ${className}`}
         />
       </div>
     </div>
@@ -32,7 +32,7 @@ export function Textarea({ label, className = '', ...rest }: TextareaProps) {
       {label && <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>}
       <textarea
         {...rest}
-        className={`w-full px-4 py-3.5 bg-white border-2 border-slate-200 rounded-2xl text-[15px] placeholder:text-slate-400 focus:border-red-400 focus:outline-none transition-colors resize-none ${className}`}
+        className={`w-full px-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-[15px] placeholder:text-slate-400 focus:border-red-400 focus:ring-2 focus:ring-red-400/25 focus:outline-none transition-all resize-none ${className}`}
       />
     </div>
   )

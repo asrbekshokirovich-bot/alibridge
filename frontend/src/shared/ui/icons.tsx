@@ -89,3 +89,16 @@ export const IconPackagePlus = ({ size = 24, className }: IconProps) => (
     <path d="M16 16l-4 4-4-4M12 3v9M3 10h4l2 3M21 10h-4l-2 3" {...stroke} />
   </svg>
 )
+
+export const IconPhone = ({ size = 24, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0122 16.92z" {...stroke} />
+  </svg>
+)
+
+export const IconCard = ({ size = 24, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <rect x="2" y="5" width="20" height="14" rx="2" {...stroke} />
+    <path d="M2 10h20" {...stroke} />
+  </svg>
+)

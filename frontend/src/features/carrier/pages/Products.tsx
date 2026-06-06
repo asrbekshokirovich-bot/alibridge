@@ -4,8 +4,8 @@ import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import { useCarrierStore } from '../store'
-import { IS_DEV, DEFAULT_TICKET } from '@/shared/config'
 import type { Product, CartItem } from '@/shared/types'
+import { money } from '@/shared/lib/format'
 import { Header, ListSkeleton, EmptyState, Input, Sheet, Button, IconCheck, IconPlane } from '@/shared/ui'
 
 // Donali uchun og'irlik = dona × 1 dona vazni
@@ -21,9 +21,7 @@ function calcPrice(p: Product, amount: number): number {
 export default function Products() {
   const navigate = useNavigate()
   const { haptic } = useTelegram()
-  const savedTicket = useCarrierStore((s) => s.ticket)
-  // Dev rejimda bilet bo'lmasa default ishlatamiz (test uchun)
-  const ticket = savedTicket ?? (IS_DEV ? DEFAULT_TICKET : null)
+  const ticket = useCarrierStore((s) => s.ticket)
   const [cart, setCart] = useState<CartItem[]>([])
 
   // Sheet (miqdor kiritish)
@@ -160,7 +158,7 @@ export default function Products() {
                       <span className="text-xs font-bold text-white px-2 py-0.5 rounded-lg" style={{ background: 'var(--brand-gradient)' }}>
                         {item!.amount} {p.type === 'weight' ? 'kg' : 'dona'} tanlandi
                       </span>
-                      <span className="text-xs font-semibold text-slate-500">{item!.price.toLocaleString()} so'm</span>
+                      <span className="text-xs font-semibold text-slate-500">{money(item!.price)}</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 mt-1">
@@ -168,7 +166,7 @@ export default function Products() {
                         {p.type === 'weight' ? `${p.weight_kg} kg mavjud` : `${p.quantity} dona mavjud`}
                       </span>
                       <span className="text-sm font-bold" style={{ color: 'var(--brand)' }}>
-                        {p.cargo_price.toLocaleString()}/{p.type === 'weight' ? 'kg' : 'dona'}
+                        {money(p.cargo_price)}/{p.type === 'weight' ? 'kg' : 'dona'}
                       </span>
                     </div>
                   )}
@@ -243,7 +241,7 @@ export default function Products() {
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-500">Narx</span>
                   <span className="font-bold" style={{ color: 'var(--brand)' }}>
-                    {calcPrice(sheetProduct, parseFloat(amountInput)).toLocaleString()} so'm
+                    {money(calcPrice(sheetProduct, parseFloat(amountInput)))}
                   </span>
                 </div>
               </div>

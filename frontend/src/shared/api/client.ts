@@ -1,34 +1,10 @@
 import axios from 'axios'
 import type { ApiError } from '@/shared/types'
-import { getMock, getMockPost } from './mock'
-
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
 const client = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? '/api/v1',
   headers: { 'Content-Type': 'application/json' },
 })
-
-// DEV: backend yo'q paytda soxta ma'lumot qaytaradi
-if (USE_MOCK) {
-  client.interceptors.request.use((config) => {
-    config.adapter = async () => {
-      await new Promise((r) => setTimeout(r, 300))
-      const data =
-        config.method === 'get'
-          ? getMock(config.url ?? '')
-          : getMockPost(config.url ?? '')
-      return {
-        data,
-        status: 200,
-        statusText: 'OK',
-        headers: {},
-        config,
-      }
-    }
-    return config
-  })
-}
 
 // JWT token qo'shish
 client.interceptors.request.use((config) => {
@@ -39,13 +15,13 @@ client.interceptors.request.use((config) => {
   return config
 })
 
-// Xato normalizatsiya
+// Xato normalizatsiya — 401 bo'lsa eskirgan sessiyani tozalaymiz
 client.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem('token')
-      window.location.reload()
+      localStorage.removeItem('user')
     }
     return Promise.reject(err)
   }

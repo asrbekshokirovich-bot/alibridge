@@ -1,34 +1,86 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
+import { useAuthStore } from '@/shared/store/auth'
+import type { Role, User } from '@/shared/types'
 import { IconBag, IconPlane, IconUsers } from '@/shared/ui'
 
 export default function Welcome() {
   const navigate = useNavigate()
-  const { haptic } = useTelegram()
+  const { haptic, notify } = useTelegram()
+  const user = useAuthStore((s) => s.user)
+  const setAuth = useAuthStore((s) => s.setAuth)
+  const [loading, setLoading] = useState<Role | null>(null)
+  const [error, setError] = useState('')
 
-  const go = (path: string) => { haptic('medium'); navigate(path) }
+  // Yo'lovchi/Buyurtmachi: rolni almashtirib darrov panelga kiramiz (ro'yxatdan o'tish yo'q)
+  const selectRole = async (role: Role, home: string) => {
+    if (loading) return
+    haptic('medium')
+    setError('')
+    // Allaqachon o'sha rolda — to'g'ridan-to'g'ri
+    if (user?.role === role) {
+      navigate(home)
+      return
+    }
+    setLoading(role)
+    try {
+      const res = await client.post<{ token: string; user: User }>('/auth/select-role', { role })
+      setAuth(res.data.token, res.data.user)
+      notify('success')
+      navigate(home)
+    } catch (err) {
+      setError(extractErrorMessage(err))
+      notify('error')
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  // Kompaniya xodimi: admin tasdig'i uchun so'rov yuboramiz
+  const requestStaff = async () => {
+    if (loading) return
+    haptic('medium')
+    setError('')
+    setLoading('pending' as Role)
+    try {
+      const res = await client.post<{ token: string; user: User }>('/auth/staff-request')
+      setAuth(res.data.token, res.data.user)
+      notify('success')
+      navigate('/staff/pending')
+    } catch (err) {
+      setError(extractErrorMessage(err))
+      notify('error')
+    } finally {
+      setLoading(null)
+    }
+  }
 
   const options = [
     {
       title: 'Buyurtma berish',
       desc: 'Mahsulot buyurtma qiling',
       icon: <IconBag size={26} />,
-      path: '/orderer/register',
+      role: 'orderer' as Role,
       gradient: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
+      onClick: () => selectRole('orderer', '/orderer'),
     },
     {
       title: 'Turkiyaga yuk olib ketish',
       desc: 'Yo\'lovchi sifatida pul ishlang',
       icon: <IconPlane size={26} />,
-      path: '/carrier/register',
+      role: 'carrier' as Role,
       gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+      onClick: () => selectRole('carrier', '/carrier'),
     },
     {
       title: 'Kompaniya xodimi',
       desc: 'Jamoa a\'zosi sifatida kirish',
       icon: <IconUsers size={26} />,
-      path: '/staff/register',
+      role: 'staff' as Role,
       gradient: 'linear-gradient(135deg, #64748b 0%, #475569 100%)',
+      onClick: requestStaff,
     },
   ]
 
@@ -50,9 +102,10 @@ export default function Welcome() {
       <div className="flex flex-col gap-3.5 flex-1">
         {options.map((opt) => (
           <button
-            key={opt.path}
-            onClick={() => go(opt.path)}
-            className="press bg-white rounded-3xl p-4 border border-slate-100 shadow-[var(--shadow-md)] flex items-center gap-4 text-left"
+            key={opt.title}
+            onClick={opt.onClick}
+            disabled={loading !== null}
+            className="press bg-white rounded-3xl p-4 border border-slate-100 shadow-[var(--shadow-md)] flex items-center gap-4 text-left disabled:opacity-60"
           >
             <div
               className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shrink-0"
@@ -64,12 +117,20 @@ export default function Welcome() {
               <h3 className="font-bold text-slate-900 text-[15px]">{opt.title}</h3>
               <p className="text-[13px] text-slate-500">{opt.desc}</p>
             </div>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-slate-300 shrink-0">
-              <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            {loading === opt.role ? (
+              <span className="w-5 h-5 border-2 border-slate-200 border-t-slate-500 rounded-full animate-spin shrink-0" />
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-slate-300 shrink-0">
+                <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
           </button>
         ))}
       </div>
+
+      {error && (
+        <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl mb-3">{error}</div>
+      )}
 
       <p className="text-center text-xs text-slate-400 py-6">ALI BRIDGE © 2026</p>
     </div>

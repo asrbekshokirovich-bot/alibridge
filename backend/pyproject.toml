@@ -1,0 +1,53 @@
+[tool.poetry]
+name = "ali-bridge-backend"
+version = "1.0.0"
+description = "ALI BRIDGE — Telegram Mini App backend (cargo logistics UZ -> TR)"
+authors = ["ALI BRIDGE"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.14"
+fastapi = "^0.115.0"
+uvicorn = { extras = ["standard"], version = "^0.32.0" }
+aiogram = "^3.13.0"
+sqlalchemy = { extras = ["asyncio"], version = "^2.0.35" }
+asyncpg = "^0.30.0"
+alembic = "^1.13.3"
+pydantic = "^2.9.0"
+pydantic-settings = "^2.5.0"
+python-jose = { extras = ["cryptography"], version = "^3.3.0" }
+python-barcode = "^0.15.1"
+reportlab = "^4.2.5"
+pillow = "^11.0.0"
+httpx = "^0.27.0"
+greenlet = "^3.1.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.0"
+pytest-asyncio = "^0.24.0"
+ruff = "^0.7.0"
+black = "^24.10.0"
+mypy = "^1.13.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B"]
+ignore = ["B008"]  # FastAPI Depends() default
+
+[tool.black]
+line-length = 100
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+    "unit: unit tests",
+    "integration: requires DB",
+]

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import client from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
+import { money } from '@/shared/lib/format'
 import { Header, ListSkeleton, EmptyState, StatusBadge, Button, IconMoney } from '@/shared/ui'
 
 interface Payment {
@@ -33,7 +34,7 @@ export default function Payments() {
         <div className="px-4 pt-4">
           <div className="rounded-3xl p-5 text-white" style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)' }}>
             <p className="text-sm text-white/60">Jami to'lanmagan</p>
-            <p className="text-3xl font-extrabold mt-1">{totalUnpaid.toLocaleString()} so'm</p>
+            <p className="text-3xl font-extrabold mt-1">{money(totalUnpaid)}</p>
           </div>
         </div>
       )}
@@ -53,8 +54,7 @@ export default function Payments() {
                   <p className="text-xs text-slate-400 mt-0.5">{p.products_count} ta mahsulot</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-extrabold text-lg text-slate-900">{p.total_amount.toLocaleString()}</p>
-                  <p className="text-xs text-slate-400">so'm</p>
+                  <p className="font-extrabold text-lg text-slate-900">{money(p.total_amount)}</p>
                 </div>
               </div>
               <div className="flex items-center justify-between mt-3">

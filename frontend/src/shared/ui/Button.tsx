@@ -30,7 +30,7 @@ export function Button({ variant = 'primary', fullWidth, loading, children, clas
       disabled={disabled || loading}
       onClick={(e) => { haptic('light'); onClick?.(e) }}
       style={bg}
-      className={`press inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-[15px] font-semibold disabled:opacity-50 disabled:pointer-events-none ${variants[variant]} ${fullWidth ? 'w-full' : ''} ${className}`}
+      className={`press inline-flex items-center justify-center gap-2 rounded-2xl px-5 h-[52px] text-[15px] font-bold disabled:opacity-50 disabled:pointer-events-none ${variants[variant]} ${fullWidth ? 'w-full' : ''} ${className}`}
     >
       {loading && (
         <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />

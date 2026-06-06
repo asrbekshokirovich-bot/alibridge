@@ -45,6 +45,18 @@ export function useTelegram() {
     if (tg) {
       tg.ready()
       tg.expand()
+      // Telegram WebApp dark theme bilan moslash (header/fon)
+      try {
+        const anyTg = tg as unknown as {
+          setHeaderColor?: (c: string) => void
+          setBackgroundColor?: (c: string) => void
+          enableClosingConfirmation?: () => void
+        }
+        anyTg.setHeaderColor?.('#0c0d12')
+        anyTg.setBackgroundColor?.('#0c0d12')
+      } catch {
+        // eski Telegram versiyalari — e'tiborsiz
+      }
       setIsReady(true)
     } else {
       // Development: Telegram yo'q bo'lsa ham ishlaydi

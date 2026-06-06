@@ -1,8 +1,8 @@
 import { Routes, Route } from 'react-router-dom'
 import Dashboard from './Dashboard'
 import ReceiveGoods from './pages/ReceiveGoods'
-import WeighAndLabel from './pages/WeighAndLabel'
-import HandoverCarrier from './pages/HandoverCarrier'
+import Orders from './pages/Orders'
+import Products from './pages/Products'
 import HandoverCourier from './pages/HandoverCourier'
 
 export default function WarehouseUzRoutes() {
@@ -10,8 +10,8 @@ export default function WarehouseUzRoutes() {
     <Routes>
       <Route path="/" element={<Dashboard />} />
       <Route path="/receive" element={<ReceiveGoods />} />
-      <Route path="/weigh" element={<WeighAndLabel />} />
-      <Route path="/handover-carrier" element={<HandoverCarrier />} />
+      <Route path="/orders" element={<Orders />} />
+      <Route path="/products" element={<Products />} />
       <Route path="/handover-courier" element={<HandoverCourier />} />
     </Routes>
   )

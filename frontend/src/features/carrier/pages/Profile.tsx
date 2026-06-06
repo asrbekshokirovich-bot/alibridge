@@ -1,9 +1,11 @@
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/shared/store/auth'
 import { useCarrierStore } from '../store'
 import { initials } from '@/shared/lib/format'
 import { Header, IconPlane, IconBag, IconCheck } from '@/shared/ui'
 
 export default function Profile() {
+  const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const ticket = useCarrierStore((s) => s.ticket)
 
@@ -67,6 +69,17 @@ export default function Profile() {
             <p className="text-xs text-slate-400">Jami reys</p>
           </div>
         </div>
+
+        {/* Boshqa bo'limga o'tish */}
+        <button
+          onClick={() => navigate('/welcome')}
+          className="press w-full bg-white rounded-2xl border border-slate-100 shadow-sm px-4 py-3.5 flex items-center justify-between"
+        >
+          <span className="text-sm font-semibold text-slate-700">Boshqa bo'limga o'tish</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-slate-300">
+            <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
       </div>
     </div>
   )

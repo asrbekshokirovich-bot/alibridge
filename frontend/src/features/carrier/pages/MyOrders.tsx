@@ -33,19 +33,37 @@ export default function MyOrders() {
                   <StatusBadge tone={st.tone} dot>{st.text}</StatusBadge>
                 </div>
 
-                {/* Mahsulotlar */}
+                {/* Mahsulotlar — items bo'lsa actual (tortilgan) qiymat, aks holda product */}
                 <div className="divide-y divide-slate-50">
-                  {order.products.map((p) => (
-                    <div key={p.id} className="flex items-center gap-3 px-4 py-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-sm shrink-0">
-                        {p.type === 'weight' ? '🧵' : '📦'}
+                  {(order.items ?? []).length > 0 ? (
+                    order.items!.map((it) => (
+                      <div key={it.product_id} className="flex items-center gap-3 px-4 py-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-sm shrink-0">
+                          {it.type === 'weight' ? '🧵' : '📦'}
+                        </div>
+                        <span className="flex-1 text-sm text-slate-700 truncate">{it.product_name}</span>
+                        <span className="text-xs text-slate-400">
+                          {it.type === 'weight'
+                            ? (it.confirmed && it.actual_kg != null
+                                ? `${it.actual_kg} kg, ${it.actual_quantity} dona`
+                                : `${it.amount} kg`)
+                            : `${it.actual_quantity ?? it.amount} dona`}
+                        </span>
                       </div>
-                      <span className="flex-1 text-sm text-slate-700 truncate">{p.name}</span>
-                      <span className="text-xs text-slate-400">
-                        {p.type === 'weight' ? `${p.weight_kg} kg` : `${p.quantity} dona`}
-                      </span>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    order.products.map((p) => (
+                      <div key={p.id} className="flex items-center gap-3 px-4 py-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-sm shrink-0">
+                          {p.type === 'weight' ? '🧵' : '📦'}
+                        </div>
+                        <span className="flex-1 text-sm text-slate-700 truncate">{p.name}</span>
+                        <span className="text-xs text-slate-400">
+                          {p.type === 'weight' ? `${p.weight_kg} kg` : `${p.quantity} dona`}
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
 
                 {damaged && (

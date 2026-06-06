@@ -149,8 +149,8 @@ export default function ReceiveGoods() {
         )}
 
         <Input type="number"
-          label={isWeight ? 'Cargo narxi (1 kg uchun)' : 'Cargo narxi (1 dona uchun)'}
-          placeholder="so'mda"
+          label={isWeight ? 'Cargo narxi ($ / 1 kg)' : 'Cargo narxi ($ / 1 dona)'}
+          placeholder="Dollarda ($)"
           value={form.cargo_price} onChange={(e) => setForm({ ...form, cargo_price: e.target.value })} required />
 
         {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{error}</div>}

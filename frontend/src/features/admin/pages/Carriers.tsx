@@ -5,7 +5,7 @@ import { Header, ListSkeleton, EmptyState, StatusBadge, IconPlane } from '@/shar
 
 interface Carrier {
   id: number; first_name: string; last_name: string; phone: string
-  carrier_number: number; is_active: boolean; total_trips: number
+  carrier_number: number; is_active: boolean; total_trips: number; has_cargo: boolean
 }
 
 export default function Carriers() {
@@ -39,8 +39,8 @@ export default function Carriers() {
                 <p className="text-xs text-slate-400">{c.phone}</p>
                 <p className="text-xs text-slate-400 mt-0.5">Jami reys: {c.total_trips}</p>
               </div>
-              <StatusBadge tone={c.is_active ? 'green' : 'gray'} dot>
-                {c.is_active ? 'Faol' : 'Nofaol'}
+              <StatusBadge tone={c.has_cargo ? 'green' : 'red'} dot>
+                {c.has_cargo ? 'Yuk bor' : 'Yuk yo\'q'}
               </StatusBadge>
             </div>
           ))}

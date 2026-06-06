@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Navigate } from 'react-router-dom'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import type { CartItem } from '@/shared/types'
+import { money } from '@/shared/lib/format'
 import { Header, Button, Input, Textarea, IconBox, IconTruck } from '@/shared/ui'
 
 interface LocationState { cart: CartItem[] }
@@ -62,13 +63,13 @@ export default function Checkout() {
                   {c.product.type === 'piece' && ` · ~${c.weight.toFixed(1)} kg`}
                 </p>
               </div>
-              <p className="text-sm font-bold text-slate-700">{c.price.toLocaleString()}</p>
+              <p className="text-sm font-bold text-slate-700">{money(c.price)}</p>
             </div>
           ))}
           {/* Jami */}
           <div className="flex items-center justify-between p-3.5 bg-slate-50/50">
             <span className="text-sm font-bold text-slate-700">Jami</span>
-            <span className="text-sm font-extrabold" style={{ color: 'var(--brand)' }}>{totalPrice.toLocaleString()} so'm</span>
+            <span className="text-sm font-extrabold" style={{ color: 'var(--brand)' }}>{money(totalPrice)}</span>
           </div>
         </div>
 
@@ -101,8 +102,12 @@ export default function Checkout() {
           </div>
         )}
 
-        <Textarea label="Turkiyadagi yetkazish manzili" placeholder="To'liq manzilni yozing"
+        <Textarea label="Turkiyada yukni qoldirish manzili"
+          placeholder="Kuryer kelib oladigan joy (mehmonxona, manzil...)"
           value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} rows={3} />
+        <p className="text-xs text-slate-400 -mt-3">
+          Yukni shu manzilga qoldirasiz — Turkiyadagi kuryer o'sha yerdan olib ketadi.
+        </p>
 
         {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{error}</div>}
       </form>

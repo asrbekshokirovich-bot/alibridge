@@ -197,3 +197,15 @@ input::placeholder, textarea::placeholder {
 /* Header/nav blur fonni dark qilish */
 .bg-white\/80 { background-color: rgba(22, 24, 31, 0.85) !important; }
 .bg-white\/90 { background-color: rgba(22, 24, 31, 0.9) !important; }
+
+/* Number input spinner (↑↓) tugmalarini yashirish — tasodifan bosilib son o'zgarmasligi uchun.
+   Chrome/Safari/Edge (WebKit) + Firefox. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}

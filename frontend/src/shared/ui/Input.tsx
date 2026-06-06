@@ -3,7 +3,14 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   icon?: React.ReactNode
 }
 
-export function Input({ label, icon, className = '', ...rest }: InputProps) {
+export function Input({ label, icon, className = '', onWheel, ...rest }: InputProps) {
+  // type=number bo'lsa: sichqoncha g'ildiragi bilan son tasodifan o'zgarmasligi uchun
+  // input ustida scroll qilinganda fokusni olib tashlaymiz (qiymat o'zgarmaydi).
+  const handleWheel: React.WheelEventHandler<HTMLInputElement> = (e) => {
+    if (rest.type === 'number') (e.target as HTMLInputElement).blur()
+    onWheel?.(e)
+  }
+
   return (
     <div className="w-full">
       {label && <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>}
@@ -15,6 +22,7 @@ export function Input({ label, icon, className = '', ...rest }: InputProps) {
         )}
         <input
           {...rest}
+          onWheel={handleWheel}
           className={`w-full ${icon ? 'pl-11' : 'pl-4'} pr-4 h-[52px] bg-white border border-slate-200 rounded-2xl text-[15px] placeholder:text-slate-400 focus:border-red-400 focus:ring-2 focus:ring-red-400/25 focus:outline-none transition-all ${className}`}
         />
       </div>

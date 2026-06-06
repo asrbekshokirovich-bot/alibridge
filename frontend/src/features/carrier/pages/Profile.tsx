@@ -45,9 +45,7 @@ export default function Profile() {
               <span className="font-bold text-slate-900">Joriy reys</span>
             </div>
             <div className="space-y-2">
-              <Row label="Reys" value={ticket.flight_number} flat />
-              <Row label="Sana" value={ticket.flight_date} flat />
-              <Row label="Vazn limiti" value={`${ticket.weight_limit} kg`} flat />
+              <Row label="Uchish sanasi" value={ticket.flight_date} flat />
             </div>
           </div>
         )}

@@ -1,12 +1,11 @@
 import { useState } from 'react'
-import { useNavigate, Navigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
-import { useCarrierStore } from '../store'
 import type { Product, CartItem } from '@/shared/types'
 import { money } from '@/shared/lib/format'
-import { Header, ListSkeleton, EmptyState, Input, Sheet, Button, IconCheck, IconPlane } from '@/shared/ui'
+import { Header, ListSkeleton, EmptyState, Input, Sheet, Button, IconCheck } from '@/shared/ui'
 
 // Donali uchun og'irlik = dona × 1 dona vazni
 // Kiloli uchun og'irlik = kiritilgan kg
@@ -21,27 +20,16 @@ function calcPrice(p: Product, amount: number): number {
 export default function Products() {
   const navigate = useNavigate()
   const { haptic } = useTelegram()
-  const ticket = useCarrierStore((s) => s.ticket)
   const [cart, setCart] = useState<CartItem[]>([])
 
   // Sheet (miqdor kiritish)
   const [sheetProduct, setSheetProduct] = useState<Product | null>(null)
   const [amountInput, setAmountInput] = useState('')
 
-  const limit = ticket?.weight_limit ?? 0
-  const totalWeight = cart.reduce((s, c) => s + c.weight, 0)
-  const pct = limit ? Math.min((totalWeight / limit) * 100, 100) : 0
-
   const { data: products, isLoading } = useQuery({
-    queryKey: ['products', limit],
-    queryFn: () => client.get<Product[]>('/products/catalog', {
-      params: { max_weight: limit || undefined },
-    }).then((r) => r.data),
-    enabled: !!ticket,
+    queryKey: ['products'],
+    queryFn: () => client.get<Product[]>('/products/catalog').then((r) => r.data),
   })
-
-  // Bilet yo'q bo'lsa — avval bilet kiritsin
-  if (!ticket) return <Navigate to="/carrier/ticket" replace />
 
   const inCart = (id: number) => cart.find((c) => c.product.id === id)
 
@@ -71,19 +59,10 @@ export default function Products() {
       return
     }
 
-    const weight = calcWeight(sheetProduct, amount)
-
-    // Limit tekshirish
-    if (limit && totalWeight + weight > limit) {
-      haptic('heavy')
-      alert(`⚠️ Limit oshib ketdi! Bu ${weight.toFixed(1)} kg, sizda ${(limit - totalWeight).toFixed(1)} kg joy bor`)
-      return
-    }
-
     const item: CartItem = {
       product: sheetProduct,
       amount,
-      weight,
+      weight: calcWeight(sheetProduct, amount),
       price: calcPrice(sheetProduct, amount),
     }
     setCart([...cart, item])
@@ -95,42 +74,11 @@ export default function Products() {
     <div className="min-h-screen pb-28 animate-fade-in">
       <Header title="Mahsulotlar" subtitle="O'zingizga mos yukni tanlang" />
 
-      {/* Bilet banner */}
-      <div className="px-4 pt-4">
-        <button onClick={() => { haptic('light'); navigate('/carrier/ticket') }}
-          className="press w-full rounded-2xl p-3.5 flex items-center gap-3 text-white text-left" style={{ background: 'var(--brand-gradient)' }}>
-          <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-            <IconPlane size={20} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-sm">{ticket.flight_number} · {ticket.flight_date}</p>
-            <p className="text-xs text-white/80">Limit: {limit} kg · bosib yangilang</p>
-          </div>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-white/70 shrink-0">
-            <path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Progress */}
-      {cart.length > 0 && (
-        <div className="px-4 pt-3 animate-fade-in">
-          <div className="flex justify-between text-xs font-medium text-slate-600 mb-1.5">
-            <span>Yuklangan</span>
-            <span>{totalWeight.toFixed(1)} / {limit} kg</span>
-          </div>
-          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-            <div className="h-full rounded-full transition-all duration-300"
-              style={{ width: `${pct}%`, background: pct > 90 ? '#f59e0b' : 'var(--brand-gradient)' }} />
-          </div>
-        </div>
-      )}
-
       {/* Ro'yxat */}
       {isLoading ? (
         <ListSkeleton />
       ) : !products?.length ? (
-        <EmptyState title="Mahsulot topilmadi" description="Bu vaznga mos mahsulot yo'q" />
+        <EmptyState title="Mahsulot topilmadi" description="Hozircha mahsulot yo'q" />
       ) : (
         <div className="px-4 pt-4 space-y-3">
           {products.map((p) => {
@@ -182,10 +130,10 @@ export default function Products() {
         </div>
       )}
 
-      {/* Suzuvchi tasdiqlash */}
+      {/* Suzuvchi tasdiqlash — sana kiritish ekraniga o'tadi */}
       {cart.length > 0 && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-4 z-20 animate-slide-up">
-          <button onClick={() => { haptic('medium'); navigate('/carrier/checkout', { state: { cart } }) }}
+          <button onClick={() => { haptic('medium'); navigate('/carrier/ticket', { state: { cart } }) }}
             style={{ background: 'var(--brand-gradient)' }}
             className="press w-full text-white rounded-2xl py-4 font-bold shadow-[var(--shadow-brand)] flex items-center justify-center gap-2">
             Tasdiqlash

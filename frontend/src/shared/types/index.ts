@@ -65,9 +65,7 @@ export interface Product {
 
 // Yo'lovchi bilet ma'lumotlari (har safar yangilanadi)
 export interface Ticket {
-  flight_number: string   // reys raqami
   flight_date: string     // uchish sanasi
-  weight_limit: number    // kg limiti
 }
 
 // Savatdagi element — tanlangan miqdor bilan

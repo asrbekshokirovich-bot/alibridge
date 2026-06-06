@@ -14,10 +14,10 @@ services:
         sync: false
       - key: BOT_USERNAME
         value: alibridgebot
-      - key: BOT_WEBHOOK_URL
-        value: https://alibridge-backend.onrender.com/api/v1/telegram/webhook
-      - key: BOT_WEBHOOK_SECRET
-        sync: false   # Dashboard'da kuchli tasodifiy qiymat o'rnating (commit qilmang)
+      # Bot polling rejimida ishlaydi (Render web service doimo yoniq).
+      # Cloudflared/tunnel kerak emas — Render public HTTPS beradi.
+      - key: BOT_FORCE_POLLING
+        value: "true"
       - key: MINIAPP_URL
         value: https://alibridge-frontend.onrender.com
       - key: CORS_ORIGINS

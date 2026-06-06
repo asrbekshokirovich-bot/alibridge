@@ -99,8 +99,13 @@ async def start_bot() -> None:
     except Exception as e:  # noqa: BLE001
         logger.warning("Bot description o'rnatishda xato: %s", e)
 
-    # Tunnel URL o'zgarishini doimiy kuzatuvchi watchdog
-    _watchdog_task = asyncio.create_task(_tunnel_watchdog(bot))
+    # Tunnel watchdog faqat local'da (cloudflared tunnel.log mavjud bo'lsa).
+    # Render'da tunnel yo'q — MINIAPP_URL env'dan keladi, watchdog kerak emas.
+    if read_tunnel_url() is not None:
+        _watchdog_task = asyncio.create_task(_tunnel_watchdog(bot))
+        logger.info("Tunnel watchdog ishga tushdi (local rejim)")
+    else:
+        logger.info("Tunnel topilmadi — watchdog o'chirilgan (server rejim, MINIAPP_URL env'dan)")
 
     async def _run() -> None:
         try:

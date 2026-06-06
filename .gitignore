@@ -32,8 +32,9 @@ develop-eggs/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+# Python build lib (faqat ildizda — frontend/src/shared/lib manba kodi emas)
+/lib/
+/lib64/
 parts/
 sdist/
 var/

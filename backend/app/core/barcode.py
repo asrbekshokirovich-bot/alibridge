@@ -56,21 +56,21 @@ def render_label_pdf(barcode: str, name: str, received: date) -> bytes:
     while name_size > 12 and c.stringWidth(name_text, "Helvetica-Bold", name_size) > LABEL_W - 6 * mm:
         name_size -= 1
     c.setFont("Helvetica-Bold", name_size)
-    c.drawCentredString(LABEL_W / 2, LABEL_H - 9 * mm, name_text)
+    c.drawCentredString(LABEL_W / 2, LABEL_H - 8 * mm, name_text)
 
-    # Sana
-    c.setFont("Helvetica", 7)
-    c.drawCentredString(LABEL_W / 2, LABEL_H - 13 * mm, received.strftime("%d.%m.%Y"))
+    # Sana (nomdan pastroqda, kattaroq)
+    c.setFont("Helvetica", 12)
+    c.drawCentredString(LABEL_W / 2, LABEL_H - 16 * mm, received.strftime("%d.%m.%Y"))
 
     # Shtrix-kod (markazda)
     png = _barcode_png(barcode)
     img = ImageReader(png)
     bw = LABEL_W - 8 * mm
-    bh = 14 * mm
+    bh = 12 * mm
     c.drawImage(
         img,
         (LABEL_W - bw) / 2,
-        11 * mm,
+        9.5 * mm,
         width=bw,
         height=bh,
         preserveAspectRatio=False,
@@ -79,7 +79,7 @@ def render_label_pdf(barcode: str, name: str, received: date) -> bytes:
 
     # Barkod kodi (pastda)
     c.setFont("Helvetica-Bold", 10)
-    c.drawCentredString(LABEL_W / 2, 4 * mm, barcode)
+    c.drawCentredString(LABEL_W / 2, 3.5 * mm, barcode)
 
     c.showPage()
     c.save()

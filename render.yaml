@@ -20,6 +20,9 @@ services:
         value: "true"
       - key: MINIAPP_URL
         value: https://alibridge-frontend.onrender.com
+      # Barkod PDF yorliq linklari uchun — backend o'z URL'i (PDF backend'da generatsiya bo'ladi)
+      - key: PUBLIC_BASE_URL
+        value: https://alibridge-backend.onrender.com
       - key: CORS_ORIGINS
         value: https://alibridge-frontend.onrender.com,https://web.telegram.org,https://t.me
       - key: DATABASE_URL

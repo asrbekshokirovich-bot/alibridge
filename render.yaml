@@ -79,6 +79,9 @@ services:
     buildCommand: cd frontend && npm ci && npm run build
     staticPublishPath: ./frontend/dist
     envVars:
+      # Vite 8 / TypeScript 6 Node 20+ talab qiladi (default eski Node build'ni buzadi)
+      - key: NODE_VERSION
+        value: "22.11.0"
       - key: VITE_BOT_USERNAME
         value: alibridgebot
       - key: VITE_APP_VERSION

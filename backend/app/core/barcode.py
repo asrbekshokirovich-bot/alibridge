@@ -50,14 +50,17 @@ def render_label_pdf(barcode: str, name: str, received: date) -> bytes:
     out = BytesIO()
     c = canvas.Canvas(out, pagesize=(LABEL_W, LABEL_H))
 
-    # Nom (tepada, qalin)
-    name_text = name if len(name) <= 24 else name[:23] + "…"
-    c.setFont("Helvetica-Bold", 9)
-    c.drawCentredString(LABEL_W / 2, LABEL_H - 6 * mm, name_text)
+    # Nom (tepada, qalin, KATTA) — joyga moslab shrift hajmi tanlanadi
+    name_text = name if len(name) <= 18 else name[:17] + "…"
+    name_size = 27
+    while name_size > 12 and c.stringWidth(name_text, "Helvetica-Bold", name_size) > LABEL_W - 6 * mm:
+        name_size -= 1
+    c.setFont("Helvetica-Bold", name_size)
+    c.drawCentredString(LABEL_W / 2, LABEL_H - 9 * mm, name_text)
 
     # Sana
     c.setFont("Helvetica", 7)
-    c.drawCentredString(LABEL_W / 2, LABEL_H - 10 * mm, received.strftime("%d.%m.%Y"))
+    c.drawCentredString(LABEL_W / 2, LABEL_H - 13 * mm, received.strftime("%d.%m.%Y"))
 
     # Shtrix-kod (markazda)
     png = _barcode_png(barcode)

@@ -78,16 +78,10 @@ export default function ReceiveGoods() {
           <p className="font-mono text-sm font-bold tracking-widest text-slate-900">{result.barcode}</p>
         </div>
 
-        {/* Mahsulot soni (eslatma uchun) */}
-        <div className="w-full mt-3 px-1 flex justify-between text-sm">
-          <span className="text-slate-500">Mahsulot soni</span>
-          <span className="font-bold text-slate-900">{result.quantity} dona</span>
-        </div>
-
         <a href={result.print_url} target="_blank" rel="noopener noreferrer"
           style={{ background: 'var(--brand-gradient)' }}
           className="press w-full text-white rounded-2xl py-4 font-bold mt-5 text-center shadow-[var(--shadow-brand)]">
-          🖨️ Barkod chiqarish (1 nusxa)
+          🖨️ Barkod chiqarish
         </a>
         <button onClick={() => { setResult(null); setForm({ name: '', category: '', type: 'piece', quantity: '', weight_kg: '', box_weight_kg: '', cargo_price: '' }) }}
           className="press w-full bg-slate-100 text-slate-700 rounded-2xl py-3.5 font-semibold mt-3">

@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
-import client from '@/shared/api/client'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import client, { extractErrorMessage } from '@/shared/api/client'
+import { useTelegram } from '@/shared/hooks/useTelegram'
 import { initials } from '@/shared/lib/format'
-import { Header, ListSkeleton, EmptyState, StatusBadge, IconPlane } from '@/shared/ui'
+import { Header, ListSkeleton, EmptyState, StatusBadge, IconPlane, IconTrash } from '@/shared/ui'
 
 interface Carrier {
   id: number; first_name: string; last_name: string; phone: string
@@ -9,9 +10,21 @@ interface Carrier {
 }
 
 export default function Carriers() {
+  const { notify } = useTelegram()
+  const qc = useQueryClient()
+
   const { data, isLoading } = useQuery({
     queryKey: ['admin-carriers'],
     queryFn: () => client.get<Carrier[]>('/admin/carriers').then((r) => r.data),
+  })
+
+  const remove = useMutation({
+    mutationFn: (id: number) => client.post(`/admin/carriers/${id}/remove`),
+    onSuccess: () => {
+      notify('success')
+      qc.invalidateQueries({ queryKey: ['admin-carriers'] })
+    },
+    onError: (err) => { alert(extractErrorMessage(err)); notify('error') },
   })
 
   return (
@@ -24,26 +37,46 @@ export default function Carriers() {
         <EmptyState icon={<IconPlane size={30} />} title="Yo'lovchi yo'q" />
       ) : (
         <div className="px-4 pt-4 space-y-3">
-          {data.map((c) => (
-            <div key={c.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3.5">
-              <div className="relative shrink-0">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ background: 'var(--brand-gradient)' }}>
-                  {initials(c.first_name, c.last_name)}
+          {data.map((c) => {
+            const busy = remove.isPending && remove.variables === c.id
+            return (
+              <div key={c.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3.5">
+                <div className="relative shrink-0">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ background: 'var(--brand-gradient)' }}>
+                    {initials(c.first_name, c.last_name)}
+                  </div>
+                  <span className="absolute -bottom-1 -right-1 bg-slate-900 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                    #{c.carrier_number}
+                  </span>
                 </div>
-                <span className="absolute -bottom-1 -right-1 bg-slate-900 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-                  #{c.carrier_number}
-                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-slate-900 truncate">{c.first_name} {c.last_name}</p>
+                  <p className="text-xs text-slate-400">{c.phone}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Jami reys: {c.total_trips}</p>
+                </div>
+                <div className="flex flex-col items-end gap-2 shrink-0">
+                  <StatusBadge tone={c.has_cargo ? 'green' : 'red'} dot>
+                    {c.has_cargo ? 'Yuk bor' : 'Yuk yo\'q'}
+                  </StatusBadge>
+                  <button
+                    onClick={() => {
+                      if (confirm(`${c.first_name} yo'lovchi rolidan olib tashlansinmi?`)) remove.mutate(c.id)
+                    }}
+                    disabled={busy || c.has_cargo}
+                    title={c.has_cargo ? "Yuk bor — avval topshirilishi kerak" : "Roldan olib tashlash"}
+                    className="press flex items-center gap-1 text-xs font-semibold text-red-600 disabled:opacity-40"
+                  >
+                    {busy ? (
+                      <span className="w-3 h-3 border-2 border-red-300 border-t-red-500 rounded-full animate-spin" />
+                    ) : (
+                      <IconTrash size={14} />
+                    )}
+                    O'chirish
+                  </button>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-slate-900 truncate">{c.first_name} {c.last_name}</p>
-                <p className="text-xs text-slate-400">{c.phone}</p>
-                <p className="text-xs text-slate-400 mt-0.5">Jami reys: {c.total_trips}</p>
-              </div>
-              <StatusBadge tone={c.has_cargo ? 'green' : 'red'} dot>
-                {c.has_cargo ? 'Yuk bor' : 'Yuk yo\'q'}
-              </StatusBadge>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

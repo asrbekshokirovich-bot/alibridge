@@ -12,6 +12,12 @@ export const IconBox = ({ size = 24, className }: IconProps) => (
   </svg>
 )
 
+export const IconTrash = ({ size = 24, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M10 11v6M14 11v6" {...stroke} />
+  </svg>
+)
+
 export const IconBag = ({ size = 24, className }: IconProps) => (
   <svg {...base(size)} className={className}>
     <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6zM3 6h18M16 10a4 4 0 01-8 0" {...stroke} />

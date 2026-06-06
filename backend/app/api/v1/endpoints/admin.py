@@ -206,6 +206,41 @@ async def carriers(
     ]
 
 
+@router.post("/carriers/{user_id}/remove", response_model=OkResponse)
+async def remove_carrier(
+    user_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*ROLE)),
+) -> OkResponse:
+    """Yo'lovchini roldan olib tashlaydi — oddiy foydalanuvchiga (NEW) qaytaradi."""
+    target = await db.get(User, user_id)
+    if target is None:
+        raise AppError("USER_NOT_FOUND", "Foydalanuvchi topilmadi")
+    if target.role != Role.CARRIER:
+        raise AppError("NOT_CARRIER", "Bu foydalanuvchi yo'lovchi emas")
+
+    # Yo'lovchida hozir yuk bo'lsa — o'chirib bo'lmaydi
+    has_cargo = await db.scalar(
+        select(func.count())
+        .select_from(Product)
+        .where(
+            Product.custody_holder_type == HolderType.CARRIER,
+            Product.custody_holder_id == target.id,
+        )
+    )
+    if has_cargo:
+        raise AppError("HAS_CARGO", "Yo'lovchida yuk bor — avval topshirilishi kerak")
+
+    target.role = Role.NEW
+    await db.flush()
+    await notify_user(
+        db,
+        target.id,
+        "ℹ️ Sizning yo'lovchi rolingiz olib tashlandi.\nQaytadan rol tanlashingiz mumkin.",
+    )
+    return OkResponse(ok=True)
+
+
 # ─── Staff (barcha tasdiqlangan xodimlar) ───────────────────────────────────────
 
 

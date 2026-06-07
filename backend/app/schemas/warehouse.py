@@ -92,7 +92,7 @@ class ScanResponse(BaseModel):
 
 
 class ConfirmRequest(BaseModel):
-    barcodes: list[str] = Field(min_length=1)
+    barcodes: list[str] = Field(min_length=1, max_length=200)
 
 
 # ─── Walk-in (TR) ───────────────────────────────────────────────────────────────

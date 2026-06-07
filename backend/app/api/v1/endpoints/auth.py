@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, Request
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
+from app.core.limiter import limiter
 from app.bot.notify import on_staff_request
 from app.core.enums import RegType, Role, StaffRequestStatus
 from app.core.errors import AppError
@@ -18,7 +19,7 @@ router = APIRouter(tags=["auth"])
 
 
 class LoginRequest(BaseModel):
-    tg_init_data: str
+    tg_init_data: str = Field(max_length=4096)
 
 
 class SelectRoleRequest(BaseModel):
@@ -32,7 +33,9 @@ SWITCHABLE_ROLES = {Role.NEW, Role.ORDERER, Role.CARRIER, Role.PENDING}
 
 
 @router.post("/auth/login", response_model=RegisterResponse)
+@limiter.limit("20/minute")
 async def login(
+    request: Request,
     body: LoginRequest,
     db: AsyncSession = Depends(get_db),
 ) -> RegisterResponse:
@@ -53,7 +56,9 @@ async def login(
 
 
 @router.post("/auth/register", response_model=RegisterResponse)
+@limiter.limit("10/minute")
 async def register(
+    request: Request,
     body: RegisterRequest,
     db: AsyncSession = Depends(get_db),
 ) -> RegisterResponse:
@@ -82,7 +87,9 @@ async def me(user: User = Depends(get_current_user)) -> UserOut:
 
 
 @router.post("/auth/select-role", response_model=RegisterResponse)
+@limiter.limit("20/minute")
 async def select_role(
+    request: Request,
     body: SelectRoleRequest,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
@@ -108,7 +115,9 @@ async def select_role(
 
 
 @router.post("/auth/staff-request", response_model=RegisterResponse)
+@limiter.limit("5/minute")
 async def staff_request(
+    request: Request,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> RegisterResponse:

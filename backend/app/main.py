@@ -1,13 +1,23 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi.errors import RateLimitExceeded
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.responses import JSONResponse
 
 from app.bot.runner import start_bot, stop_bot
 from app.core.config import settings
+from app.core.limiter import limiter
+
+
+async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    return JSONResponse(
+        status_code=429,
+        content={"error": {"code": "RATE_LIMIT", "message": "Juda ko'p so'rov. Birozdan keyin urinib ko'ring."}},
+    )
 from app.core.errors import (
     AppError,
     app_error_handler,
@@ -42,10 +52,19 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — Telegram WebView va frontend uchun
+# Rate limiting (spam/DoS himoyasi) — global 120/min, alohida endpointlarda qattiqroq
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_handler)
+
+# CORS — Telegram WebView va frontend uchun.
+# Production'da CORS_ORIGINS to'ldirilishi shart; bo'sh bo'lsa faqat Telegram domenlari.
+_cors_origins = settings.cors_origin_list or [
+    "https://web.telegram.org",
+    "https://t.me",
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origin_list or ["*"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

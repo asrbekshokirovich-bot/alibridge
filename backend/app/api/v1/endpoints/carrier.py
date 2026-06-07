@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
+
+from app.core.limiter import limiter
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -43,7 +45,9 @@ async def catalog(
 
 
 @router.post("/carrier/orders", response_model=OrderCreatedResponse)
+@limiter.limit("15/minute")
 async def create_carrier_order(
+    request: Request,
     body: CreateOrderRequest,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(Role.CARRIER)),

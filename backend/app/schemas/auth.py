@@ -9,7 +9,7 @@ class RegisterRequest(BaseModel):
     phone: str = Field(default="", max_length=32)
     passport: str | None = Field(default=None, max_length=256)
     reg_type: RegType
-    tg_init_data: str
+    tg_init_data: str = Field(max_length=4096)
 
 
 class UserOut(BaseModel):

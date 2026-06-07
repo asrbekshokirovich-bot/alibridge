@@ -20,7 +20,7 @@ class ScanAirportRequest(BaseModel):
 
 class ConfirmAirportRequest(BaseModel):
     carrier_number: int
-    barcodes: list[str] = Field(min_length=1)
+    barcodes: list[str] = Field(min_length=1, max_length=200)
 
 
 # ─── Courier TR ─────────────────────────────────────────────────────────────────
@@ -46,4 +46,4 @@ class ScanDeliveryRequest(BaseModel):
 
 class ConfirmDeliveryRequest(BaseModel):
     delivery_id: int
-    barcodes: list[str] = Field(min_length=1)
+    barcodes: list[str] = Field(min_length=1, max_length=200)

@@ -11,9 +11,9 @@ class OrderItemIn(BaseModel):
 
 
 class CreateOrderRequest(BaseModel):
-    items: list[OrderItemIn] = Field(min_length=1)
+    items: list[OrderItemIn] = Field(min_length=1, max_length=200)
     pickup_type: PickupType
-    pickup_address: str | None = None
+    pickup_address: str | None = Field(default=None, max_length=512)
     delivery_address_tr: str = Field(min_length=1, max_length=512)
 
 

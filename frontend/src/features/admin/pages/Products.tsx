@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
+import { money } from '@/shared/lib/format'
 import { Header, ListSkeleton, EmptyState, StatusBadge, IconBox } from '@/shared/ui'
 import type { Product } from '@/shared/types'
 
@@ -10,10 +11,6 @@ const STATUS_LABEL: Record<string, { label: string; tone: 'green' | 'yellow' | '
   with_carrier: { label: 'Yo\'lovchida', tone: 'yellow' },
   delivered_tr: { label: 'Turkiyada', tone: 'green' },
   damaged: { label: 'Shikastlangan', tone: 'red' },
-}
-
-function money(v: number): string {
-  return new Intl.NumberFormat('uz-UZ').format(v) + ' so\'m'
 }
 
 export default function Products() {

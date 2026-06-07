@@ -12,7 +12,7 @@ class ProductOut(BaseModel):
     category: str
     type: ProductType
     quantity: int
-    weight_kg: int
+    weight_kg: float
     unit_weight_kg: float | None = None
     box_weight_kg: float | None = None
     cargo_price: int

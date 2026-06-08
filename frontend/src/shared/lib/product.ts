@@ -38,10 +38,10 @@ export function typeLabel(t: ProductType): string {
   return LABEL[productGroup(t)]
 }
 
-// Barkod PDF yorlig'i linki (auth shart emas) — chop etish uchun
-// printDate berilsa, PDF'da o'sha sana ko'rsatiladi (bosilgan sana)
+// Barkod Word (.docx) yorlig'i linki (auth shart emas) — chop etish uchun
+// printDate berilsa, faylda o'sha sana ko'rsatiladi (bosilgan sana)
 export function labelUrl(barcode: string, printDate?: string): string {
   const base = import.meta.env.VITE_API_URL ?? '/api/v1'
-  const url = `${base}/labels/${barcode}.pdf`
+  const url = `${base}/labels/${barcode}.docx`
   return printDate ? `${url}?print_date=${printDate}` : url
 }

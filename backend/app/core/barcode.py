@@ -87,3 +87,56 @@ def render_label_pdf(barcode: str, name: str, received: date) -> bytes:
     c.showPage()
     c.save()
     return out.getvalue()
+
+
+def render_label_docx(barcode: str, name: str, received: date) -> bytes:
+    """Bitta yorliqni Word (.docx) sifatida chizadi — oddiy printerda chop etish uchun.
+
+    Tartib (markazlashgan): nom (qalin, katta) / sana / shtrix-kod rasmi / barkod kodi.
+    """
+    from docx import Document
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.shared import Mm, Pt
+
+    doc = Document()
+    section = doc.sections[0]
+    # Yorliq o'lchamiga yaqin sahifa (58x40 mm), minimal hoshiya
+    section.page_width = Mm(58)
+    section.page_height = Mm(40)
+    section.top_margin = Mm(2)
+    section.bottom_margin = Mm(2)
+    section.left_margin = Mm(3)
+    section.right_margin = Mm(3)
+
+    # Nom (qalin, katta)
+    p_name = doc.add_paragraph()
+    p_name.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_name.paragraph_format.space_after = Pt(2)
+    run_name = p_name.add_run(name if len(name) <= 24 else name[:23] + "…")
+    run_name.bold = True
+    run_name.font.size = Pt(16)
+
+    # Sana
+    p_date = doc.add_paragraph()
+    p_date.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_date.paragraph_format.space_after = Pt(2)
+    run_date = p_date.add_run(received.strftime("%d.%m.%Y"))
+    run_date.font.size = Pt(11)
+
+    # Shtrix-kod rasmi (markazda)
+    p_img = doc.add_paragraph()
+    p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_img.paragraph_format.space_after = Pt(2)
+    png = _barcode_png(barcode)
+    p_img.add_run().add_picture(png, width=Mm(50))
+
+    # Barkod kodi (pastda)
+    p_code = doc.add_paragraph()
+    p_code.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run_code = p_code.add_run(barcode)
+    run_code.bold = True
+    run_code.font.size = Pt(11)
+
+    out = BytesIO()
+    doc.save(out)
+    return out.getvalue()

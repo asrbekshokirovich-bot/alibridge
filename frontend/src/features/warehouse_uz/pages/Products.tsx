@@ -122,6 +122,7 @@ export default function Products() {
                   )}
                   <a
                     href={labelUrl(p.barcode, new Date().toISOString().slice(0, 10))}
+                    download={`${p.barcode}.docx`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="press flex-1 py-2.5 rounded-xl text-sm font-semibold bg-slate-100 text-slate-700 text-center"

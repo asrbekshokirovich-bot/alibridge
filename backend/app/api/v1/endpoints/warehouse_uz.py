@@ -58,9 +58,7 @@ async def stats(
         .select_from(OrderItem)
         .join(Product, Product.id == OrderItem.product_id)
         .where(
-            Product.type.in_(
-                [ProductType.BOXED, ProductType.TEXTILE, ProductType.WEIGHT]
-            ),
+            Product.type.in_([ProductType.BOXED, ProductType.TEXTILE, ProductType.WEIGHT]),
             OrderItem.actual_quantity.is_(None),
         )
     )

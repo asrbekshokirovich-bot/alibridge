@@ -81,6 +81,23 @@ services:
     runtime: static
     buildCommand: cd frontend && npm ci && npm run build
     staticPublishPath: ./frontend/dist
+    # SPA — barcha yo'llar index.html ga
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    # index.html HECH QACHON keshlanmaydi — Telegram/CDN har doim yangi JS hash oladi.
+    # Hashlangan assetlar (immutable) esa uzoq keshlanadi.
+    headers:
+      - path: /index.html
+        name: Cache-Control
+        value: "no-store, no-cache, must-revalidate, max-age=0"
+      - path: /
+        name: Cache-Control
+        value: "no-store, no-cache, must-revalidate, max-age=0"
+      - path: /assets/*
+        name: Cache-Control
+        value: "public, max-age=31536000, immutable"
     envVars:
       # Vite 8 / TypeScript 6 Node 20+ talab qiladi (default eski Node build'ni buzadi)
       - key: NODE_VERSION

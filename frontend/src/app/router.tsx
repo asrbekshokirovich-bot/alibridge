@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useAuthStore } from '@/shared/store/auth'
 import { RoleGuard } from '@/shared/components/RoleGuard'
 import { useTelegramBackButton } from '@/shared/hooks/useTelegramBackButton'
 
@@ -30,8 +31,13 @@ export const ROLE_HOME: Record<string, string> = {
 }
 
 function RootRedirect() {
-  // /start orqali kirilganda har doim Welcome ochiladi (rol tanlangan bo'lsa ham).
-  // Welcome'da joriy rol bo'yicha "Davom etish" tugmasi ko'rsatiladi.
+  const user = useAuthStore((s) => s.user)
+  // Roli tayinlangan bo'lsa — to'g'ridan-to'g'ri o'z paneliga.
+  // 'new' (hali rol tanlamagan) ROLE_HOME'da yo'q — Welcome'ga boradi.
+  if (user && ROLE_HOME[user.role]) {
+    return <Navigate to={ROLE_HOME[user.role]} replace />
+  }
+  // Yangi foydalanuvchi ('new') yoki Telegram tashqarisi — rol tanlash ekrani
   return <Navigate to="/welcome" replace />
 }
 

@@ -24,8 +24,10 @@ async def register_user(
         role = Role.CARRIER
     elif reg_type == RegType.ORDERER:
         role = Role.ORDERER
-    else:  # STAFF
+    elif reg_type == RegType.STAFF:
         role = Role.PENDING
+    else:
+        role = Role.NEW  # rol tanlanmagan — Mini App'da Welcome ko'rsatiladi
 
     # Foydalanuvchi o'zi erkin tanlay oladigan rollar (xodim emas)
     SELF_ROLES = {Role.PENDING, Role.CARRIER, Role.ORDERER}

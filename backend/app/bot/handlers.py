@@ -138,7 +138,7 @@ async def reg_name(message: Message, state: FSMContext) -> None:
     phone = data.get("phone", "")
     await state.clear()
 
-    # Foydalanuvchini yaratamiz — default rol: orderer (Mini App'da almashtira oladi)
+    # Foydalanuvchini yaratamiz — rol tanlanmagan (NEW). Mini App'da Welcome ko'rsatiladi.
     async with SessionLocal() as db:
         existing = await db.scalar(select(User).where(User.telegram_id == message.from_user.id))
         if existing is None:

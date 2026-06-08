@@ -44,7 +44,7 @@ class User(Base):
     last_name: Mapped[str] = mapped_column(String(128), default="")
     phone: Mapped[str] = mapped_column(String(32), default="")
     passport: Mapped[str | None] = mapped_column(String(256), nullable=True)
-    role: Mapped[Role] = mapped_column(String(32), default=Role.PENDING, index=True)
+    role: Mapped[Role] = mapped_column(String(32), default=Role.NEW, index=True)
     carrier_number: Mapped[int | None] = mapped_column(Integer, unique=True, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)

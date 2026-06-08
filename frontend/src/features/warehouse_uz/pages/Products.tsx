@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
 import type { Product } from '@/shared/types'
 import { PRODUCT_STATUS } from '@/shared/lib/status'
-import { productGroup, typeEmoji, type ProductGroup } from '@/shared/lib/product'
+import { productGroup, typeEmoji, labelUrl, type ProductGroup } from '@/shared/lib/product'
 import { Header, ListSkeleton, EmptyState, StatusBadge, IconBox } from '@/shared/ui'
 
 type Filter = 'all' | ProductGroup
@@ -109,16 +109,26 @@ export default function Products() {
                   </div>
                 </div>
 
-                {/* Tahrirlash — faqat omborda turgan mahsulot */}
-                {editable && (
-                  <button
-                    onClick={() => navigate(`/warehouse-uz/products/${p.id}/edit`)}
-                    className={`press w-full mt-3 py-2.5 rounded-xl text-sm font-semibold ${incomplete ? 'text-white' : 'bg-slate-100 text-slate-700'}`}
-                    style={incomplete ? { background: 'var(--brand-gradient)' } : undefined}
+                {/* Tugmalar: Tahrirlash + Barkod chiqarish */}
+                <div className="flex gap-2 mt-3">
+                  {editable && (
+                    <button
+                      onClick={() => navigate(`/warehouse-uz/products/${p.id}/edit`)}
+                      className={`press flex-1 py-2.5 rounded-xl text-sm font-semibold ${incomplete ? 'text-white' : 'bg-slate-100 text-slate-700'}`}
+                      style={incomplete ? { background: 'var(--brand-gradient)' } : undefined}
+                    >
+                      {incomplete ? 'To\'ldirish' : '✏️ Tahrirlash'}
+                    </button>
+                  )}
+                  <a
+                    href={labelUrl(p.barcode)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="press flex-1 py-2.5 rounded-xl text-sm font-semibold bg-slate-100 text-slate-700 text-center"
                   >
-                    {incomplete ? 'To\'ldirish' : '✏️ Tahrirlash'}
-                  </button>
-                )}
+                    🖨️ Barkod
+                  </a>
+                </div>
               </div>
             )
           })}

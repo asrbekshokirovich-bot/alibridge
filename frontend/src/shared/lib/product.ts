@@ -37,3 +37,9 @@ const LABEL: Record<ProductGroup, string> = { piece: 'Donali', boxed: 'Kiloli', 
 export function typeLabel(t: ProductType): string {
   return LABEL[productGroup(t)]
 }
+
+// Barkod PDF yorlig'i linki (auth shart emas) — chop etish uchun
+export function labelUrl(barcode: string): string {
+  const base = import.meta.env.VITE_API_URL ?? '/api/v1'
+  return `${base}/labels/${barcode}.pdf`
+}

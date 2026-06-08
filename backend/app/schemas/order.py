@@ -1,3 +1,5 @@
+from datetime import date
+
 from pydantic import BaseModel, Field
 
 from app.core.enums import OrderStatus, PickupType, ProductType
@@ -15,6 +17,7 @@ class CreateOrderRequest(BaseModel):
     pickup_type: PickupType
     pickup_address: str | None = Field(default=None, max_length=512)
     delivery_address_tr: str = Field(min_length=1, max_length=512)
+    flight_date: date | None = Field(default=None)
 
 
 class OrderItemOut(BaseModel):
@@ -35,6 +38,7 @@ class CarrierOrderOut(BaseModel):
     pickup_type: PickupType
     pickup_address: str | None = None
     delivery_address_tr: str
+    flight_date: date | None = None
     status: OrderStatus
     created_at: str
 

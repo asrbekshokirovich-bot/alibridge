@@ -1,7 +1,7 @@
 import logging
 
 from aiogram import F, Router
-from aiogram.filters import CommandStart
+from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import (
@@ -16,9 +16,9 @@ from aiogram.types import (
 from sqlalchemy import select
 
 from app.core.config import settings
-from app.core.enums import Role
+from app.core.enums import Role, StaffRequestStatus
 from app.db.base import SessionLocal
-from app.db.models import User
+from app.db.models import StaffRequest, User
 
 logger = logging.getLogger("alibridge.bot")
 
@@ -168,3 +168,54 @@ async def reg_name_invalid(message: Message) -> None:
 @router.message(F.text == "/app")
 async def cmd_app(message: Message) -> None:
     await message.answer("ALI BRIDGE:", reply_markup=_miniapp_keyboard())
+
+
+@router.message(Command("ishchi"))
+async def cmd_ishchi(message: Message) -> None:
+    """Foydalanuvchi /ishchi yozsa — xodim so'rovi yuboriladi, admin xabar oladi."""
+    if not message.from_user:
+        return
+    tg = message.from_user
+
+    async with SessionLocal() as db:
+        user = await db.scalar(select(User).where(User.telegram_id == tg.id))
+
+        # Ro'yxatdan o'tmagan — avval /start bossin
+        if user is None:
+            await message.answer(
+                "Avval ro'yxatdan o'ting — /start ni bosing."
+            )
+            return
+
+        # Allaqachon xodim yoki admin
+        staff_roles = {Role.WAREHOUSE_UZ, Role.WAREHOUSE_TR, Role.COURIER_UZ, Role.COURIER_TR, Role.ADMIN}
+        if user.role in staff_roles:
+            await message.answer("Siz allaqachon xodim sifatida tizimda ro'yxatdansiz.")
+            return
+
+        # Kutilayotgan so'rov bormi
+        existing = await db.scalar(
+            select(StaffRequest).where(
+                StaffRequest.user_id == user.id,
+                StaffRequest.status == StaffRequestStatus.PENDING,
+            )
+        )
+        if existing is not None:
+            await message.answer("So'rovingiz allaqachon yuborilgan. Admin ko'rib chiqadi.")
+            return
+
+        # So'rov yaratamiz
+        user.role = Role.PENDING
+        db.add(StaffRequest(user_id=user.id, status=StaffRequestStatus.PENDING))
+        await db.commit()
+
+    # Foydalanuvchiga tasdiqlash
+    await message.answer(
+        "✅ <b>So'rov yuborildi!</b>\n\nAdmin tasdiqlashini kuting. Tez orada rol tayinlanadi.",
+        parse_mode="HTML",
+    )
+
+    # Adminlarga xabar
+    from app.bot.notify import on_staff_request
+    async with SessionLocal() as db:
+        await on_staff_request(db, name=f"{tg.first_name} {tg.last_name or ''}".strip())

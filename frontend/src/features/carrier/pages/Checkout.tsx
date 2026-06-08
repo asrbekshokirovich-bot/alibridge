@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useLocation, Navigate } from 'react-router-dom'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
+import { useCarrierStore } from '../store'
 import type { CartItem } from '@/shared/types'
 import { money } from '@/shared/lib/format'
 import { isPiece, typeEmoji, unitWord } from '@/shared/lib/product'
@@ -13,6 +14,7 @@ export default function Checkout() {
   const navigate = useNavigate()
   const { state } = useLocation() as { state: LocationState }
   const { notify, haptic } = useTelegram()
+  const { ticket, clearTicket } = useCarrierStore()
 
   const [pickupType, setPickupType] = useState<'self' | 'courier'>('self')
   const [pickupAddress, setPickupAddress] = useState('')
@@ -38,8 +40,10 @@ export default function Checkout() {
         pickup_type: pickupType,
         pickup_address: pickupType === 'courier' ? pickupAddress : null,
         delivery_address_tr: deliveryAddress,
+        flight_date: ticket?.flight_date ?? null,
       })
       notify('success')
+      clearTicket()
       navigate('/carrier/my-orders')
     } catch (err) { setError(extractErrorMessage(err)); notify('error') }
     finally { setLoading(false) }

@@ -29,6 +29,7 @@ async def create_order(db: AsyncSession, carrier_id: int, body: CreateOrderReque
         pickup_type=body.pickup_type,
         pickup_address=body.pickup_address,
         delivery_address_tr=body.delivery_address_tr,
+        flight_date=body.flight_date,
         status=OrderStatus.PENDING_ADMIN,
     )
     db.add(order)

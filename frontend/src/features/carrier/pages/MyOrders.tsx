@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
-import type { CarrierOrder } from '@/shared/types'
+import type { CarrierOrder, OrderStatus } from '@/shared/types'
 import { ORDER_STATUS } from '@/shared/lib/status'
 import { isPiece, typeEmoji } from '@/shared/lib/product'
 import { Header, ListSkeleton, EmptyState, StatusBadge, IconBag } from '@/shared/ui'
@@ -23,14 +23,19 @@ export default function MyOrders() {
       ) : (
         <div className="px-4 pt-4 space-y-3">
           {orders.map((order) => {
-            const st = ORDER_STATUS[order.status]
-            const damaged = order.status === 'damaged'
+            const st = ORDER_STATUS[order.status as OrderStatus] ?? { text: order.status, tone: 'gray' as const }
+            const damaged = order.products.some((p) => p.status === 'damaged')
             return (
               <div key={order.id}
                 className={`bg-white rounded-2xl border shadow-sm overflow-hidden ${damaged ? 'border-red-200' : 'border-slate-100'}`}>
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-slate-50">
-                  <span className="text-sm font-bold text-slate-900">Buyurtma #{order.id}</span>
+                  <div>
+                    <span className="text-sm font-bold text-slate-900">Buyurtma #{order.id}</span>
+                    {order.flight_date && (
+                      <p className="text-xs text-slate-400 mt-0.5">✈️ {order.flight_date}</p>
+                    )}
+                  </div>
                   <StatusBadge tone={st.tone} dot>{st.text}</StatusBadge>
                 </div>
 

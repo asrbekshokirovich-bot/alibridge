@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends
+from datetime import date
+
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,18 +16,25 @@ router = APIRouter(tags=["labels"])
 async def label_pdf(
     barcode: str,
     db: AsyncSession = Depends(get_db),
+    print_date: str | None = Query(default=None, description="Chop etish sanasi (YYYY-MM-DD). Berilmasa received_date ishlatiladi."),
 ) -> Response:
     """PDF yorliq — brauzerda ochiladi/yuklanadi. Auth talab qilmaydi (print_url)."""
+    # print_date berilsa o'sha sanani ishlatamiz, aks holda received_date
+    override: date | None = None
+    if print_date:
+        try:
+            override = date.fromisoformat(print_date)
+        except ValueError:
+            override = None
+
     try:
         product = await get_product_by_barcode(db, barcode)
     except AppError:
-        # Yorliq uchun aniq mahsulot bo'lmasa ham, faqat barkod bilan chizamiz
-        from datetime import date
-
-        pdf = render_label_pdf(barcode, barcode, date.today())
+        pdf = render_label_pdf(barcode, barcode, override or date.today())
         return Response(content=pdf, media_type="application/pdf")
 
-    pdf = render_label_pdf(product.barcode, product.name, product.received_date)
+    label_date = override if override else product.received_date
+    pdf = render_label_pdf(product.barcode, product.name, label_date)
     return Response(
         content=pdf,
         media_type="application/pdf",

@@ -36,6 +36,7 @@ class ProductStatus(StrEnum):
     IN_WAREHOUSE_UZ = "in_warehouse_uz"  # Toshkent omborida (katalogda)
     PENDING_ADMIN = "pending_admin"  # yo'lovchi tanladi, admin tasdig'i kutilmoqda
     CONFIRMED = "confirmed"  # admin tasdiqladi
+    WITH_COURIER_UZ = "with_courier_uz"  # Toshkent kuryerida
     WITH_CARRIER = "with_carrier"  # yo'lovchida
     DELIVERED_TR = "delivered_tr"  # Turkiyaga topshirildi
     DAMAGED = "damaged"  # zarar yetgan

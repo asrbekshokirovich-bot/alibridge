@@ -34,11 +34,20 @@ export interface ApiError {
   }
 }
 
+// Buyurtma holatlari (OrderStatus — backend enums.py bilan mos)
+export type OrderStatus =
+  | 'pending_admin'
+  | 'confirmed'
+  | 'in_warehouse_uz'
+  | 'with_carrier'
+  | 'delivered_tr'
+
 // Yuk holatlari
 export type ProductStatus =
   | 'pending_admin'       // Admin tasdiqlashini kutmoqda
   | 'confirmed'           // Admin tasdiqladi, yuk kutilmoqda
   | 'in_warehouse_uz'     // Toshkent omborida
+  | 'with_courier_uz'     // Toshkent kuryerida
   | 'with_carrier'        // Yo'lovchida
   | 'delivered_tr'        // Turkiyaga topshirildi
   | 'damaged'             // Zarar yetgan
@@ -100,7 +109,8 @@ export interface CarrierOrder {
   pickup_type: 'self' | 'courier'
   pickup_address?: string
   delivery_address_tr: string
-  status: ProductStatus
+  flight_date?: string
+  status: OrderStatus
   created_at: string
 }
 

@@ -69,6 +69,11 @@ async def scan_pickup(
     user: User = Depends(require_role(*ROLE)),
 ) -> ScanResponse:
     product = await get_product_by_barcode(db, body.barcode)
+    if product.status not in (ProductStatus.IN_WAREHOUSE_UZ, ProductStatus.CONFIRMED):
+        raise AppError(
+            "INVALID_PRODUCT_STATE",
+            "Bu mahsulot ombordan olishga tayyor emas yoki allaqachon olingan",
+        )
     return ScanResponse(barcode=product.barcode, product_name=product.name)
 
 
@@ -87,6 +92,7 @@ async def confirm_pickup(
             to_holder_id=user.id,
             event_type=CustodyEventType.COURIER_UZ_PICKUP,
             scanned_by=user.id,
+            new_status=ProductStatus.WITH_COURIER_UZ,
         )
     return OkResponse(ok=True)
 
@@ -110,6 +116,11 @@ async def scan_airport(
     user: User = Depends(require_role(*ROLE)),
 ) -> ScanResponse:
     product = await get_product_by_barcode(db, body.barcode)
+    if product.status != ProductStatus.WITH_COURIER_UZ:
+        raise AppError(
+            "INVALID_PRODUCT_STATE",
+            "Bu mahsulot kuryerda emas, aeroportda topshirib bo'lmaydi",
+        )
     carrier = await _find_carrier_by_number(db, body.carrier_number)
     return ScanResponse(
         barcode=product.barcode,

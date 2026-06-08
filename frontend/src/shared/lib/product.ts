@@ -39,7 +39,9 @@ export function typeLabel(t: ProductType): string {
 }
 
 // Barkod PDF yorlig'i linki (auth shart emas) — chop etish uchun
-export function labelUrl(barcode: string): string {
+// printDate berilsa, PDF'da o'sha sana ko'rsatiladi (bosilgan sana)
+export function labelUrl(barcode: string, printDate?: string): string {
   const base = import.meta.env.VITE_API_URL ?? '/api/v1'
-  return `${base}/labels/${barcode}.pdf`
+  const url = `${base}/labels/${barcode}.pdf`
+  return printDate ? `${url}?print_date=${printDate}` : url
 }

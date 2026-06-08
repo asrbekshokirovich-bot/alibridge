@@ -1,14 +1,16 @@
 from fastapi import APIRouter, Depends, Query, Request
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, require_role
 from app.bot.notify import on_new_order
-from app.core.enums import ProductStatus, Role
+from app.core.enums import OrderStatus, ProductStatus, Role
 from app.core.errors import AppError
 from app.core.limiter import limiter
+from app.core.security import create_access_token
 from app.db.base import get_db
-from app.db.models import Product, User
+from app.db.models import Order, OrderItem, Product, User
+from app.schemas.auth import UserOut
 from app.schemas.common import OkResponse, OrderCreatedResponse
 from app.schemas.order import (
     AutoReceiveRequest,
@@ -27,7 +29,7 @@ router = APIRouter(tags=["carrier"])
 async def catalog(
     max_weight: float | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_role(Role.CARRIER)),
 ):
     """Yo'lovchi olib keta oladigan mahsulotlar (in_warehouse_uz, kg limitiga mos)."""
     stmt = select(Product).where(Product.status == ProductStatus.IN_WAREHOUSE_UZ)
@@ -89,6 +91,7 @@ async def my_orders(
                 pickup_type=o.pickup_type,
                 pickup_address=o.pickup_address,
                 delivery_address_tr=o.delivery_address_tr,
+                flight_date=o.flight_date,
                 status=o.status,
                 created_at=o.created_at.date().isoformat(),
             )
@@ -120,5 +123,53 @@ async def auto_receive(
     courier = await db.get(User, body.courier_id)
     if courier is None or courier.role != Role.COURIER_UZ:
         raise AppError("COURIER_NOT_FOUND", "Kuryer topilmadi")
-    # Hozircha tanlovni qabul qilamiz; haqiqiy egalik o'tishi kuryer skanlaganda bo'ladi.
     return OkResponse(ok=True)
+
+
+class LeaveRoleResponse(OkResponse):
+    token: str
+    user: UserOut
+
+
+@router.post("/carrier/leave-role", response_model=LeaveRoleResponse)
+async def leave_role(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(Role.CARRIER)),
+) -> LeaveRoleResponse:
+    """Yo'lovchi rolidan chiqish — faqat barcha yuklari WITH_CARRIER emas yoki DELIVERED_TR bo'lsa.
+    Shartlar: hech qanday faol yuki qolmagan bo'lishi kerak (pending_admin, confirmed, with_courier_uz, with_carrier).
+    """
+    active_statuses = [
+        ProductStatus.PENDING_ADMIN,
+        ProductStatus.CONFIRMED,
+        ProductStatus.WITH_COURIER_UZ,
+        ProductStatus.WITH_CARRIER,
+    ]
+    # Yo'lovchining faol yuklar bormi
+    active_count = await db.scalar(
+        select(func.count())
+        .select_from(Order)
+        .join(OrderItem, OrderItem.order_id == Order.id)
+        .join(Product, Product.id == OrderItem.product_id)
+        .where(
+            Order.carrier_id == user.id,
+            Product.status.in_(active_statuses),
+        )
+    )
+    if active_count and active_count > 0:
+        raise AppError(
+            "HAS_ACTIVE_GOODS",
+            "Hisobingizda hali yo'lda yoki omborida turgan yuklaringiz bor. "
+            "Barcha yuklarni Turkiya kuryeriga topshirgandan keyin chiqishingiz mumkin.",
+            status_code=400,
+        )
+
+    user.role = Role.NEW
+    await db.flush()
+    await db.refresh(user)
+    token = create_access_token(user.id, str(user.role))
+    return LeaveRoleResponse(
+        ok=True,
+        token=token,
+        user=UserOut.model_validate(user, from_attributes=True),
+    )

@@ -1,13 +1,35 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import client, { extractErrorMessage } from '@/shared/api/client'
 import { useAuthStore } from '@/shared/store/auth'
 import { useCarrierStore } from '../store'
 import { initials } from '@/shared/lib/format'
 import { Header, IconPlane, IconBag, IconCheck } from '@/shared/ui'
+import type { User } from '@/shared/types'
 
 export default function Profile() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
+  const setAuth = useAuthStore((s) => s.setAuth)
   const ticket = useCarrierStore((s) => s.ticket)
+  const clearTicket = useCarrierStore((s) => s.clearTicket)
+  const [leaveLoading, setLeaveLoading] = useState(false)
+  const [leaveError, setLeaveError] = useState('')
+
+  const handleLeave = async () => {
+    setLeaveError('')
+    setLeaveLoading(true)
+    try {
+      const res = await client.post<{ token: string; user: User }>('/carrier/leave-role')
+      clearTicket()
+      setAuth(res.data.token, res.data.user)
+      navigate('/welcome', { replace: true })
+    } catch (err) {
+      setLeaveError(extractErrorMessage(err))
+    } finally {
+      setLeaveLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen pb-28 animate-fade-in">
@@ -68,13 +90,19 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Boshqa bo'limga o'tish */}
+        {/* Roldan chiqish */}
+        {leaveError && (
+          <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{leaveError}</div>
+        )}
         <button
-          onClick={() => navigate('/welcome')}
-          className="press w-full bg-white rounded-2xl border border-slate-100 shadow-sm px-4 py-3.5 flex items-center justify-between"
+          onClick={handleLeave}
+          disabled={leaveLoading}
+          className="press w-full bg-red-50 rounded-2xl border border-red-100 px-4 py-3.5 flex items-center justify-between disabled:opacity-60"
         >
-          <span className="text-sm font-semibold text-slate-700">Boshqa bo'limga o'tish</span>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-slate-300">
+          <span className="text-sm font-semibold text-red-600">
+            {leaveLoading ? 'Tekshirilmoqda...' : 'Yo\'lovchi rolidan chiqish'}
+          </span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-red-300">
             <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>

@@ -256,6 +256,11 @@ async def _scan_for_handover(db: AsyncSession, barcode: str) -> ScanResponse:
             "INVALID_PRODUCT_STATE",
             "Bu yuk topshirishga tayyor emas yoki allaqachon topshirilgan",
         )
+    if not product.cargo_price or product.quantity == 0:
+        raise AppError(
+            "PRODUCT_INCOMPLETE",
+            "Bu mahsulot ma'lumotlari to'ldirilmagan (narx yoki miqdor yo'q)",
+        )
 
     return ScanResponse(
         barcode=product.barcode,
@@ -290,5 +295,6 @@ async def confirm_courier_handover(
             to_holder_id=None,
             event_type=CustodyEventType.HANDOVER_TO_COURIER_UZ,
             scanned_by=user.id,
+            new_status=ProductStatus.WITH_COURIER_UZ,
         )
     return OkResponse(ok=True)

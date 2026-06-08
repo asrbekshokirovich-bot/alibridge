@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import client, { extractErrorMessage } from '@/shared/api/client'
-import { authDebug } from '@/shared/hooks/useAuthBootstrap'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import { useAuthStore } from '@/shared/store/auth'
 import type { Role, User } from '@/shared/types'
@@ -132,11 +131,6 @@ export default function Welcome() {
       {error && (
         <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl mb-3">{error}</div>
       )}
-
-      {/* VAQTINCHALIK DIAGNOSTIKA — sabab topilgach olib tashlanadi */}
-      <div className="bg-amber-50 text-amber-900 text-[11px] leading-relaxed px-3 py-2 rounded-xl mb-3 break-all font-mono">
-        🔍 {authDebug.info}
-      </div>
 
       <p className="text-center text-xs text-slate-400 py-6">ALI BRIDGE © 2026</p>
     </div>

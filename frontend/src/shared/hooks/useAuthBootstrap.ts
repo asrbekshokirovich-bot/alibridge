@@ -8,8 +8,18 @@ interface LoginResponse {
   user: User
 }
 
-// VAQTINCHALIK DIAGNOSTIKA — login nega ishlamayotganini Welcome'da ko'rsatish uchun
-export const authDebug: { info: string } = { info: 'boot...' }
+// Telegram WebApp initData ba'zan mount paytida hali bo'sh bo'ladi (SDK kechikadi).
+// To'lguncha qisqa vaqt kutamiz — aks holda avtomatik login o'tkazib yuboriladi.
+async function waitForInitData(maxMs = 3000): Promise<string> {
+  const start = Date.now()
+  for (;;) {
+    const data = window.Telegram?.WebApp?.initData ?? ''
+    if (data) return data
+    if (!window.Telegram?.WebApp) return '' // Telegram tashqarisi — kutishdan ma'no yo'q
+    if (Date.now() - start > maxMs) return ''
+    await new Promise((r) => setTimeout(r, 100))
+  }
+}
 
 /**
  * App ishga tushganda:
@@ -33,41 +43,30 @@ export function useAuthBootstrap(): boolean {
         try {
           const res = await client.get<User>('/auth/me')
           if (!cancelled) setUser(res.data)
+          return
         } catch (err: unknown) {
           const status = (err as { response?: { status?: number } })?.response?.status
-          if (!cancelled && status === 401) {
+          // Token eskirgan (401) yoki user o'chirilgan (404) — tozalab, qayta login'ga o'tamiz
+          if (status === 401 || status === 404) {
             clearAuth()
             localStorage.removeItem('carrier_ticket')
+            // pastga tushadi — initData bilan qayta login sinaladi
+          } else {
+            return // tarmoq/server xatosi — eski tokenni saqlab qolamiz
           }
         }
-        return
       }
 
-      // 2) Token yo'q — Telegram initData bilan avtomatik login
-      const initData = window.Telegram?.WebApp?.initData ?? ''
-      const hasTg = !!window.Telegram?.WebApp
-      const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user
-      authDebug.info = `tg=${hasTg} initLen=${initData.length} uid=${tgUser?.id ?? '-'} base=${client.defaults.baseURL}`
-      if (!initData) {
-        authDebug.info += ' | initData BO\'SH — Telegram tashqarisida yoki SDK yuklanmadi'
-        return // Telegram tashqarisida — Welcome ko'rsatiladi
-      }
+      // 2) Token yo'q (yoki eskirgan) — Telegram initData bilan avtomatik login
+      const initData = await waitForInitData()
+      if (cancelled || !initData) return // Telegram tashqarisi / initData yo'q — Welcome
 
       try {
         const res = await client.post<LoginResponse>('/auth/login', {
           tg_init_data: initData,
         })
         if (!cancelled) setAuth(res.data.token, res.data.user)
-        authDebug.info += ` | LOGIN OK role=${res.data.user.role}`
-      } catch (err: unknown) {
-        const e = err as {
-          response?: { status?: number; data?: { error?: { code?: string; message?: string } } }
-          message?: string
-        }
-        const status = e?.response?.status
-        const code = e?.response?.data?.error?.code
-        const msg = e?.response?.data?.error?.message
-        authDebug.info += ` | LOGIN FAIL status=${status ?? 'NETWORK'} code=${code ?? '-'} msg=${msg ?? e?.message ?? '-'}`
+      } catch {
         // Ro'yxatda yo'q (404) yoki boshqa xato — Welcome ko'rsatiladi
       }
     }

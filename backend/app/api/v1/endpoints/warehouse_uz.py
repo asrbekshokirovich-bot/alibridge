@@ -52,12 +52,17 @@ async def stats(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*WH_UZ)),
 ) -> WarehouseUzStats:
-    # pending_receive: kiloli, tortilmagan order itemlar (actual_quantity null)
+    # pending_receive: kg bo'yicha (boxed/textile), tortilmagan order itemlar (actual_quantity null)
     pending_receive = await db.scalar(
         select(func.count())
         .select_from(OrderItem)
         .join(Product, Product.id == OrderItem.product_id)
-        .where(Product.type == ProductType.WEIGHT, OrderItem.actual_quantity.is_(None))
+        .where(
+            Product.type.in_(
+                [ProductType.BOXED, ProductType.TEXTILE, ProductType.WEIGHT]
+            ),
+            OrderItem.actual_quantity.is_(None),
+        )
     )
     in_warehouse = await db.scalar(
         select(func.count())
@@ -91,7 +96,10 @@ async def receive(
         ptype=body.type,
         quantity=body.quantity,
         weight_kg=body.weight_kg,
+        unit_weight_kg=body.unit_weight_kg,
         box_weight_kg=body.box_weight_kg,
+        box_count=body.box_count,
+        units_per_box=body.units_per_box,
         cargo_price=body.cargo_price,
         created_by=user.id,
     )

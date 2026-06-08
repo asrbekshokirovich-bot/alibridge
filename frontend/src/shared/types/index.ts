@@ -43,8 +43,8 @@ export type ProductStatus =
   | 'delivered_tr'        // Turkiyaga topshirildi
   | 'damaged'             // Zarar yetgan
 
-// Yuk turi
-export type ProductType = 'piece' | 'weight' // donali | kiloli
+// Yuk turi: donali | kiloli (qutili) | tekstil. 'weight' — eski (textile bilan bir xil).
+export type ProductType = 'piece' | 'boxed' | 'textile' | 'weight'
 
 export interface Product {
   id: number
@@ -52,15 +52,17 @@ export interface Product {
   name: string
   category: string
   type: ProductType
-  quantity: number          // mavjud jami soni (donali) / jami dona (kiloli)
-  weight_kg: number         // mavjud jami kg
-  unit_weight_kg?: number   // 1 dona vazni (donali uchun) — limit hisoblash uchun
-  box_weight_kg?: number    // kartonka vazni (faqat tekstil)
-  cargo_price: number       // donali: 1 dona narxi / kiloli: 1 kg narxi
+  quantity: number          // jami dona (boxed: quti × 1 qutidagi soni)
+  weight_kg: number         // jami kg
+  unit_weight_kg?: number   // 1 dona vazni (donali) — limit hisoblash uchun
+  box_weight_kg?: number    // 1 quti vazni (kiloli)
+  box_count?: number        // quti soni (kiloli)
+  units_per_box?: number    // 1 quti ichidagi soni (kiloli)
+  cargo_price: number       // donali: $/dona; kiloli & tekstil: $/kg
   status: ProductStatus
   image_url?: string
-  actual_quantity?: number  // ombor tortgandan keyingi haqiqiy dona (tekstil)
-  actual_kg?: number        // ombor tortgandan keyingi haqiqiy kg (tekstil)
+  actual_quantity?: number  // ombor tortgandan keyingi haqiqiy dona
+  actual_kg?: number        // ombor tortgandan keyingi haqiqiy kg
 }
 
 // Yo'lovchi bilet ma'lumotlari (har safar yangilanadi)

@@ -64,6 +64,9 @@ class Product(Base):
     weight_kg: Mapped[Decimal] = mapped_column(Numeric(18, 4), default=Decimal("0"))
     unit_weight_kg: Mapped[Decimal | None] = mapped_column(Numeric(18, 4), nullable=True)
     box_weight_kg: Mapped[Decimal | None] = mapped_column(Numeric(18, 4), nullable=True)
+    # kiloli (boxed): quti soni va 1 quti ichidagi mahsulot soni
+    box_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    units_per_box: Mapped[int | None] = mapped_column(Integer, nullable=True)
     cargo_price: Mapped[Decimal] = mapped_column(Numeric(18, 4), default=Decimal("0"))
     status: Mapped[ProductStatus] = mapped_column(
         String(32), default=ProductStatus.IN_WAREHOUSE_UZ, index=True

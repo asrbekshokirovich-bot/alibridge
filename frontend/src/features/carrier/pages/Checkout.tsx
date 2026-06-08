@@ -4,6 +4,7 @@ import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import type { CartItem } from '@/shared/types'
 import { money } from '@/shared/lib/format'
+import { isPiece, typeEmoji, unitWord } from '@/shared/lib/product'
 import { Header, Button, Input, Textarea, IconBox, IconTruck } from '@/shared/ui'
 
 interface LocationState { cart: CartItem[] }
@@ -54,13 +55,13 @@ export default function Checkout() {
           {cart.map((c) => (
             <div key={c.product.id} className="flex items-center gap-3 p-3.5">
               <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-lg shrink-0">
-                {c.product.type === 'weight' ? '🧵' : '📦'}
+                {typeEmoji(c.product.type)}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm text-slate-900 truncate">{c.product.name}</p>
                 <p className="text-xs text-slate-400">
-                  {c.amount} {c.product.type === 'weight' ? 'kg' : 'dona'}
-                  {c.product.type === 'piece' && ` · ~${c.weight.toFixed(1)} kg`}
+                  {c.amount} {unitWord(c.product.type)}
+                  {isPiece(c.product.type) && ` · ~${c.weight.toFixed(1)} kg`}
                 </p>
               </div>
               <p className="text-sm font-bold text-slate-700">{money(c.price)}</p>

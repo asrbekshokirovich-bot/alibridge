@@ -38,49 +38,31 @@ async def seed() -> None:
                 )
 
         # Test mahsulotlar (katalog uchun)
+        # (nom, kat, tur, qty, weight_kg, unit_w, box_w, box_count, units_per_box, price)
         sample = [
             (
-                "Krasovka Nike",
-                "Poyabzal",
-                ProductType.PIECE,
-                600,
-                Decimal("480"),
-                Decimal("0.8"),
-                None,
-                Decimal("50000"),
+                "Krasovka Nike", "Poyabzal", ProductType.PIECE,
+                600, Decimal("480"), Decimal("0.8"), None, None, None, Decimal("50000"),
             ),
             (
-                "iPhone 15 Case",
-                "Aksessuar",
-                ProductType.PIECE,
-                200,
-                Decimal("20"),
-                Decimal("0.1"),
-                None,
-                Decimal("15000"),
+                "iPhone 15 Case", "Aksessuar", ProductType.PIECE,
+                200, Decimal("20"), Decimal("0.1"), None, None, None, Decimal("15000"),
             ),
             (
-                "Tekstil mato",
-                "Tekstil",
-                ProductType.WEIGHT,
-                0,
-                Decimal("100"),
-                None,
-                Decimal("2"),
-                Decimal("30000"),
+                "Tekstil mato", "Tekstil", ProductType.TEXTILE,
+                0, Decimal("100"), None, None, None, None, Decimal("30000"),
             ),
             (
-                "Parfyumeriya",
-                "Kosmetika",
-                ProductType.PIECE,
-                150,
-                Decimal("75"),
-                Decimal("0.5"),
-                None,
-                Decimal("40000"),
+                # kiloli: 50 quti × 20 dona = 1000 dona; 50 × 2kg = 100 kg
+                "Atir flakon", "Kosmetika", ProductType.BOXED,
+                1000, Decimal("100"), None, Decimal("2"), 50, 20, Decimal("35000"),
+            ),
+            (
+                "Parfyumeriya", "Kosmetika", ProductType.PIECE,
+                150, Decimal("75"), Decimal("0.5"), None, None, None, Decimal("40000"),
             ),
         ]
-        for name, cat, ptype, qty, wkg, uw, bw, price in sample:
+        for name, cat, ptype, qty, wkg, uw, bw, bc, upb, price in sample:
             exists = await db.scalar(select(Product).where(Product.name == name))
             if exists:
                 continue
@@ -98,6 +80,8 @@ async def seed() -> None:
                     weight_kg=wkg,
                     unit_weight_kg=uw,
                     box_weight_kg=bw,
+                    box_count=bc,
+                    units_per_box=upb,
                     cargo_price=price,
                     status=ProductStatus.IN_WAREHOUSE_UZ,
                     received_date=date.today(),

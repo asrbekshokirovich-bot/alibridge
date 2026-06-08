@@ -17,9 +17,12 @@ class ReceiveGoodsRequest(BaseModel):
     category: str = Field(default="", max_length=128)
     type: ProductType
     quantity: int = Field(default=0, ge=0)
-    weight_kg: float | None = None
-    box_weight_kg: float | None = None
-    cargo_price: int = Field(ge=0)
+    weight_kg: float | None = None  # piece: 1 dona YOKI umumiy; textile: umumiy kg
+    unit_weight_kg: float | None = None  # piece: agar xodim to'g'ridan 1 dona vaznini kiritsa
+    box_weight_kg: float | None = None  # boxed: 1 quti vazni (kg)
+    box_count: int | None = None  # boxed: quti soni
+    units_per_box: int | None = None  # boxed: 1 quti ichidagi mahsulot soni
+    cargo_price: int = Field(ge=0)  # piece: $/dona; boxed & textile: $/kg
 
 
 class ReceiveGoodsResponse(BaseModel):

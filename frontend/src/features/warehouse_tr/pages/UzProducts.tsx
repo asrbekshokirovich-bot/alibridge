@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
 import type { Product } from '@/shared/types'
 import { PRODUCT_STATUS } from '@/shared/lib/status'
+import { isPiece, typeEmoji } from '@/shared/lib/product'
 import { Header, ListSkeleton, EmptyState, StatusBadge, IconBox } from '@/shared/ui'
 
 export default function UzProducts() {
@@ -24,7 +25,7 @@ export default function UzProducts() {
             <div key={p.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
               <div className="flex items-start gap-3">
                 <div className="w-11 h-11 rounded-xl bg-slate-50 flex items-center justify-center text-xl shrink-0">
-                  {p.type === 'weight' ? '🧵' : '📦'}
+                  {typeEmoji(p.type)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
@@ -34,7 +35,7 @@ export default function UzProducts() {
                   <p className="text-xs text-slate-400">{p.category}</p>
                   <div className="flex items-center gap-2 mt-1.5">
                     <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg">
-                      {p.type === 'weight' ? `${p.weight_kg} kg` : `${p.quantity} dona`}
+                      {isPiece(p.type) ? `${p.quantity} dona` : `${p.weight_kg} kg`}
                     </span>
                     {p.box_weight_kg ? (
                       <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg">

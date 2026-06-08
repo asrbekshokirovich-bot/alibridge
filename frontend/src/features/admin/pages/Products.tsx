@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
 import { money } from '@/shared/lib/format'
+import { isPiece, unitWord } from '@/shared/lib/product'
 import { Header, ListSkeleton, EmptyState, StatusBadge, IconBox } from '@/shared/ui'
 import type { Product } from '@/shared/types'
 
@@ -43,13 +44,13 @@ export default function Products() {
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                       <StatusBadge tone={st.tone} dot>{st.label}</StatusBadge>
                       <span className="text-xs text-slate-400">
-                        {p.type === 'weight' ? `${p.weight_kg} kg · ${p.quantity} dona` : `${p.quantity} dona`}
+                        {isPiece(p.type) ? `${p.quantity} dona` : `${p.weight_kg} kg · ${p.quantity} dona`}
                       </span>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-sm font-bold text-slate-900">{money(p.cargo_price)}</p>
-                    <p className="text-[11px] text-slate-400">kargo narxi</p>
+                    <p className="text-[11px] text-slate-400">${p.cargo_price}/{unitWord(p.type)}</p>
                   </div>
                 </div>
               </div>

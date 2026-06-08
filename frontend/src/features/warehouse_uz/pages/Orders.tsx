@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import type { WarehouseOrder, OrderItemDetail, ProductType } from '@/shared/types'
+import { isPiece, typeEmoji, unitWord } from '@/shared/lib/product'
 import { Header, ListSkeleton, EmptyState, StatusBadge, Sheet, Input, Button, IconBag, IconCheck } from '@/shared/ui'
 
 type SheetState = { orderId: number; item: OrderItemDetail }
@@ -24,7 +25,7 @@ export default function Orders() {
     mutationFn: (vars: { orderId: number; itemId: number; type: ProductType; actual_kg?: number; actual_quantity: number }) =>
       client.post(`/warehouse-uz/orders/${vars.orderId}/items/${vars.itemId}/confirm`, {
         actual_quantity: vars.actual_quantity,
-        ...(vars.type === 'weight' ? { actual_kg: vars.actual_kg } : {}),
+        ...(!isPiece(vars.type) ? { actual_kg: vars.actual_kg } : {}),
       }),
     onSuccess: () => {
       notify('success')
@@ -40,24 +41,24 @@ export default function Orders() {
     setError('')
     setKg('')
     // Donali uchun so'ralgan sonni default qo'yamiz
-    setQty(item.type === 'piece' ? String(Math.round(item.requested_amount)) : '')
+    setQty(isPiece(item.type) ? String(Math.round(item.requested_amount)) : '')
     setSheet({ orderId, item })
   }
 
   const submit = () => {
     if (!sheet) return
-    const isWeight = sheet.item.type === 'weight'
+    const byWeight = !isPiece(sheet.item.type)
     const q = parseInt(qty, 10)
     const k = parseFloat(kg)
     if (!q || q <= 0) return
-    if (isWeight && (!k || k <= 0)) return
+    if (byWeight && (!k || k <= 0)) return
     setError('')
     confirm.mutate({
       orderId: sheet.orderId,
       itemId: sheet.item.item_id,
       type: sheet.item.type,
       actual_quantity: q,
-      actual_kg: isWeight ? k : undefined,
+      actual_kg: byWeight ? k : undefined,
     })
   }
 
@@ -109,20 +110,20 @@ export default function Orders() {
                         </div>
                       ) : (
                         <div className="w-9 h-9 rounded-lg bg-slate-50 flex items-center justify-center text-lg shrink-0">
-                          {it.type === 'weight' ? '🧵' : '📦'}
+                          {typeEmoji(it.type)}
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-slate-900 truncate">{it.product_name}</p>
                         {it.confirmed ? (
                           <p className="text-xs text-emerald-600 font-medium">
-                            {it.type === 'weight'
+                            {!isPiece(it.type)
                               ? `${it.actual_kg} kg · ${it.actual_quantity} dona`
                               : `${it.actual_quantity} dona`}
                           </p>
                         ) : (
                           <p className="text-xs text-slate-400">
-                            So'ralgan: {it.requested_amount} {it.type === 'weight' ? 'kg' : 'dona'}
+                            So'ralgan: {it.requested_amount} {unitWord(it.type)}
                           </p>
                         )}
                       </div>
@@ -151,22 +152,22 @@ export default function Orders() {
           <div className="px-5 pt-2 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-slate-50 flex items-center justify-center text-xl shrink-0">
-                {sheet.item.type === 'weight' ? '🧵' : '📦'}
+                {typeEmoji(sheet.item.type)}
               </div>
               <div className="min-w-0">
                 <h3 className="font-bold text-slate-900 truncate">{sheet.item.product_name}</h3>
                 <p className="text-xs text-slate-400">
-                  So'ralgan: {sheet.item.requested_amount} {sheet.item.type === 'weight' ? 'kg' : 'dona'}
+                  So'ralgan: {sheet.item.requested_amount} {unitWord(sheet.item.type)}
                 </p>
               </div>
             </div>
 
-            {sheet.item.type === 'weight' && (
+            {!isPiece(sheet.item.type) && (
               <Input type="number" label="Necha kg chiqdi?" placeholder="Tarozida tortilgan kg"
                 value={kg} onChange={(e) => setKg(e.target.value)} autoFocus />
             )}
             <Input type="number" label="Necha dona?" placeholder="Mahsulot soni"
-              value={qty} onChange={(e) => setQty(e.target.value)} autoFocus={sheet.item.type === 'piece'} />
+              value={qty} onChange={(e) => setQty(e.target.value)} autoFocus={isPiece(sheet.item.type)} />
 
             {error && <p className="text-red-500 text-sm">{error}</p>}
 

@@ -22,7 +22,14 @@ class RegType(StrEnum):
 
 class ProductType(StrEnum):
     PIECE = "piece"  # donali
-    WEIGHT = "weight"  # kiloli / tekstil
+    BOXED = "boxed"  # kiloli (qutili) — narx kg bo'yicha
+    TEXTILE = "textile"  # tekstil — narx kg bo'yicha
+    WEIGHT = "weight"  # ESKI — textile ga ko'chiriladi (orqaga moslik uchun saqlanadi)
+
+    @property
+    def priced_by_weight(self) -> bool:
+        """Narx kg bo'yicha hisoblanadigan turlar (donali emas)."""
+        return self in (ProductType.BOXED, ProductType.TEXTILE, ProductType.WEIGHT)
 
 
 class ProductStatus(StrEnum):

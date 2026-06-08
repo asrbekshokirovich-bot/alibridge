@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
 import type { CarrierOrder } from '@/shared/types'
 import { ORDER_STATUS } from '@/shared/lib/status'
+import { isPiece, typeEmoji } from '@/shared/lib/product'
 import { Header, ListSkeleton, EmptyState, StatusBadge, IconBag } from '@/shared/ui'
 
 export default function MyOrders() {
@@ -39,15 +40,15 @@ export default function MyOrders() {
                     order.items!.map((it) => (
                       <div key={it.product_id} className="flex items-center gap-3 px-4 py-2.5">
                         <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-sm shrink-0">
-                          {it.type === 'weight' ? '🧵' : '📦'}
+                          {typeEmoji(it.type)}
                         </div>
                         <span className="flex-1 text-sm text-slate-700 truncate">{it.product_name}</span>
                         <span className="text-xs text-slate-400">
-                          {it.type === 'weight'
-                            ? (it.confirmed && it.actual_kg != null
+                          {isPiece(it.type)
+                            ? `${it.actual_quantity ?? it.amount} dona`
+                            : (it.confirmed && it.actual_kg != null
                                 ? `${it.actual_kg} kg, ${it.actual_quantity} dona`
-                                : `${it.amount} kg`)
-                            : `${it.actual_quantity ?? it.amount} dona`}
+                                : `${it.amount} kg`)}
                         </span>
                       </div>
                     ))
@@ -55,11 +56,11 @@ export default function MyOrders() {
                     order.products.map((p) => (
                       <div key={p.id} className="flex items-center gap-3 px-4 py-2.5">
                         <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-sm shrink-0">
-                          {p.type === 'weight' ? '🧵' : '📦'}
+                          {typeEmoji(p.type)}
                         </div>
                         <span className="flex-1 text-sm text-slate-700 truncate">{p.name}</span>
                         <span className="text-xs text-slate-400">
-                          {p.type === 'weight' ? `${p.weight_kg} kg` : `${p.quantity} dona`}
+                          {isPiece(p.type) ? `${p.quantity} dona` : `${p.weight_kg} kg`}
                         </span>
                       </div>
                     ))

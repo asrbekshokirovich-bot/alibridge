@@ -15,6 +15,8 @@ class ProductOut(BaseModel):
     weight_kg: float
     unit_weight_kg: float | None = None
     box_weight_kg: float | None = None
+    box_count: int | None = None
+    units_per_box: int | None = None
     cargo_price: int
     status: ProductStatus
     image_url: str | None = None

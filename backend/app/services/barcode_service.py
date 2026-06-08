@@ -11,9 +11,9 @@ from app.services.counter_service import next_value
 
 
 def build_print_url(barcode: str) -> str:
-    """Kontrakt print_url: PDF yorliq linki (/api/v1/labels/<barcode>.pdf)."""
+    """Kontrakt print_url: Word (.docx) yorliq linki (/api/v1/labels/<barcode>.docx)."""
     base = settings.label_base_url
-    path = f"{settings.api_prefix}/labels/{barcode}.pdf"
+    path = f"{settings.api_prefix}/labels/{barcode}.docx"
     return f"{base}{path}" if base else path
 
 

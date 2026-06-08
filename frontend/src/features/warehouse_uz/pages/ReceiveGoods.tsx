@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
+import { labelUrl } from '@/shared/lib/product'
 import { Header, Button, Input } from '@/shared/ui'
 import ProductDetailsForm from '../components/ProductDetailsForm'
 
@@ -18,7 +19,7 @@ type Step = 'name' | 'details' | 'done'
 
 export default function ReceiveGoods() {
   const navigate = useNavigate()
-  const { notify } = useTelegram()
+  const { notify, openLink } = useTelegram()
 
   const [step, setStep] = useState<Step>('name')
   const [name, setName] = useState('')
@@ -98,10 +99,11 @@ export default function ReceiveGoods() {
               ))}
             </div>
             <p className="font-mono text-sm font-bold tracking-widest text-slate-900">{created.barcode}</p>
-            <a href={created.print_url} target="_blank" rel="noopener noreferrer"
+            <button
+              onClick={() => openLink(labelUrl(created.barcode, new Date().toISOString().slice(0, 10)))}
               className="press inline-block mt-2.5 text-sm font-semibold px-4 py-2 rounded-xl text-white" style={{ background: 'var(--brand-gradient)' }}>
               🖨️ Barkod chiqarish
-            </a>
+            </button>
           </div>
         </div>
 

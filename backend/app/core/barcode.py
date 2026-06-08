@@ -1,11 +1,12 @@
 """Barkod (ALB-NNNNNN) generatsiya va Code-128 Word (.docx) yorliq.
 
-Yorliq o'lchami: 82 x 20 mm (termo yorliq, gorizontal).
+Yorliq o'lchami: 80 x 50 mm (termo yorliq).
 Dizayn — barcha element ketma-ket, bitta yorliqqa sig'adi:
     ┌────────────────────────────────┐
-    │           TGHFTH               │  ← name (qalin)
+    │           TGHFTH               │  ← name (qalin, katta)
+    │          08.06.2026            │  ← sana
     │  ║║│║║││║║│║║││║║│║║││║║│║      │  ← Code-128 shtrix-kod
-    │   08.06.2026    ALB-100001     │  ← sana + kod (bitta qatorda)
+    │          ALB-100001            │  ← barcode kod
     └────────────────────────────────┘
 """
 
@@ -39,10 +40,10 @@ def _barcode_png(code: str, module_height: float = 12.0) -> BytesIO:
 
 
 def render_label_docx(barcode: str, name: str, received: date) -> bytes:
-    """Bitta yorliqni Word (.docx) sifatida chizadi — 82x20 mm termo yorliq.
+    """Bitta yorliqni Word (.docx) sifatida chizadi — 80x50 mm termo yorliq.
 
     4 element ketma-ket, bitta yorliqqa sig'adi:
-    nom (qalin) / shtrix-kod / sana + kod (bir qatorda).
+    nom (qalin, katta) / sana / shtrix-kod / barkod kodi.
     """
     from docx import Document
     from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -50,15 +51,15 @@ def render_label_docx(barcode: str, name: str, received: date) -> bytes:
 
     doc = Document()
     section = doc.sections[0]
-    # Aniq yorliq o'lchami: 82 x 20 mm (gorizontal), hoshiyalar minimal
-    section.page_width = Mm(82)
-    section.page_height = Mm(20)
-    section.top_margin = Mm(0.8)
-    section.bottom_margin = Mm(0.8)
-    section.left_margin = Mm(2)
-    section.right_margin = Mm(2)
+    # Aniq yorliq o'lchami: 80 x 50 mm
+    section.page_width = Mm(80)
+    section.page_height = Mm(50)
+    section.top_margin = Mm(2)
+    section.bottom_margin = Mm(2)
+    section.left_margin = Mm(3)
+    section.right_margin = Mm(3)
 
-    def _tight(p, after=0.0):
+    def _tight(p, after=2.0):
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         pf = p.paragraph_format
         pf.space_before = Pt(0)
@@ -68,22 +69,27 @@ def render_label_docx(barcode: str, name: str, received: date) -> bytes:
         pf.keep_together = False
         return p
 
-    # Nom (qalin) — kichik, bitta qatorga
-    p_name = _tight(doc.add_paragraph(), after=0.5)
-    run_name = p_name.add_run(name if len(name) <= 30 else name[:29] + "…")
+    # Nom (qalin, katta)
+    p_name = _tight(doc.add_paragraph(), after=2.0)
+    run_name = p_name.add_run(name if len(name) <= 26 else name[:25] + "…")
     run_name.bold = True
-    run_name.font.size = Pt(9)
+    run_name.font.size = Pt(16)
 
-    # Shtrix-kod rasmi — eng past (balandlik 6.5mm), keng (78mm)
-    p_img = _tight(doc.add_paragraph(), after=0.5)
-    png = _barcode_png(barcode, module_height=6.0)
-    p_img.add_run().add_picture(png, width=Mm(76), height=Mm(7))
+    # Sana
+    p_date = _tight(doc.add_paragraph(), after=2.0)
+    run_date = p_date.add_run(received.strftime("%d.%m.%Y"))
+    run_date.font.size = Pt(11)
 
-    # Sana + kod — bitta qatorda yonma-yon
-    p_meta = _tight(doc.add_paragraph(), after=0.0)
-    run_meta = p_meta.add_run(f"{received.strftime('%d.%m.%Y')}    {barcode}")
-    run_meta.bold = True
-    run_meta.font.size = Pt(8)
+    # Shtrix-kod rasmi
+    p_img = _tight(doc.add_paragraph(), after=2.0)
+    png = _barcode_png(barcode, module_height=8.0)
+    p_img.add_run().add_picture(png, width=Mm(70), height=Mm(15))
+
+    # Barkod kodi (pastda)
+    p_code = _tight(doc.add_paragraph(), after=0.0)
+    run_code = p_code.add_run(barcode)
+    run_code.bold = True
+    run_code.font.size = Pt(13)
 
     out = BytesIO()
     doc.save(out)

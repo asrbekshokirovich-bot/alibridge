@@ -18,7 +18,7 @@ import AdminRoutes from '@/features/admin/routes'
 
 // Har bir rol o'z paneliga yo'naltiriladi — Mini App oxirgi holatda ochiladi.
 // pending (xodim so'rovi kutilmoqda) -> StaffPending, aks holda Welcome (rol tanlash).
-const ROLE_HOME: Record<string, string> = {
+export const ROLE_HOME: Record<string, string> = {
   orderer: '/orderer',
   carrier: '/carrier',
   warehouse_uz: '/warehouse-uz',
@@ -31,13 +31,8 @@ const ROLE_HOME: Record<string, string> = {
 }
 
 function RootRedirect() {
-  const user = useAuthStore((s) => s.user)
-  // Rol tanlangan bo'lsa — to'g'ridan-to'g'ri o'z paneliga.
-  // 'new' (hali rol tanlamagan) ROLE_HOME'da yo'q — Welcome'ga boradi.
-  if (user && ROLE_HOME[user.role]) {
-    return <Navigate to={ROLE_HOME[user.role]} replace />
-  }
-  // Yangi foydalanuvchi ('new') yoki Telegram tashqarisi — rol tanlash ekrani
+  // /start orqali kirilganda har doim Welcome ochiladi (rol tanlangan bo'lsa ham).
+  // Welcome'da joriy rol bo'yicha "Davom etish" tugmasi ko'rsatiladi.
   return <Navigate to="/welcome" replace />
 }
 

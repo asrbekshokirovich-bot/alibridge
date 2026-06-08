@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useAuthStore } from '@/shared/store/auth'
 import { RoleGuard } from '@/shared/components/RoleGuard'
 import { useTelegramBackButton } from '@/shared/hooks/useTelegramBackButton'
 

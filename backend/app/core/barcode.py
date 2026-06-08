@@ -1,12 +1,12 @@
 """Barkod (ALB-NNNNNN) generatsiya va Code-128 Word (.docx) yorliq.
 
-Yorliq dizayni (har nusxa):
-    ┌──────────────────────┐
-    │  Krasovka Nike       │  ← name (tepada)
-    │  06.06.2026          │  ← received_date
-    │  ║║│║║││║║│║║││║║│    │  ← Code-128 shtrix-kod
-    │  ALB-100001          │  ← barcode kod
-    └──────────────────────┘
+Yorliq o'lchami: 82 x 20 mm (termo yorliq, gorizontal).
+Dizayn — barcha element ketma-ket, bitta yorliqqa sig'adi:
+    ┌────────────────────────────────┐
+    │           TGHFTH               │  ← name (qalin)
+    │  ║║│║║││║║│║║││║║│║║││║║│║      │  ← Code-128 shtrix-kod
+    │   08.06.2026    ALB-100001     │  ← sana + kod (bitta qatorda)
+    └────────────────────────────────┘
 """
 
 from datetime import date
@@ -39,9 +39,10 @@ def _barcode_png(code: str, module_height: float = 12.0) -> BytesIO:
 
 
 def render_label_docx(barcode: str, name: str, received: date) -> bytes:
-    """Bitta yorliqni Word (.docx) sifatida chizadi — oddiy printerda chop etish uchun.
+    """Bitta yorliqni Word (.docx) sifatida chizadi — 82x20 mm termo yorliq.
 
-    Tartib (markazlashgan): nom (qalin, katta) / sana / shtrix-kod rasmi / barkod kodi.
+    4 element ketma-ket, bitta yorliqqa sig'adi:
+    nom (qalin) / shtrix-kod / sana + kod (bir qatorda).
     """
     from docx import Document
     from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -49,52 +50,40 @@ def render_label_docx(barcode: str, name: str, received: date) -> bytes:
 
     doc = Document()
     section = doc.sections[0]
-    # A6 ga yaqin sahifa — barcha element bemalol bitta sahifaga sig'adi
-    section.page_width = Mm(70)
-    section.page_height = Mm(70)
-    section.top_margin = Mm(3)
-    section.bottom_margin = Mm(3)
-    section.left_margin = Mm(4)
-    section.right_margin = Mm(4)
+    # Aniq yorliq o'lchami: 82 x 20 mm (gorizontal), hoshiyalar minimal
+    section.page_width = Mm(82)
+    section.page_height = Mm(20)
+    section.top_margin = Mm(0.8)
+    section.bottom_margin = Mm(0.8)
+    section.left_margin = Mm(2)
+    section.right_margin = Mm(2)
 
-    def _tight(p):
+    def _tight(p, after=0.0):
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         pf = p.paragraph_format
         pf.space_before = Pt(0)
-        pf.space_after = Pt(2)
+        pf.space_after = Pt(after)
         pf.line_spacing = 1.0
+        pf.keep_with_next = False
+        pf.keep_together = False
         return p
 
-    def _no_keep(p):
-        """Paragrafni keyingisi bilan "birga ushlash"ni o'chiramiz — sahifa
-        bo'linishiga sabab bo'ladigan keep_with_next/keep_together ni olib tashlaymiz."""
-        p.paragraph_format.keep_with_next = False
-        p.paragraph_format.keep_together = False
-        # bo'sh paragraf qo'shilib ketmasligi uchun
-        return p
-
-    # Nom (qalin, katta)
-    p_name = _no_keep(_tight(doc.add_paragraph()))
-    run_name = p_name.add_run(name if len(name) <= 24 else name[:23] + "…")
+    # Nom (qalin) — kichik, bitta qatorga
+    p_name = _tight(doc.add_paragraph(), after=0.5)
+    run_name = p_name.add_run(name if len(name) <= 30 else name[:29] + "…")
     run_name.bold = True
-    run_name.font.size = Pt(16)
+    run_name.font.size = Pt(9)
 
-    # Sana
-    p_date = _no_keep(_tight(doc.add_paragraph()))
-    run_date = p_date.add_run(received.strftime("%d.%m.%Y"))
-    run_date.font.size = Pt(11)
+    # Shtrix-kod rasmi — eng past (balandlik 6.5mm), keng (78mm)
+    p_img = _tight(doc.add_paragraph(), after=0.5)
+    png = _barcode_png(barcode, module_height=6.0)
+    p_img.add_run().add_picture(png, width=Mm(76), height=Mm(7))
 
-    # Shtrix-kod rasmi — past
-    p_img = _no_keep(_tight(doc.add_paragraph()))
-    png = _barcode_png(barcode, module_height=8.0)
-    p_img.add_run().add_picture(png, width=Mm(55), height=Mm(15))
-
-    # Barkod kodi (pastda) — oxirgi paragraf, space_after = 0
-    p_code = _no_keep(_tight(doc.add_paragraph()))
-    p_code.paragraph_format.space_after = Pt(0)
-    run_code = p_code.add_run(barcode)
-    run_code.bold = True
-    run_code.font.size = Pt(12)
+    # Sana + kod — bitta qatorda yonma-yon
+    p_meta = _tight(doc.add_paragraph(), after=0.0)
+    run_meta = p_meta.add_run(f"{received.strftime('%d.%m.%Y')}    {barcode}")
+    run_meta.bold = True
+    run_meta.font.size = Pt(8)
 
     out = BytesIO()
     doc.save(out)

@@ -1,6 +1,7 @@
 """Dev seed — test ma'lumotlari. Ishga tushirish:
-    docker compose exec backend python -m app.seed
+docker compose exec backend python -m app.seed
 """
+
 import asyncio
 from datetime import date
 from decimal import Decimal
@@ -9,7 +10,7 @@ from sqlalchemy import select
 
 from app.core.enums import ProductStatus, ProductType, Role
 from app.db.base import SessionLocal
-from app.db.models import Counter, Product, User
+from app.db.models import Product, User
 
 
 async def seed() -> None:
@@ -38,16 +39,47 @@ async def seed() -> None:
 
         # Test mahsulotlar (katalog uchun)
         sample = [
-            ("Krasovka Nike", "Poyabzal", ProductType.PIECE, 600, Decimal("480"),
-             Decimal("0.8"), None, Decimal("50000")),
-            ("iPhone 15 Case", "Aksessuar", ProductType.PIECE, 200, Decimal("20"),
-             Decimal("0.1"), None, Decimal("15000")),
-            ("Tekstil mato", "Tekstil", ProductType.WEIGHT, 0, Decimal("100"),
-             None, Decimal("2"), Decimal("30000")),
-            ("Parfyumeriya", "Kosmetika", ProductType.PIECE, 150, Decimal("75"),
-             Decimal("0.5"), None, Decimal("40000")),
+            (
+                "Krasovka Nike",
+                "Poyabzal",
+                ProductType.PIECE,
+                600,
+                Decimal("480"),
+                Decimal("0.8"),
+                None,
+                Decimal("50000"),
+            ),
+            (
+                "iPhone 15 Case",
+                "Aksessuar",
+                ProductType.PIECE,
+                200,
+                Decimal("20"),
+                Decimal("0.1"),
+                None,
+                Decimal("15000"),
+            ),
+            (
+                "Tekstil mato",
+                "Tekstil",
+                ProductType.WEIGHT,
+                0,
+                Decimal("100"),
+                None,
+                Decimal("2"),
+                Decimal("30000"),
+            ),
+            (
+                "Parfyumeriya",
+                "Kosmetika",
+                ProductType.PIECE,
+                150,
+                Decimal("75"),
+                Decimal("0.5"),
+                None,
+                Decimal("40000"),
+            ),
         ]
-        existing_count = await db.scalar(select(Counter).where(Counter.name == "barcode"))
         for name, cat, ptype, qty, wkg, uw, bw, price in sample:
             exists = await db.scalar(select(Product).where(Product.name == name))
             if exists:

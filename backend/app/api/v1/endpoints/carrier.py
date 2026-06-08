@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, Query, Request
-
-from app.core.limiter import limiter
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, require_role
+from app.bot.notify import on_new_order
 from app.core.enums import ProductStatus, Role
 from app.core.errors import AppError
+from app.core.limiter import limiter
 from app.db.base import get_db
 from app.db.models import Product, User
 from app.schemas.common import OkResponse, OrderCreatedResponse
@@ -17,7 +17,6 @@ from app.schemas.order import (
     CreateOrderRequest,
     OrderItemOut,
 )
-from app.bot.notify import on_new_order
 from app.schemas.serializers import product_to_out
 from app.services.order_service import create_order, list_carrier_orders
 
@@ -35,8 +34,7 @@ async def catalog(
     if max_weight is not None:
         # unit_weight_kg (donali) yoki weight_kg (kiloli) limitidan og'ir bo'lmagani
         stmt = stmt.where(
-            (Product.unit_weight_kg.is_(None))
-            | (Product.unit_weight_kg <= max_weight)
+            (Product.unit_weight_kg.is_(None)) | (Product.unit_weight_kg <= max_weight)
         )
     stmt = stmt.order_by(Product.created_at.desc())
     rows = await db.execute(stmt)

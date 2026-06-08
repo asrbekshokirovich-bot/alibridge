@@ -81,7 +81,9 @@ async def start_bot() -> None:
     # Mini App'ga faqat /start orqali kiriladi — menu tugmasi /start buyrug'ini
     # ko'rsatadi (WebApp emas). Avvalgi WebApp menu bo'lsa ham bekor qilinadi.
     try:
-        await bot.set_my_commands([BotCommand(command="start", description="Boshlash / Ilovani ochish")])
+        await bot.set_my_commands(
+            [BotCommand(command="start", description="Boshlash / Ilovani ochish")]
+        )
         await bot.set_chat_menu_button(menu_button=MenuButtonCommands())
         logger.info("Bot menu: /start buyrug'i o'rnatildi (WebApp menu olib tashlandi)")
     except Exception as e:  # noqa: BLE001

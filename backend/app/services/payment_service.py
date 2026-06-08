@@ -24,7 +24,7 @@ async def recompute_carrier_payment(db: AsyncSession, carrier_id: int) -> Paymen
     )
     total = Decimal("0")
     count = 0
-    for item, product in rows.all():
+    for item, _product in rows.all():
         qty = item.actual_quantity if item.actual_quantity is not None else item.amount
         total += item.locked_cargo_price * Decimal(str(qty))
         count += 1

@@ -10,9 +10,7 @@ from app.db.models import Order, OrderItem, Product
 from app.schemas.order import CreateOrderRequest
 
 
-async def create_order(
-    db: AsyncSession, carrier_id: int, body: CreateOrderRequest
-) -> Order:
+async def create_order(db: AsyncSession, carrier_id: int, body: CreateOrderRequest) -> Order:
     # Mahsulotlarni bitta so'rovda olamiz
     product_ids = [it.product_id for it in body.items]
     rows = await db.execute(select(Product).where(Product.id.in_(product_ids)))

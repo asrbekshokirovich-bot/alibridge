@@ -3,6 +3,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_role
+from app.bot.notify import on_damage_reported
 from app.core.enums import (
     CustodyEventType,
     DisputeStatus,
@@ -21,7 +22,6 @@ from app.schemas.courier import (
     ScanDeliveryRequest,
 )
 from app.schemas.warehouse import ConfirmRequest, ScanRequest, ScanResponse
-from app.bot.notify import on_damage_reported
 from app.services.custody_service import get_product_by_barcode, transfer_custody
 from app.services.payment_service import recompute_carrier_payment
 

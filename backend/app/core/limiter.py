@@ -3,6 +3,7 @@
 Reverse-proxy (Render) ortida ishlaydi, shuning uchun X-Forwarded-For
 sarlavhasidagi birinchi IP bo'yicha cheklaydi.
 """
+
 from fastapi import Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address

@@ -1,4 +1,5 @@
 """Bot bildirishnomalari. Xatolar yutiladi — bildirishnoma asosiy oqimni buzmasligi kerak."""
+
 import logging
 
 from aiogram.exceptions import TelegramAPIError
@@ -44,11 +45,7 @@ async def notify_user(db: AsyncSession, user_id: int, text: str) -> None:
 
 
 async def on_new_order(db: AsyncSession, *, carrier_name: str, order_id: int) -> None:
-    text = (
-        f"📦 Yangi buyurtma #{order_id}\n"
-        f"Yo'lovchi: {carrier_name}\n"
-        f"Tasdiqlash kutilmoqda."
-    )
+    text = f"📦 Yangi buyurtma #{order_id}\nYo'lovchi: {carrier_name}\nTasdiqlash kutilmoqda."
     await notify_roles(db, (Role.WAREHOUSE_UZ, Role.ADMIN), text)
 
 
@@ -77,7 +74,9 @@ async def on_staff_approved(db: AsyncSession, *, user_id: int, role: str) -> Non
         "china_worker": "Xitoy ishchisi",
     }
     rn = role_names.get(role, role)
-    await notify_user(db, user_id, f"🎉 Hisobingiz tasdiqlandi!\nRol: {rn}\nEndi tizimga kira olasiz.")
+    await notify_user(
+        db, user_id, f"🎉 Hisobingiz tasdiqlandi!\nRol: {rn}\nEndi tizimga kira olasiz."
+    )
 
 
 async def on_damage_reported(

@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_role
+from app.bot.notify import notify_user, on_staff_approved
 from app.core.enums import (
     DisputeStatus,
     HolderType,
@@ -12,7 +13,6 @@ from app.core.enums import (
     Role,
     StaffRequestStatus,
 )
-from app.bot.notify import notify_user, on_staff_approved
 from app.core.errors import AppError
 from app.db.base import get_db
 from app.db.models import Dispute, Order, Payment, Product, StaffRequest, User
@@ -50,23 +50,21 @@ async def stats(
     user: User = Depends(require_role(*ROLE)),
 ) -> AdminStats:
     pending_staff = await db.scalar(
-        select(func.count()).select_from(StaffRequest).where(
-            StaffRequest.status == StaffRequestStatus.PENDING
-        )
+        select(func.count())
+        .select_from(StaffRequest)
+        .where(StaffRequest.status == StaffRequestStatus.PENDING)
     )
     active_carriers = await db.scalar(
-        select(func.count()).select_from(User).where(
-            User.role == Role.CARRIER, User.is_active.is_(True)
-        )
+        select(func.count())
+        .select_from(User)
+        .where(User.role == Role.CARRIER, User.is_active.is_(True))
     )
     total_products = await db.scalar(select(func.count()).select_from(Product))
     open_disputes = await db.scalar(
         select(func.count()).select_from(Dispute).where(Dispute.status == DisputeStatus.OPEN)
     )
     unpaid_payments = await db.scalar(
-        select(func.count()).select_from(Payment).where(
-            Payment.status == PaymentStatus.UNPAID
-        )
+        select(func.count()).select_from(Payment).where(Payment.status == PaymentStatus.UNPAID)
     )
     return AdminStats(
         pending_staff=pending_staff or 0,

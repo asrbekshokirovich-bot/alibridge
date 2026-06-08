@@ -10,14 +10,6 @@ from starlette.responses import JSONResponse
 
 from app.bot.runner import start_bot, stop_bot
 from app.core.config import settings
-from app.core.limiter import limiter
-
-
-async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
-    return JSONResponse(
-        status_code=429,
-        content={"error": {"code": "RATE_LIMIT", "message": "Juda ko'p so'rov. Birozdan keyin urinib ko'ring."}},
-    )
 from app.core.errors import (
     AppError,
     app_error_handler,
@@ -25,6 +17,20 @@ from app.core.errors import (
     unhandled_error_handler,
     validation_error_handler,
 )
+from app.core.limiter import limiter
+
+
+async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    return JSONResponse(
+        status_code=429,
+        content={
+            "error": {
+                "code": "RATE_LIMIT",
+                "message": "Juda ko'p so'rov. Birozdan keyin urinib ko'ring.",
+            }
+        },
+    )
+
 
 logging.basicConfig(
     level=getattr(logging, "DEBUG" if settings.app_debug else "INFO"),

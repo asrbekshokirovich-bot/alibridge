@@ -2,7 +2,7 @@ import hashlib
 import hmac
 import json
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from urllib.parse import parse_qsl
 
 from jose import JWTError, jwt
@@ -10,12 +10,11 @@ from jose import JWTError, jwt
 from app.core.config import settings
 from app.core.errors import AppError
 
-
 # ─── JWT ──────────────────────────────────────────────────────────────────────
 
 
 def create_access_token(user_id: int, role: str) -> str:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     payload = {
         "sub": str(user_id),
         "role": role,
@@ -27,9 +26,7 @@ def create_access_token(user_id: int, role: str) -> str:
 
 def decode_access_token(token: str) -> dict:
     try:
-        payload = jwt.decode(
-            token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
-        )
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
     except JWTError as e:
         raise AppError("UNAUTHORIZED", "Token yaroqsiz", status_code=401) from e
     if "sub" not in payload:
@@ -65,9 +62,7 @@ def verify_init_data(init_data: str, max_age_seconds: int = 86400) -> dict:
     # data_check_string: kalitlar alifbo tartibida, key=value, \n bilan
     data_check_string = "\n".join(f"{k}={parsed[k]}" for k in sorted(parsed))
     secret_key = _build_secret_key(settings.bot_token)
-    calculated_hash = hmac.new(
-        secret_key, data_check_string.encode(), hashlib.sha256
-    ).hexdigest()
+    calculated_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
 
     if not hmac.compare_digest(calculated_hash, received_hash):
         raise AppError("INVALID_INIT_DATA", "Imzo tekshiruvi muvaffaqiyatsiz", status_code=401)

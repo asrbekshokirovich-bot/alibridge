@@ -8,6 +8,7 @@ Kontrakt PDF dizayni (har nusxa):
     │  ALB-100001          │  ← barcode kod
     └──────────────────────┘
 """
+
 from datetime import date
 from io import BytesIO
 
@@ -53,7 +54,9 @@ def render_label_pdf(barcode: str, name: str, received: date) -> bytes:
     # Nom (tepada, qalin, KATTA) — joyga moslab shrift hajmi tanlanadi
     name_text = name if len(name) <= 18 else name[:17] + "…"
     name_size = 27
-    while name_size > 12 and c.stringWidth(name_text, "Helvetica-Bold", name_size) > LABEL_W - 6 * mm:
+    while (
+        name_size > 12 and c.stringWidth(name_text, "Helvetica-Bold", name_size) > LABEL_W - 6 * mm
+    ):
         name_size -= 1
     c.setFont("Helvetica-Bold", name_size)
     c.drawCentredString(LABEL_W / 2, LABEL_H - 8 * mm, name_text)

@@ -140,9 +140,7 @@ async def reg_name(message: Message, state: FSMContext) -> None:
 
     # Foydalanuvchini yaratamiz — default rol: orderer (Mini App'da almashtira oladi)
     async with SessionLocal() as db:
-        existing = await db.scalar(
-            select(User).where(User.telegram_id == message.from_user.id)
-        )
+        existing = await db.scalar(select(User).where(User.telegram_id == message.from_user.id))
         if existing is None:
             db.add(
                 User(
@@ -157,8 +155,7 @@ async def reg_name(message: Message, state: FSMContext) -> None:
             await db.commit()
 
     await message.answer(
-        f"✅ Tayyor, <b>{first_name}</b>!\n\n"
-        "Endi ilovani oching va kerakli bo'limni tanlang 👇",
+        f"✅ Tayyor, <b>{first_name}</b>!\n\nEndi ilovani oching va kerakli bo'limni tanlang 👇",
         reply_markup=_miniapp_keyboard(),
     )
 

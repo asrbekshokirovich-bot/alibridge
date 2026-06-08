@@ -123,9 +123,7 @@ class Dispute(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     product_id: Mapped[int | None] = mapped_column(ForeignKey("products.id"), nullable=True)
     carrier_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
-    reported_by: Mapped[int | None] = mapped_column(
-        ForeignKey("users.id"), nullable=True
-    )
+    reported_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     barcode: Mapped[str] = mapped_column(String(32), default="")
     note: Mapped[str] = mapped_column(Text, default="")
     status: Mapped[DisputeStatus] = mapped_column(

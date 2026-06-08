@@ -73,6 +73,10 @@ dmypy.json
 # Linting
 .ruff_cache/
 
+# Vaqtinchalik diagnostika/skriptlar
+_keep_safe/
+_list_users.py
+
 # Jupyter
 .ipynb_checkpoints
 

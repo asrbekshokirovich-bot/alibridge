@@ -35,10 +35,7 @@ async def register_user(
         # Allaqachon ro'yxatdan o'tgan.
         # Foydalanuvchi rollari (pending/carrier/orderer) o'rtasida erkin almashish
         # mumkin. Xodim rollari (warehouse/courier/admin) himoyalangan — o'zgarmaydi.
-        if (
-            existing.role in SELF_ROLES
-            and reg_type in (RegType.CARRIER, RegType.ORDERER)
-        ):
+        if existing.role in SELF_ROLES and reg_type in (RegType.CARRIER, RegType.ORDERER):
             existing.role = role
             existing.first_name = first_name or existing.first_name
             existing.last_name = last_name or existing.last_name

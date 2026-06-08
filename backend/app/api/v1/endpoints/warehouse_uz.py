@@ -60,19 +60,15 @@ async def stats(
         .where(Product.type == ProductType.WEIGHT, OrderItem.actual_quantity.is_(None))
     )
     in_warehouse = await db.scalar(
-        select(func.count()).select_from(Product).where(
-            Product.status == ProductStatus.IN_WAREHOUSE_UZ
-        )
+        select(func.count())
+        .select_from(Product)
+        .where(Product.status == ProductStatus.IN_WAREHOUSE_UZ)
     )
     pending_handover = await db.scalar(
-        select(func.count()).select_from(Product).where(
-            Product.status == ProductStatus.CONFIRMED
-        )
+        select(func.count()).select_from(Product).where(Product.status == ProductStatus.CONFIRMED)
     )
     pending_orders = await db.scalar(
-        select(func.count()).select_from(Order).where(
-            Order.status == OrderStatus.PENDING_ADMIN
-        )
+        select(func.count()).select_from(Order).where(Order.status == OrderStatus.PENDING_ADMIN)
     )
     return WarehouseUzStats(
         pending_receive=pending_receive or 0,
@@ -205,9 +201,7 @@ async def products(
     user: User = Depends(require_role(*WH_UZ)),
 ) -> list[ProductOut]:
     """Ombordagi barcha mahsulotlar katalogi (har qanday holatdagi)."""
-    rows = await db.execute(
-        select(Product).order_by(Product.created_at.desc())
-    )
+    rows = await db.execute(select(Product).order_by(Product.created_at.desc()))
     return [product_to_out(p, expose_box_weight=True) for p in rows.scalars().all()]
 
 

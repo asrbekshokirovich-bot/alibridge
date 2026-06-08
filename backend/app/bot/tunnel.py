@@ -4,6 +4,7 @@ Bepul trycloudflare.com tunnel uzilib qayta ulanганда URL o'zgaradi.
 Backend startup'da log'dan eng oxirgi URL'ni o'qib, bot menu button + WebApp
 tugmasini avtomatik yangilaydi.
 """
+
 import logging
 import re
 from pathlib import Path

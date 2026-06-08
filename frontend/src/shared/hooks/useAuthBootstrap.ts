@@ -8,6 +8,9 @@ interface LoginResponse {
   user: User
 }
 
+// VAQTINCHALIK DIAGNOSTIKA — login nega ishlamayotganini Welcome'da ko'rsatish uchun
+export const authDebug: { info: string } = { info: 'boot...' }
+
 /**
  * App ishga tushganda:
  * - Token bor bo'lsa  -> /auth/me bilan joriy rolni sinxronlaymiz (rol DB'da o'zgargan bo'lsa).
@@ -42,14 +45,29 @@ export function useAuthBootstrap(): boolean {
 
       // 2) Token yo'q — Telegram initData bilan avtomatik login
       const initData = window.Telegram?.WebApp?.initData ?? ''
-      if (!initData) return // Telegram tashqarisida — Welcome ko'rsatiladi
+      const hasTg = !!window.Telegram?.WebApp
+      const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user
+      authDebug.info = `tg=${hasTg} initLen=${initData.length} uid=${tgUser?.id ?? '-'} base=${client.defaults.baseURL}`
+      if (!initData) {
+        authDebug.info += ' | initData BO\'SH — Telegram tashqarisida yoki SDK yuklanmadi'
+        return // Telegram tashqarisida — Welcome ko'rsatiladi
+      }
 
       try {
         const res = await client.post<LoginResponse>('/auth/login', {
           tg_init_data: initData,
         })
         if (!cancelled) setAuth(res.data.token, res.data.user)
-      } catch {
+        authDebug.info += ` | LOGIN OK role=${res.data.user.role}`
+      } catch (err: unknown) {
+        const e = err as {
+          response?: { status?: number; data?: { error?: { code?: string; message?: string } } }
+          message?: string
+        }
+        const status = e?.response?.status
+        const code = e?.response?.data?.error?.code
+        const msg = e?.response?.data?.error?.message
+        authDebug.info += ` | LOGIN FAIL status=${status ?? 'NETWORK'} code=${code ?? '-'} msg=${msg ?? e?.message ?? '-'}`
         // Ro'yxatda yo'q (404) yoki boshqa xato — Welcome ko'rsatiladi
       }
     }

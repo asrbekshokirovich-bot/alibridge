@@ -7,6 +7,7 @@ declare global {
         ready: () => void
         expand: () => void
         close: () => void
+        openLink: (url: string, options?: { try_instant_view?: boolean }) => void
         initData: string
         initDataUnsafe: {
           user?: {
@@ -72,6 +73,16 @@ export function useTelegram() {
     tg?.HapticFeedback.notificationOccurred(type)
   }
 
+  // Faylni/havolani tashqi brauzerda ochish — Telegram WebView ichida
+  // <a download> ishlamaydi, openLink esa tizim brauzerida ochib yuklab oladi.
+  const openLink = (url: string) => {
+    if (tg?.openLink) {
+      tg.openLink(url, { try_instant_view: false })
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    }
+  }
+
   return {
     tg,
     isReady,
@@ -79,5 +90,6 @@ export function useTelegram() {
     tgUser: tg?.initDataUnsafe?.user,
     haptic,
     notify,
+    openLink,
   }
 }

@@ -40,8 +40,12 @@ export function typeLabel(t: ProductType): string {
 
 // Barkod Word (.docx) yorlig'i linki (auth shart emas) — chop etish uchun
 // printDate berilsa, faylda o'sha sana ko'rsatiladi (bosilgan sana)
+// Telegram WebView tashqi brauzerda ochishi uchun mutlaq (absolute) URL qaytaramiz.
 export function labelUrl(barcode: string, printDate?: string): string {
   const base = import.meta.env.VITE_API_URL ?? '/api/v1'
-  const url = `${base}/labels/${barcode}.docx`
-  return printDate ? `${url}?print_date=${printDate}` : url
+  let url = `${base}/labels/${barcode}.docx`
+  if (printDate) url += `?print_date=${printDate}`
+  // Nisbiy bo'lsa — to'liq manzilga aylantiramiz
+  if (url.startsWith('/')) url = window.location.origin + url
+  return url
 }

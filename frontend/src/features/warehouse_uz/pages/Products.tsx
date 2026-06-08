@@ -5,6 +5,7 @@ import client from '@/shared/api/client'
 import type { Product } from '@/shared/types'
 import { PRODUCT_STATUS } from '@/shared/lib/status'
 import { productGroup, typeEmoji, labelUrl, type ProductGroup } from '@/shared/lib/product'
+import { useTelegram } from '@/shared/hooks/useTelegram'
 import { Header, ListSkeleton, EmptyState, StatusBadge, IconBox } from '@/shared/ui'
 
 type Filter = 'all' | ProductGroup
@@ -21,6 +22,7 @@ const CHIP_MUTED = 'text-xs font-medium text-slate-400 bg-slate-50 px-2 py-0.5 r
 
 export default function Products() {
   const navigate = useNavigate()
+  const { openLink } = useTelegram()
   const [filter, setFilter] = useState<Filter>('all')
 
   const { data: products, isLoading } = useQuery({
@@ -120,15 +122,12 @@ export default function Products() {
                       {incomplete ? 'To\'ldirish' : '✏️ Tahrirlash'}
                     </button>
                   )}
-                  <a
-                    href={labelUrl(p.barcode, new Date().toISOString().slice(0, 10))}
-                    download={`${p.barcode}.docx`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    onClick={() => openLink(labelUrl(p.barcode, new Date().toISOString().slice(0, 10)))}
                     className="press flex-1 py-2.5 rounded-xl text-sm font-semibold bg-slate-100 text-slate-700 text-center"
                   >
                     🖨️ Barkod
-                  </a>
+                  </button>
                 </div>
               </div>
             )

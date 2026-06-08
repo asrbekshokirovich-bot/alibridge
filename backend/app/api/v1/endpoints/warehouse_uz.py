@@ -28,11 +28,13 @@ from app.schemas.warehouse import (
     ReceiveGoodsResponse,
     ScanRequest,
     ScanResponse,
+    UpdateProductRequest,
     WarehouseOrderItemOut,
     WarehouseOrderOut,
     WarehouseUzStats,
 )
 from app.services.barcode_service import (
+    apply_product_fields,
     build_print_url,
     create_received_product,
 )
@@ -87,18 +89,12 @@ async def receive(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*WH_UZ)),
 ) -> ReceiveGoodsResponse:
+    """1-qadam: faqat nom bilan mahsulot + barkod yaratadi (soni=0).
+    Qolgan ma'lumotlar PATCH /products/{id} orqali to'ldiriladi."""
     product = await create_received_product(
         db,
         name=body.name,
         category=body.category,
-        ptype=body.type,
-        quantity=body.quantity,
-        weight_kg=body.weight_kg,
-        unit_weight_kg=body.unit_weight_kg,
-        box_weight_kg=body.box_weight_kg,
-        box_count=body.box_count,
-        units_per_box=body.units_per_box,
-        cargo_price=body.cargo_price,
         created_by=user.id,
     )
     # Qabul qilindi — custody warehouse_uz da
@@ -111,12 +107,47 @@ async def receive(
         scanned_by=user.id,
     )
     return ReceiveGoodsResponse(
+        id=product.id,
         barcode=product.barcode,
         name=product.name,
         received_date=product.received_date.isoformat(),
         print_url=build_print_url(product.barcode),
         quantity=product.quantity,
     )
+
+
+@router.patch("/products/{product_id}", response_model=ProductOut)
+async def update_product(
+    product_id: int,
+    body: UpdateProductRequest,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*WH_UZ)),
+) -> ProductOut:
+    """2-qadam (to'ldirish) yoki Tahrirlash: tur/miqdor/vazn/narx ni yangilaydi.
+    Faqat omborda turgan (in_warehouse_uz) mahsulotni o'zgartirish mumkin."""
+    product = await db.get(Product, product_id)
+    if product is None:
+        raise AppError("PRODUCT_NOT_FOUND", "Mahsulot topilmadi", status_code=404)
+    if product.status != ProductStatus.IN_WAREHOUSE_UZ:
+        raise AppError(
+            "PRODUCT_LOCKED",
+            "Bu mahsulot allaqachon jarayonga o'tgan, o'zgartirib bo'lmaydi",
+        )
+    apply_product_fields(
+        product,
+        ptype=body.type,
+        quantity=body.quantity,
+        weight_kg=body.weight_kg,
+        unit_weight_kg=body.unit_weight_kg,
+        box_weight_kg=body.box_weight_kg,
+        box_count=body.box_count,
+        units_per_box=body.units_per_box,
+        cargo_price=body.cargo_price,
+        name=body.name,
+        category=body.category,
+    )
+    await db.flush()
+    return product_to_out(product, expose_box_weight=True)
 
 
 # ─── Yo'lovchilar buyurtmalari (ombor tasdiqlash) ───────────────────────────────

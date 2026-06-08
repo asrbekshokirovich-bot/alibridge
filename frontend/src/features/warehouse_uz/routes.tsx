@@ -3,6 +3,7 @@ import Dashboard from './Dashboard'
 import ReceiveGoods from './pages/ReceiveGoods'
 import Orders from './pages/Orders'
 import Products from './pages/Products'
+import EditProduct from './pages/EditProduct'
 import HandoverCourier from './pages/HandoverCourier'
 
 export default function WarehouseUzRoutes() {
@@ -12,6 +13,7 @@ export default function WarehouseUzRoutes() {
       <Route path="/receive" element={<ReceiveGoods />} />
       <Route path="/orders" element={<Orders />} />
       <Route path="/products" element={<Products />} />
+      <Route path="/products/:id/edit" element={<EditProduct />} />
       <Route path="/handover-courier" element={<HandoverCourier />} />
     </Routes>
   )

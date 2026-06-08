@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
 import type { Product } from '@/shared/types'
@@ -19,6 +20,7 @@ const CHIP = 'text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounde
 const CHIP_MUTED = 'text-xs font-medium text-slate-400 bg-slate-50 px-2 py-0.5 rounded-lg'
 
 export default function Products() {
+  const navigate = useNavigate()
   const [filter, setFilter] = useState<Filter>('all')
 
   const { data: products, isLoading } = useQuery({
@@ -66,8 +68,11 @@ export default function Products() {
         <div className="px-4 pt-4 space-y-3">
           {filtered.map((p) => {
             const g = productGroup(p.type)
+            const editable = p.status === 'in_warehouse_uz'
+            // To'ldirilmagan: omborda turibdi, lekin narx/miqdor kiritilmagan (ekran uchib qolgan)
+            const incomplete = editable && (!p.cargo_price || p.quantity === 0)
             return (
-              <div key={p.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+              <div key={p.id} className={`bg-white rounded-2xl p-4 border shadow-sm ${incomplete ? 'border-amber-300' : 'border-slate-100'}`}>
                 <div className="flex items-start gap-3">
                   <div className="w-11 h-11 rounded-xl bg-slate-50 flex items-center justify-center text-xl shrink-0">{typeEmoji(p.type)}</div>
                   <div className="flex-1 min-w-0">
@@ -75,31 +80,45 @@ export default function Products() {
                       <h3 className="font-bold text-slate-900 truncate">{p.name}</h3>
                       <StatusBadge tone={PRODUCT_STATUS[p.status].tone} dot>{PRODUCT_STATUS[p.status].text}</StatusBadge>
                     </div>
-                    <p className="text-xs text-slate-400">{p.category}</p>
+                    <p className="text-xs text-slate-400">{p.category || '—'}</p>
 
-                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      {g === 'piece' && <span className={CHIP}>{p.quantity} dona</span>}
-                      {g === 'boxed' && (
-                        <>
-                          <span className={CHIP}>{p.box_count ?? '—'} quti</span>
-                          <span className={CHIP}>1 qutida {p.units_per_box ?? '—'} dona</span>
-                          <span className={CHIP}>{p.weight_kg} kg</span>
-                          <span className={CHIP_MUTED}>jami {p.quantity} dona</span>
-                        </>
-                      )}
-                      {g === 'textile' && (
-                        <>
-                          <span className={CHIP}>{p.weight_kg} kg</span>
-                          <span className={CHIP}>{p.quantity} dona</span>
-                        </>
-                      )}
-                      {/* narx */}
-                      <span className="text-xs font-bold" style={{ color: 'var(--brand)' }}>
-                        ${p.cargo_price}/{g === 'piece' ? 'dona' : 'kg'}
-                      </span>
-                    </div>
+                    {incomplete ? (
+                      <p className="text-xs text-amber-600 font-medium mt-1.5">⚠️ Ma'lumotlar to'ldirilmagan — tahrirlang</p>
+                    ) : (
+                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                        {g === 'piece' && <span className={CHIP}>{p.quantity} dona</span>}
+                        {g === 'boxed' && (
+                          <>
+                            <span className={CHIP}>{p.box_count ?? '—'} quti</span>
+                            <span className={CHIP}>1 qutida {p.units_per_box ?? '—'} dona</span>
+                            <span className={CHIP}>{p.weight_kg} kg</span>
+                            <span className={CHIP_MUTED}>jami {p.quantity} dona</span>
+                          </>
+                        )}
+                        {g === 'textile' && (
+                          <>
+                            <span className={CHIP}>{p.weight_kg} kg</span>
+                            <span className={CHIP}>{p.quantity} dona</span>
+                          </>
+                        )}
+                        <span className="text-xs font-bold" style={{ color: 'var(--brand)' }}>
+                          ${p.cargo_price}/{g === 'piece' ? 'dona' : 'kg'}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
+
+                {/* Tahrirlash — faqat omborda turgan mahsulot */}
+                {editable && (
+                  <button
+                    onClick={() => navigate(`/warehouse-uz/products/${p.id}/edit`)}
+                    className={`press w-full mt-3 py-2.5 rounded-xl text-sm font-semibold ${incomplete ? 'text-white' : 'bg-slate-100 text-slate-700'}`}
+                    style={incomplete ? { background: 'var(--brand-gradient)' } : undefined}
+                  >
+                    {incomplete ? 'To\'ldirish' : '✏️ Tahrirlash'}
+                  </button>
+                )}
               </div>
             )
           })}

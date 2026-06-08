@@ -13,8 +13,27 @@ class WarehouseUzStats(BaseModel):
 
 
 class ReceiveGoodsRequest(BaseModel):
+    """1-qadam: faqat nom (+ixtiyoriy kategoriya) — barkod yaratiladi.
+    Qolgan ma'lumotlar keyin PATCH /products/{id} orqali to'ldiriladi."""
+
     name: str = Field(min_length=1, max_length=256)
     category: str = Field(default="", max_length=128)
+
+
+class ReceiveGoodsResponse(BaseModel):
+    id: int
+    barcode: str
+    name: str
+    received_date: str
+    print_url: str
+    quantity: int
+
+
+class UpdateProductRequest(BaseModel):
+    """2-qadam (to'ldirish) yoki Tahrirlash: tur + miqdor + vazn + narx."""
+
+    name: str | None = Field(default=None, max_length=256)
+    category: str | None = Field(default=None, max_length=128)
     type: ProductType
     quantity: int = Field(default=0, ge=0)
     weight_kg: float | None = None  # piece: 1 dona YOKI umumiy; textile: umumiy kg
@@ -23,14 +42,6 @@ class ReceiveGoodsRequest(BaseModel):
     box_count: int | None = None  # boxed: quti soni
     units_per_box: int | None = None  # boxed: 1 quti ichidagi mahsulot soni
     cargo_price: int = Field(ge=0)  # piece: $/dona; boxed & textile: $/kg
-
-
-class ReceiveGoodsResponse(BaseModel):
-    barcode: str
-    name: str
-    received_date: str
-    print_url: str
-    quantity: int
 
 
 # ─── Yo'lovchilar buyurtmalari (ombor tasdiqlash) ───────────────────────────────

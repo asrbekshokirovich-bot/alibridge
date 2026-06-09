@@ -13,10 +13,6 @@
 # Secrets
 **/secrets/
 *.pem
-
-# Generatsiya qilingan QR kodlar (lokal)
-qr_receive.png
-backend/qr_receive.png
 *.key
 *.crt
 

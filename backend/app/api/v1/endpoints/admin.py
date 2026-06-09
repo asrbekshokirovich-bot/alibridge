@@ -43,6 +43,9 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 ROLE = (Role.ADMIN,)
 
+# Nizolar (disputes) — admin + Toshkent ombor xodimi ko'radi va hal qiladi
+DISPUTE_ROLE = (Role.ADMIN, Role.WAREHOUSE_UZ)
+
 # Adminning xodim rollari (tayinlash/almashtirish uchun ruxsat etilgan)
 STAFF_ROLES = (
     Role.WAREHOUSE_UZ,
@@ -377,7 +380,7 @@ async def remove_staff(
 @router.get("/disputes", response_model=list[DisputeOut])
 async def disputes(
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(require_role(*ROLE)),
+    user: User = Depends(require_role(*DISPUTE_ROLE)),
 ) -> list[DisputeOut]:
     CarrierUser = User
     rows = await db.execute(
@@ -410,7 +413,7 @@ async def update_dispute(
     dispute_id: int,
     body: UpdateDisputeRequest,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(require_role(*ROLE)),
+    user: User = Depends(require_role(*DISPUTE_ROLE)),
 ) -> OkResponse:
     d = await db.get(Dispute, dispute_id)
     if d is None:

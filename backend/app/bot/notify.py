@@ -46,7 +46,11 @@ async def notify_user(db: AsyncSession, user_id: int, text: str) -> None:
 
 async def on_new_order(db: AsyncSession, *, carrier_name: str, order_id: int) -> None:
     text = f"📦 Yangi buyurtma #{order_id}\nYo'lovchi: {carrier_name}\nTasdiqlash kutilmoqda."
-    await notify_roles(db, (Role.WAREHOUSE_UZ, Role.ADMIN), text)
+    await notify_roles(
+        db,
+        (Role.WAREHOUSE_UZ, Role.ADMIN, Role.COURIER_UZ, Role.COURIER_TR),
+        text,
+    )
 
 
 async def on_order_confirmed(db: AsyncSession, *, carrier_id: int, order_id: int) -> None:

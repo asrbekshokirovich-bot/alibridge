@@ -78,7 +78,11 @@ export default function Products() {
             return (
               <div key={p.id} className={`bg-white rounded-2xl p-4 border shadow-sm ${incomplete ? 'border-amber-300' : 'border-slate-100'}`}>
                 <div className="flex items-start gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-slate-50 flex items-center justify-center text-xl shrink-0">{typeEmoji(p.type)}</div>
+                  <div className="w-11 h-11 rounded-xl bg-slate-50 flex items-center justify-center text-xl shrink-0 overflow-hidden">
+                    {p.image_url
+                      ? <img src={p.image_url} alt="" className="w-full h-full object-cover" />
+                      : typeEmoji(p.type)}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <h3 className="font-bold text-slate-900 truncate">{p.name}</h3>

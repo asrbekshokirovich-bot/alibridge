@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_role
@@ -15,7 +15,16 @@ from app.core.enums import (
 )
 from app.core.errors import AppError
 from app.db.base import get_db
-from app.db.models import Dispute, Order, Payment, Product, StaffRequest, User
+from app.db.models import (
+    CustodyEvent,
+    Dispute,
+    Order,
+    Payment,
+    Product,
+    StaffRequest,
+    User,
+    WalkInCustomer,
+)
 from app.schemas.admin import (
     AdminStats,
     ApproveStaffRequest,
@@ -42,6 +51,23 @@ STAFF_ROLES = (
     Role.COURIER_TR,
     Role.CHINA_WORKER,
 )
+
+
+async def _has_work_history(db: AsyncSession, user_id: int) -> bool:
+    """User biror ish tarixi qoldirganmi (skanlash/mahsulot/dispute).
+
+    custody_events append-only bo'lgani uchun bunday yozuvlarni o'chirib/null
+    qilib bo'lmaydi — shu sababli tarixli userni o'chirish taqiqlanadi.
+    """
+    for stmt in (
+        select(CustodyEvent.id).where(CustodyEvent.scanned_by == user_id),
+        select(Product.id).where(Product.created_by == user_id),
+        select(Dispute.id).where(Dispute.reported_by == user_id),
+        select(WalkInCustomer.id).where(WalkInCustomer.created_by == user_id),
+    ):
+        if await db.scalar(stmt.limit(1)) is not None:
+            return True
+    return False
 
 
 @router.get("/stats", response_model=AdminStats)
@@ -210,7 +236,10 @@ async def remove_carrier(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*ROLE)),
 ) -> OkResponse:
-    """Yo'lovchini roldan olib tashlaydi — oddiy foydalanuvchiga (NEW) qaytaradi."""
+    """Yo'lovchini butunlay o'chiradi — user bazadan o'chadi, botdan ham uchadi.
+
+    Yuk, buyurtma yoki to'lov tarixi bo'lsa o'chirib bo'lmaydi (avval tozalansin).
+    """
     target = await db.get(User, user_id)
     if target is None:
         raise AppError("USER_NOT_FOUND", "Foydalanuvchi topilmadi")
@@ -229,13 +258,32 @@ async def remove_carrier(
     if has_cargo:
         raise AppError("HAS_CARGO", "Yo'lovchida yuk bor — avval topshirilishi kerak")
 
-    target.role = Role.NEW
-    await db.flush()
+    # Buyurtma yoki to'lov tarixi bo'lsa — o'chirib bo'lmaydi (moliyaviy tarix saqlanadi)
+    has_orders = await db.scalar(
+        select(func.count()).select_from(Order).where(Order.carrier_id == target.id)
+    )
+    has_payments = await db.scalar(
+        select(func.count()).select_from(Payment).where(Payment.carrier_id == target.id)
+    )
+    if has_orders or has_payments or await _has_work_history(db, target.id):
+        raise AppError(
+            "HAS_HISTORY", "Yo'lovchida buyurtma/to'lov tarixi bor — o'chirib bo'lmaydi"
+        )
+
+    # O'chirishdan oldin xabar yuboramiz
     await notify_user(
         db,
         target.id,
-        "ℹ️ Sizning yo'lovchi rolingiz olib tashlandi.\nQaytadan rol tanlashingiz mumkin.",
+        "ℹ️ Sizning yo'lovchi rolingiz olib tashlandi va hisobingiz o'chirildi.\n"
+        "Qaytadan kirish uchun /start ni bosing.",
     )
+    # Dispute'lar carrier_id null bo'lishi mumkin — yetim qilmaymiz
+    await db.execute(
+        update(Dispute).where(Dispute.carrier_id == target.id).values(carrier_id=None)
+    )
+    await db.execute(delete(StaffRequest).where(StaffRequest.user_id == target.id))
+    await db.delete(target)
+    await db.flush()
     return OkResponse(ok=True)
 
 
@@ -293,20 +341,33 @@ async def remove_staff(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*ROLE)),
 ) -> OkResponse:
-    """Xodimni roldan butunlay olib tashlaydi — oddiy foydalanuvchiga (orderer) qaytaradi."""
+    """Xodimni butunlay o'chiradi — user bazadan o'chadi, botdan ham uchadi.
+
+    Ish tarixi (skanlash, mahsulot, dispute) bo'lsa o'chirib bo'lmaydi —
+    custody_events append-only bo'lgani uchun yozuvlar saqlanishi shart.
+    O'chirilgandan keyin user qaytadan /start bosib ro'yxatdan o'tishi kerak.
+    """
     target = await db.get(User, user_id)
     if target is None:
         raise AppError("USER_NOT_FOUND", "Foydalanuvchi topilmadi")
     if target.role not in STAFF_ROLES:
         raise AppError("NOT_STAFF", "Bu foydalanuvchi xodim emas")
 
-    target.role = Role.ORDERER
-    await db.flush()
+    if await _has_work_history(db, target.id):
+        raise AppError(
+            "HAS_HISTORY", "Xodimda ish tarixi bor — o'chirib bo'lmaydi"
+        )
+
+    # O'chirishdan oldin xabar yuboramiz (keyin user qoldmaydi)
     await notify_user(
         db,
         target.id,
-        "ℹ️ Sizning xodim rolingiz olib tashlandi.\nEndi oddiy foydalanuvchi sifatida kirasiz.",
+        "ℹ️ Sizning xodim rolingiz olib tashlandi va hisobingiz o'chirildi.\n"
+        "Qaytadan kirish uchun /start ni bosing.",
     )
+    await db.execute(delete(StaffRequest).where(StaffRequest.user_id == target.id))
+    await db.delete(target)
+    await db.flush()
     return OkResponse(ok=True)
 
 

@@ -30,18 +30,37 @@ class ReceiveGoodsResponse(BaseModel):
 
 
 class UpdateProductRequest(BaseModel):
-    """2-qadam (to'ldirish) yoki Tahrirlash: tur + miqdor + vazn + narx."""
+    """Tahrirlash: nom/kategoriya/tur (variantlardan mustaqil Product maydonlari).
+    Eski miqdor/vazn maydonlari backward-compat uchun saqlanadi."""
 
     name: str | None = Field(default=None, max_length=256)
     category: str | None = Field(default=None, max_length=128)
-    type: ProductType
+    type: ProductType = ProductType.PIECE
+    quantity: int = Field(default=0, ge=0)
+    weight_kg: float | None = None
+    tare_kg: float | None = None
+    unit_weight_kg: float | None = None
+    box_weight_kg: float | None = None
+    box_count: int | None = None
+    units_per_box: int | None = None
+    cargo_price: int = Field(default=0, ge=0)
+
+
+class AddVariantRequest(BaseModel):
+    """Mahsulotga o'lcham varianti qo'shish/yangilash.
+    Tur (type) Product darajasida — variantlar uchun bir xil.
+    Barcha o'lchov maydonlari ixtiyoriy (xodim qisman to'ldiradi)."""
+
+    type: ProductType = ProductType.PIECE
+    size_label: str = Field(default="", max_length=64)
     quantity: int = Field(default=0, ge=0)
     weight_kg: float | None = None  # piece: 1 dona YOKI umumiy; textile: umumiy kg
-    unit_weight_kg: float | None = None  # piece: agar xodim to'g'ridan 1 dona vaznini kiritsa
-    box_weight_kg: float | None = None  # boxed: 1 quti vazni (kg)
+    tare_kg: float | None = None  # qadoq/quti vazni (kg)
+    unit_weight_kg: float | None = None  # piece: 1 dona vazni
+    box_weight_kg: float | None = None  # boxed: 1 quti vazni
     box_count: int | None = None  # boxed: quti soni
-    units_per_box: int | None = None  # boxed: 1 quti ichidagi mahsulot soni
-    cargo_price: int = Field(ge=0)  # piece: $/dona; boxed & textile: $/kg
+    units_per_box: int | None = None  # boxed: 1 qutidagi soni
+    cargo_price: int = Field(default=0, ge=0)  # piece: $/dona; boxed & textile: $/kg
 
 
 # ─── Yo'lovchilar buyurtmalari (ombor tasdiqlash) ───────────────────────────────
@@ -50,6 +69,8 @@ class UpdateProductRequest(BaseModel):
 class WarehouseOrderItemOut(BaseModel):
     item_id: int
     product_id: int
+    variant_id: int | None = None
+    size_label: str = ""
     barcode: str
     product_name: str
     category: str

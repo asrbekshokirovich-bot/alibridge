@@ -43,11 +43,13 @@ export default function MyOrders() {
                 <div className="divide-y divide-slate-50">
                   {(order.items ?? []).length > 0 ? (
                     order.items!.map((it) => (
-                      <div key={it.product_id} className="flex items-center gap-3 px-4 py-2.5">
+                      <div key={it.variant_id ?? it.product_id} className="flex items-center gap-3 px-4 py-2.5">
                         <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-sm shrink-0">
                           {typeEmoji(it.type)}
                         </div>
-                        <span className="flex-1 text-sm text-slate-700 truncate">{it.product_name}</span>
+                        <span className="flex-1 text-sm text-slate-700 truncate">
+                          {it.product_name}{it.size_label ? ` · ${it.size_label}` : ''}
+                        </span>
                         <span className="text-xs text-slate-400">
                           {isPiece(it.type)
                             ? `${it.actual_quantity ?? it.amount} dona`

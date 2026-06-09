@@ -36,7 +36,7 @@ export default function Checkout() {
     setLoading(true); setError('')
     try {
       await client.post('/carrier/orders', {
-        items: cart.map((c) => ({ product_id: c.product.id, amount: c.amount })),
+        items: cart.map((c) => ({ product_id: c.product.id, variant_id: c.variant.id, amount: c.amount })),
         pickup_type: pickupType,
         pickup_address: pickupType === 'courier' ? pickupAddress : null,
         delivery_address_tr: deliveryAddress,
@@ -57,12 +57,15 @@ export default function Checkout() {
         {/* Yuk ro'yxati */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm divide-y divide-slate-50">
           {cart.map((c) => (
-            <div key={c.product.id} className="flex items-center gap-3 p-3.5">
+            <div key={c.variant.id} className="flex items-center gap-3 p-3.5">
               <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-lg shrink-0">
                 {typeEmoji(c.product.type)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm text-slate-900 truncate">{c.product.name}</p>
+                <p className="font-semibold text-sm text-slate-900 truncate">
+                  {c.product.category || c.product.name}
+                  {c.variant.size_label && <span className="text-slate-400 font-normal"> · {c.variant.size_label}</span>}
+                </p>
                 <p className="text-xs text-slate-400">
                   {c.amount} {unitWord(c.product.type)}
                   {isPiece(c.product.type) && ` · ~${c.weight.toFixed(1)} kg`}

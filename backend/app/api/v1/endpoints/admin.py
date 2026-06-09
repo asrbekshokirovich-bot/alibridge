@@ -3,6 +3,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.api.deps import require_role
 from app.bot.notify import notify_user, on_staff_approved
@@ -115,7 +116,9 @@ async def products(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*VIEW_ROLE)),
 ) -> list[ProductOut]:
-    rows = await db.execute(select(Product).order_by(Product.created_at.desc()))
+    rows = await db.execute(
+        select(Product).options(selectinload(Product.variants)).order_by(Product.created_at.desc())
+    )
     # Admin hamma narsani ko'radi (box_weight ham)
     return [product_to_out(p, expose_box_weight=True) for p in rows.scalars().all()]
 

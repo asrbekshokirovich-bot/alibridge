@@ -71,8 +71,10 @@ export default function Products() {
           {filtered.map((p) => {
             const g = productGroup(p.type)
             const editable = p.status === 'in_warehouse_uz'
-            // To'ldirilmagan: omborda turibdi, lekin narx/miqdor kiritilmagan (ekran uchib qolgan)
-            const incomplete = editable && (!p.cargo_price || p.quantity === 0)
+            // Haqiqiy variantlar (bo'sh backfill emas)
+            const realVariants = p.variants?.filter((v) => v.size_label || v.quantity || v.weight_kg) ?? []
+            // To'ldirilmagan: omborda turibdi, lekin birorta variant ham yo'q
+            const incomplete = editable && realVariants.length === 0
             return (
               <div key={p.id} className={`bg-white rounded-2xl p-4 border shadow-sm ${incomplete ? 'border-amber-300' : 'border-slate-100'}`}>
                 <div className="flex items-start gap-3">
@@ -85,27 +87,30 @@ export default function Products() {
                     <p className="text-xs text-slate-400">{p.category || '—'}</p>
 
                     {incomplete ? (
-                      <p className="text-xs text-amber-600 font-medium mt-1.5">⚠️ Ma'lumotlar to'ldirilmagan — tahrirlang</p>
+                      <p className="text-xs text-amber-600 font-medium mt-1.5">⚠️ O'lcham qo'shilmagan — tahrirlang</p>
                     ) : (
-                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                        {g === 'piece' && <span className={CHIP}>{p.quantity} dona</span>}
-                        {g === 'boxed' && (
-                          <>
-                            <span className={CHIP}>{p.box_count ?? '—'} quti</span>
-                            <span className={CHIP}>1 qutida {p.units_per_box ?? '—'} dona</span>
-                            <span className={CHIP}>{p.weight_kg} kg</span>
-                            <span className={CHIP_MUTED}>jami {p.quantity} dona</span>
-                          </>
-                        )}
-                        {g === 'textile' && (
-                          <>
-                            <span className={CHIP}>{p.weight_kg} kg</span>
-                            <span className={CHIP}>{p.quantity} dona</span>
-                          </>
-                        )}
-                        <span className="text-xs font-bold" style={{ color: 'var(--brand)' }}>
-                          ${p.cargo_price}/{g === 'piece' ? 'dona' : 'kg'}
-                        </span>
+                      <div className="mt-2 space-y-1.5">
+                        {realVariants.map((v) => (
+                          <div key={v.id} className="flex items-center gap-2 flex-wrap text-xs">
+                            {v.size_label && (
+                              <span className="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg">{v.size_label}</span>
+                            )}
+                            {v.quantity > 0 && <span className={CHIP}>{v.quantity} dona</span>}
+                            {g === 'boxed' && v.box_count != null && <span className={CHIP}>{v.box_count} quti</span>}
+                            {v.weight_kg > 0 && <span className={CHIP}>{v.weight_kg} kg</span>}
+                            {v.tare_kg != null && v.tare_kg > 0 && (
+                              <>
+                                <span className={CHIP}>{(v.weight_kg - v.tare_kg).toFixed(1)} kg sof</span>
+                                <span className={CHIP_MUTED}>tara {v.tare_kg}</span>
+                              </>
+                            )}
+                            {v.cargo_price > 0 && (
+                              <span className="font-bold" style={{ color: 'var(--brand)' }}>
+                                ${v.cargo_price}/{g === 'piece' ? 'dona' : 'kg'}
+                              </span>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>

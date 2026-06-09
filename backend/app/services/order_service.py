@@ -11,9 +11,11 @@ from app.schemas.order import CreateOrderRequest
 
 
 async def create_order(db: AsyncSession, carrier_id: int, body: CreateOrderRequest) -> Order:
-    # Mahsulotlarni bitta so'rovda olamiz
+    # Mahsulotlarni variantlari bilan bitta so'rovda olamiz
     product_ids = [it.product_id for it in body.items]
-    rows = await db.execute(select(Product).where(Product.id.in_(product_ids)))
+    rows = await db.execute(
+        select(Product).where(Product.id.in_(product_ids)).options(selectinload(Product.variants))
+    )
     products = {p.id: p for p in rows.scalars().all()}
 
     missing = [pid for pid in product_ids if pid not in products]
@@ -37,14 +39,21 @@ async def create_order(db: AsyncSession, carrier_id: int, body: CreateOrderReque
 
     for it in body.items:
         product = products[it.product_id]
-        # order.items.append o'rniga to'g'ridan-to'g'ri qo'shamiz — lazy-load'dan qochish
+        # Variantni topamiz (berilgan bo'lsa). Narx variantdan qulflanadi.
+        variant = None
+        if it.variant_id is not None:
+            variant = next((v for v in product.variants if v.id == it.variant_id), None)
+            if variant is None:
+                raise AppError("VARIANT_NOT_FOUND", "O'lcham topilmadi", status_code=404)
+        locked_price = variant.cargo_price if variant else product.cargo_price
         db.add(
             OrderItem(
                 order_id=order.id,
                 product_id=product.id,
+                variant_id=it.variant_id,
                 amount=Decimal(str(it.amount)),
                 # Narx qulflanadi — keyin o'zgarmaydi (invariant 4)
-                locked_cargo_price=product.cargo_price,
+                locked_cargo_price=locked_price,
             )
         )
         # Mahsulot statusini "admin tasdig'i kutilmoqda" ga o'tkazamiz
@@ -58,7 +67,10 @@ async def list_carrier_orders(db: AsyncSession, carrier_id: int) -> list[Order]:
     rows = await db.execute(
         select(Order)
         .where(Order.carrier_id == carrier_id)
-        .options(selectinload(Order.items).selectinload(OrderItem.product))
+        .options(
+            selectinload(Order.items).selectinload(OrderItem.product).selectinload(Product.variants),
+            selectinload(Order.items).selectinload(OrderItem.variant),
+        )
         .order_by(Order.created_at.desc())
     )
     return list(rows.scalars().all())
@@ -71,7 +83,8 @@ async def list_pending_orders_for_warehouse(db: AsyncSession) -> list[Order]:
         select(Order)
         .where(Order.status == OrderStatus.PENDING_ADMIN)
         .options(
-            selectinload(Order.items).selectinload(OrderItem.product),
+            selectinload(Order.items).selectinload(OrderItem.product).selectinload(Product.variants),
+            selectinload(Order.items).selectinload(OrderItem.variant),
             selectinload(Order.carrier),
         )
         .order_by(Order.created_at.asc())

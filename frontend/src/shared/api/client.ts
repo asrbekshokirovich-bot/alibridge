@@ -1,9 +1,10 @@
 import axios from 'axios'
 import type { ApiError } from '@/shared/types'
 
+// Content-Type'ni qo'lda o'rnatmaymiz: axios JSON uchun application/json,
+// FormData (rasm) uchun multipart/form-data + boundary'ni o'zi qo'yadi.
 const client = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? '/api/v1',
-  headers: { 'Content-Type': 'application/json' },
 })
 
 // JWT token qo'shish

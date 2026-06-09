@@ -1,14 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
-import { useAuthStore } from '@/shared/store/auth'
-import { DashboardHeader, ActionGrid, IconPackagePlus, IconBag, IconTruck, IconBox, IconAlert, IconPlane } from '@/shared/ui'
+import { ActionGrid, IconPackagePlus, IconBag, IconTruck, IconBox, IconAlert, IconPlane } from '@/shared/ui'
 import type { Action } from '@/shared/ui'
 
 interface Stats { pending_receive: number; in_warehouse: number; pending_orders: number }
 
 export default function WarehouseUzDashboard() {
-  const user = useAuthStore((s) => s.user)
-
   const { data: stats } = useQuery({
     queryKey: ['warehouse-uz-stats'],
     queryFn: () => client.get<Stats>('/warehouse-uz/stats').then((r) => r.data),
@@ -25,23 +22,7 @@ export default function WarehouseUzDashboard() {
   ]
 
   return (
-    <div className="min-h-screen animate-fade-in">
-      <DashboardHeader role="Toshkent ombori" name={user?.first_name} />
-
-      {/* Stats */}
-      <div className="px-4 -mt-4">
-        <div className="bg-white rounded-3xl shadow-[var(--shadow-md)] p-4 grid grid-cols-2 gap-4">
-          <div className="text-center border-r border-slate-100">
-            <p className="text-3xl font-extrabold text-amber-500">{stats?.pending_receive ?? 0}</p>
-            <p className="text-xs text-slate-400 mt-0.5">Kutilayotgan</p>
-          </div>
-          <div className="text-center">
-            <p className="text-3xl font-extrabold" style={{ color: 'var(--brand)' }}>{stats?.in_warehouse ?? 0}</p>
-            <p className="text-xs text-slate-400 mt-0.5">Omborda</p>
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-screen animate-fade-in pt-4">
       <ActionGrid actions={actions} />
     </div>
   )

@@ -3,127 +3,108 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
-import type { Product, CartItem } from '@/shared/types'
+import type { Product, ProductVariant, CartItem } from '@/shared/types'
 import { money } from '@/shared/lib/format'
-import { isPiece, typeEmoji, unitWord } from '@/shared/lib/product'
-import { Header, ListSkeleton, EmptyState, Input, Sheet, Button, IconCheck } from '@/shared/ui'
+import { isPiece, typeLabel, typeEmoji, unitWord } from '@/shared/lib/product'
+import { Header, ListSkeleton, EmptyState, Sheet } from '@/shared/ui'
 
-// Donali uchun og'irlik = dona × 1 dona vazni
-// Kiloli/tekstil uchun og'irlik = kiritilgan kg
-function calcWeight(p: Product, amount: number): number {
-  return isPiece(p.type) ? amount * (p.unit_weight_kg ?? 0) : amount
+// Donali uchun og'irlik = dona × 1 dona vazni; kiloli/tekstil uchun = kiritilgan kg
+function calcWeight(p: Product, v: ProductVariant, amount: number): number {
+  return isPiece(p.type) ? amount * (v.unit_weight_kg ?? 0) : amount
 }
-// Donali: dona × dona narxi | Kiloli: kg × kg narxi
-function calcPrice(p: Product, amount: number): number {
-  return amount * p.cargo_price
+function calcPrice(v: ProductVariant, amount: number): number {
+  return amount * v.cargo_price
+}
+function maxAmount(p: Product, v: ProductVariant): number {
+  return isPiece(p.type) ? v.quantity : v.weight_kg
+}
+
+// Faqat to'ldirilgan variantlar (bo'sh backfill emas)
+function realVariants(p: Product): ProductVariant[] {
+  return (p.variants ?? []).filter((v) => v.size_label || v.quantity || v.weight_kg)
 }
 
 export default function Products() {
   const navigate = useNavigate()
   const { haptic } = useTelegram()
   const [cart, setCart] = useState<CartItem[]>([])
-
-  // Sheet (miqdor kiritish)
-  const [sheetProduct, setSheetProduct] = useState<Product | null>(null)
-  const [amountInput, setAmountInput] = useState('')
+  const [open, setOpen] = useState<Product | null>(null)
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: () => client.get<Product[]>('/products/catalog').then((r) => r.data),
   })
 
-  const inCart = (id: number) => cart.find((c) => c.product.id === id)
+  const inCart = (variantId: number) => cart.find((c) => c.variant.id === variantId)
 
-  const openSheet = (p: Product) => {
-    const existing = inCart(p.id)
-    if (existing) {
-      // Savatdan olib tashlash
-      setCart(cart.filter((c) => c.product.id !== p.id))
-      haptic('light')
-      return
-    }
-    haptic('light')
-    setSheetProduct(p)
-    setAmountInput('')
+  // Miqdorni o'zgartirish (donali: 1 dona qadam, kiloli/tekstil: 1 kg qadam)
+  const setAmount = (p: Product, v: ProductVariant, next: number) => {
+    const max = maxAmount(p, v)
+    const clamped = Math.max(0, Math.min(next, max))
+    setCart((prev) => {
+      const rest = prev.filter((c) => c.variant.id !== v.id)
+      if (clamped <= 0) return rest
+      return [...rest, { product: p, variant: v, amount: clamped, weight: calcWeight(p, v, clamped), price: calcPrice(v, clamped) }]
+    })
   }
 
-  const confirmAmount = () => {
-    if (!sheetProduct) return
-    const amount = parseFloat(amountInput)
-    if (!amount || amount <= 0) return
+  const select = (p: Product, v: ProductVariant) => { haptic('light'); setAmount(p, v, 1) }
+  const inc = (p: Product, v: ProductVariant, cur: number) => { haptic('light'); setAmount(p, v, cur + 1) }
+  const dec = (p: Product, v: ProductVariant, cur: number) => { haptic('light'); setAmount(p, v, cur - 1) }
 
-    // Mavjud miqdordan oshmasligi
-    const maxAvailable = isPiece(sheetProduct.type) ? sheetProduct.quantity : sheetProduct.weight_kg
-    if (amount > maxAvailable) {
-      haptic('heavy')
-      alert(`⚠️ Faqat ${maxAvailable} ${unitWord(sheetProduct.type)} mavjud`)
-      return
-    }
+  // Mahsulot kartasi uchun: nechta o'lcham savatda
+  const productCartCount = (p: Product) => realVariants(p).filter((v) => inCart(v.id)).length
+  const cartCount = cart.length
 
-    const item: CartItem = {
-      product: sheetProduct,
-      amount,
-      weight: calcWeight(sheetProduct, amount),
-      price: calcPrice(sheetProduct, amount),
-    }
-    setCart([...cart, item])
-    haptic('medium')
-    setSheetProduct(null)
+  // Kartada ko'rsatiladigan narx oralig'i
+  const priceRange = (p: Product) => {
+    const vs = realVariants(p)
+    const prices = vs.map((v) => v.cargo_price).filter((x) => x > 0)
+    if (!prices.length) return null
+    const min = Math.min(...prices), max = Math.max(...prices)
+    return min === max ? money(min) : `${money(min)}–${money(max)}`
   }
 
   return (
     <div className="min-h-screen pb-28 animate-fade-in">
       <Header title="Mahsulotlar" subtitle="O'zingizga mos yukni tanlang" />
 
-      {/* Ro'yxat */}
       {isLoading ? (
         <ListSkeleton />
       ) : !products?.length ? (
         <EmptyState title="Mahsulot topilmadi" description="Hozircha mahsulot yo'q" />
       ) : (
-        <div className="px-4 pt-4 space-y-3">
+        <div className="px-3 pt-3 grid grid-cols-2 gap-3">
           {products.map((p) => {
-            const item = inCart(p.id)
-            const selected = !!item
+            const vs = realVariants(p)
+            if (vs.length === 0) return null
+            const selectedCount = productCartCount(p)
+            const unit = unitWord(p.type)
+            const pr = priceRange(p)
             return (
-              <button key={p.id} onClick={() => openSheet(p)}
-                className={`press w-full bg-white rounded-2xl p-3.5 border-2 flex items-center gap-3.5 text-left transition-colors ${selected ? 'border-red-400' : 'border-slate-100'}`}>
-                <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center shrink-0 overflow-hidden">
-                  {p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
-                    : <span className="text-2xl">{typeEmoji(p.type)}</span>}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-slate-900 text-[15px] truncate">{p.name}</h3>
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${isPiece(p.type) ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
-                      {unitWord(p.type).toUpperCase()}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-400">{p.category}</p>
-
-                  {selected ? (
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs font-bold text-white px-2 py-0.5 rounded-lg" style={{ background: 'var(--brand-gradient)' }}>
-                        {item!.amount} {unitWord(p.type)} tanlandi
-                      </span>
-                      <span className="text-xs font-semibold text-slate-500">{money(item!.price)}</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg">
-                        {isPiece(p.type) ? `${p.quantity} dona mavjud` : `${p.weight_kg} kg mavjud`}
-                      </span>
-                      <span className="text-sm font-bold" style={{ color: 'var(--brand)' }}>
-                        {money(p.cargo_price)}/{unitWord(p.type)}
-                      </span>
-                    </div>
+              <button key={p.id} onClick={() => { haptic('light'); setOpen(p) }}
+                className={`text-left bg-white rounded-2xl overflow-hidden border-2 flex flex-col transition-colors ${selectedCount > 0 ? 'border-red-400' : 'border-slate-100'}`}>
+                {/* Rasm */}
+                <div className="aspect-square bg-slate-50 flex items-center justify-center overflow-hidden relative">
+                  {p.image_url
+                    ? <img src={p.image_url} alt="" className="w-full h-full object-cover" />
+                    : <span className="text-5xl">{typeEmoji(p.type)}</span>}
+                  {selectedCount > 0 && (
+                    <span className="absolute top-2 right-2 bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">{selectedCount} o'lcham</span>
                   )}
                 </div>
 
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all ${selected ? 'text-white' : 'border-2 border-slate-200 text-slate-300'}`}
-                  style={selected ? { background: 'var(--brand-gradient)' } : undefined}>
-                  {selected ? <IconCheck size={16} /> : <span className="text-lg leading-none">+</span>}
+                <div className="p-2.5 flex flex-col gap-1 flex-1">
+                  <span className={`self-start text-[10px] font-bold px-2 py-0.5 rounded ${isPiece(p.type) ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
+                    {typeLabel(p.type)}
+                  </span>
+                  <h3 className="text-[14px] font-bold text-slate-900 leading-tight line-clamp-2">{p.category || p.name}</h3>
+                  {pr && (
+                    <div className="text-[15px] font-bold leading-tight" style={{ color: 'var(--brand)' }}>
+                      {pr}<span className="text-xs font-medium text-slate-400">/{unit}</span>
+                    </div>
+                  )}
+                  <p className="text-[11px] text-slate-400 mt-auto pt-1">{vs.length} o'lcham mavjud →</p>
                 </div>
               </button>
             )
@@ -131,78 +112,64 @@ export default function Products() {
         </div>
       )}
 
-      {/* Suzuvchi tasdiqlash — sana kiritish ekraniga o'tadi */}
-      {cart.length > 0 && (
+      {/* O'lchamlar Sheet */}
+      <Sheet open={!!open} onClose={() => setOpen(null)}>
+        {open && (
+          <div className="px-5 pt-2 pb-2">
+            <h3 className="font-bold text-slate-900">{open.category || open.name}</h3>
+            <p className="text-xs text-slate-400 mb-4">O'lchamni tanlang</p>
+            <div className="space-y-2.5">
+              {realVariants(open).map((v) => {
+                const item = inCart(v.id)
+                const amount = item?.amount ?? 0
+                const selected = amount > 0
+                const unit = unitWord(open.type)
+                const max = maxAmount(open, v)
+                return (
+                  <div key={v.id} className="flex items-center gap-3 bg-slate-50 rounded-xl p-3">
+                    <span className="w-11 h-11 rounded-lg bg-white flex items-center justify-center font-bold text-slate-700 shrink-0">
+                      {v.size_label || '—'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold" style={{ color: 'var(--brand)' }}>
+                        {money(v.cargo_price)}<span className="text-xs font-medium text-slate-400">/{unit}</span>
+                      </p>
+                      <p className="text-[11px] text-slate-400">{max} {unit} mavjud</p>
+                    </div>
+                    <div className="shrink-0 w-[120px]">
+                      {selected ? (
+                        <div className="flex items-center justify-between rounded-xl overflow-hidden" style={{ background: 'var(--brand-gradient)' }}>
+                          <button onClick={() => dec(open, v, amount)} className="press w-9 h-9 flex items-center justify-center text-white text-xl font-bold">−</button>
+                          <span className="text-white text-sm font-bold tabular-nums">{amount}</span>
+                          <button onClick={() => inc(open, v, amount)} disabled={amount >= max}
+                            className="press w-9 h-9 flex items-center justify-center text-white text-xl font-bold disabled:opacity-40">+</button>
+                        </div>
+                      ) : (
+                        <button onClick={() => select(open, v)} disabled={max <= 0}
+                          className="press w-full h-9 rounded-xl text-sm font-bold text-white disabled:opacity-40" style={{ background: 'var(--brand-gradient)' }}>
+                          Tanlash
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </Sheet>
+
+      {/* Suzuvchi tasdiqlash */}
+      {cartCount > 0 && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-4 z-20 animate-slide-up">
           <button onClick={() => { haptic('medium'); navigate('/carrier/ticket', { state: { cart } }) }}
             style={{ background: 'var(--brand-gradient)' }}
             className="press w-full text-white rounded-2xl py-4 font-bold shadow-[var(--shadow-brand)] flex items-center justify-center gap-2">
             Tasdiqlash
-            <span className="bg-white/25 px-2.5 py-0.5 rounded-full text-sm">{cart.length}</span>
+            <span className="bg-white/25 px-2.5 py-0.5 rounded-full text-sm">{cartCount}</span>
           </button>
         </div>
       )}
-
-      {/* Miqdor kiritish sheet */}
-      <Sheet open={!!sheetProduct} onClose={() => setSheetProduct(null)}>
-        {sheetProduct && (
-          <div className="px-5">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-2xl shrink-0">
-                {typeEmoji(sheetProduct.type)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-slate-900 truncate">{sheetProduct.name}</h3>
-                <p className="text-xs text-slate-400">{sheetProduct.category}</p>
-              </div>
-            </div>
-
-            {/* Kg bo'yicha (kiloli/tekstil) uchun tushuntirish */}
-            {!isPiece(sheetProduct.type) && (
-              <div className="rounded-2xl p-3 mb-4 flex gap-2.5" style={{ background: 'var(--brand-gradient-soft)' }}>
-                <span className="text-base">ℹ️</span>
-                <p className="text-[12px] text-red-900/70 leading-snug">
-                  Necha kg kerakligini kiriting. Ombor xodimi tortib aniq dona sonini belgilaydi.
-                </p>
-              </div>
-            )}
-
-            <Input
-              type="number"
-              label={isPiece(sheetProduct.type) ? 'Necha dona kerak?' : 'Necha kg kerak?'}
-              placeholder={isPiece(sheetProduct.type) ? `Maks: ${sheetProduct.quantity} dona` : `Maks: ${sheetProduct.weight_kg} kg`}
-              className="text-center text-lg font-bold"
-              value={amountInput}
-              onChange={(e) => setAmountInput(e.target.value)}
-              autoFocus
-            />
-
-            {/* Hisob-kitob ko'rsatkichi */}
-            {amountInput && parseFloat(amountInput) > 0 && (
-              <div className="mt-3 bg-slate-50 rounded-2xl p-3.5 space-y-2 animate-fade-in">
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">Og'irlik</span>
-                  <span className="font-bold text-slate-900">
-                    {calcWeight(sheetProduct, parseFloat(amountInput)).toFixed(1)} kg
-                    {isPiece(sheetProduct.type) && <span className="text-xs text-slate-400 font-normal"> (taxminiy)</span>}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">Narx</span>
-                  <span className="font-bold" style={{ color: 'var(--brand)' }}>
-                    {money(calcPrice(sheetProduct, parseFloat(amountInput)))}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            <Button fullWidth className="mt-4" onClick={confirmAmount}
-              disabled={!amountInput || parseFloat(amountInput) <= 0}>
-              Savatga qo'shish
-            </Button>
-          </div>
-        )}
-      </Sheet>
     </div>
   )
 }

@@ -114,7 +114,9 @@ export default function Orders() {
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-slate-900 truncate">{it.product_name}</p>
+                        <p className="text-sm font-semibold text-slate-900 truncate">
+                          {it.product_name}{it.size_label ? ` · ${it.size_label}` : ''}
+                        </p>
                         {it.confirmed ? (
                           <p className="text-xs text-emerald-600 font-medium">
                             {!isPiece(it.type)
@@ -155,7 +157,9 @@ export default function Orders() {
                 {typeEmoji(sheet.item.type)}
               </div>
               <div className="min-w-0">
-                <h3 className="font-bold text-slate-900 truncate">{sheet.item.product_name}</h3>
+                <h3 className="font-bold text-slate-900 truncate">
+                  {sheet.item.product_name}{sheet.item.size_label ? ` · ${sheet.item.size_label}` : ''}
+                </h3>
                 <p className="text-xs text-slate-400">
                   So'ralgan: {sheet.item.requested_amount} {unitWord(sheet.item.type)}
                 </p>

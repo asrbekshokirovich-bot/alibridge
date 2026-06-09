@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.api.deps import require_role
 from app.bot.notify import on_new_order
@@ -31,7 +32,11 @@ async def catalog(
     user: User = Depends(require_role(Role.CARRIER)),
 ):
     """Yo'lovchi olib keta oladigan mahsulotlar (in_warehouse_uz, kg limitiga mos)."""
-    stmt = select(Product).where(Product.status == ProductStatus.IN_WAREHOUSE_UZ)
+    stmt = (
+        select(Product)
+        .options(selectinload(Product.variants))
+        .where(Product.status == ProductStatus.IN_WAREHOUSE_UZ)
+    )
     if max_weight is not None:
         # unit_weight_kg (donali) yoki weight_kg (kiloli) limitidan og'ir bo'lmagani
         stmt = stmt.where(
@@ -72,6 +77,8 @@ async def my_orders(
         items = [
             OrderItemOut(
                 product_id=it.product_id,
+                variant_id=it.variant_id,
+                size_label=it.variant.size_label if it.variant else "",
                 product_name=it.product.name,
                 type=it.product.type,
                 amount=float(it.amount),

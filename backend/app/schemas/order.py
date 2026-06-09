@@ -8,6 +8,7 @@ from app.schemas.product import ProductOut
 
 class OrderItemIn(BaseModel):
     product_id: int
+    variant_id: int | None = None  # qaysi o'lcham (eski mijozlarda null)
     # donali: dona soni; kiloli: kg
     amount: float = Field(gt=0)
 
@@ -22,6 +23,8 @@ class CreateOrderRequest(BaseModel):
 
 class OrderItemOut(BaseModel):
     product_id: int
+    variant_id: int | None = None
+    size_label: str = ""
     product_name: str
     type: ProductType
     amount: float  # so'ralgan dona/kg

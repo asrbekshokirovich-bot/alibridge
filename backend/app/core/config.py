@@ -48,6 +48,19 @@ class Settings(BaseSettings):
     # Public base URL (PDF yorliq linklari uchun) — bo'sh bo'lsa miniapp_url
     public_base_url: str = ""
 
+    # Storage (S3-mos: Supabase Storage / MinIO / Wasabi)
+    s3_endpoint: str = ""
+    s3_region: str = "us-east-1"
+    s3_bucket: str = ""
+    s3_access_key: str = ""
+    s3_secret_key: str = ""
+    s3_use_ssl: bool = True
+    s3_public_url: str = ""
+
+    @property
+    def s3_enabled(self) -> bool:
+        return bool(self.s3_endpoint and self.s3_access_key and self.s3_secret_key)
+
     @property
     def cors_origin_list(self) -> list[str]:
         if not self.cors_origins:

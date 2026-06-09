@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import require_role
@@ -138,6 +139,7 @@ async def uz_products(
 ) -> list[ProductOut]:
     rows = await db.execute(
         select(Product)
+        .options(selectinload(Product.variants))
         .where(Product.status == ProductStatus.IN_WAREHOUSE_UZ)
         .order_by(Product.created_at.desc())
     )

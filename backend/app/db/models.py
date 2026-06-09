@@ -62,6 +62,8 @@ class Product(Base):
     type: Mapped[ProductType] = mapped_column(String(16), default=ProductType.PIECE)
     quantity: Mapped[int] = mapped_column(Integer, default=0)
     weight_kg: Mapped[Decimal] = mapped_column(Numeric(18, 4), default=Decimal("0"))
+    # tara: qadoq/quti vazni (kg). Sof vazn = weight_kg - tare_kg
+    tare_kg: Mapped[Decimal | None] = mapped_column(Numeric(18, 4), nullable=True)
     unit_weight_kg: Mapped[Decimal | None] = mapped_column(Numeric(18, 4), nullable=True)
     box_weight_kg: Mapped[Decimal | None] = mapped_column(Numeric(18, 4), nullable=True)
     # kiloli (boxed): quti soni va 1 quti ichidagi mahsulot soni
@@ -80,6 +82,37 @@ class Product(Base):
 
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+    # O'lcham variantlari (bir mahsulot, ko'p o'lcham). Eski mahsulotda 1 ta (size_label='').
+    variants: Mapped[list[ProductVariant]] = relationship(
+        back_populates="product",
+        cascade="all, delete-orphan",
+        order_by="ProductVariant.position",
+    )
+
+
+class ProductVariant(Base):
+    """Mahsulot o'lcham varianti — narx/miqdor/vazn o'lchovi (fizik birlik EMAS).
+    Custody, barkod, label Product darajasida qoladi: 1 barkod = butun mahsulot."""
+
+    __tablename__ = "product_variants"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    product_id: Mapped[int] = mapped_column(
+        ForeignKey("products.id", ondelete="CASCADE"), index=True
+    )
+    size_label: Mapped[str] = mapped_column(String(64), default="")  # "39", "M"...
+    quantity: Mapped[int] = mapped_column(Integer, default=0)
+    weight_kg: Mapped[Decimal] = mapped_column(Numeric(18, 4), default=Decimal("0"))
+    tare_kg: Mapped[Decimal | None] = mapped_column(Numeric(18, 4), nullable=True)
+    unit_weight_kg: Mapped[Decimal | None] = mapped_column(Numeric(18, 4), nullable=True)
+    box_weight_kg: Mapped[Decimal | None] = mapped_column(Numeric(18, 4), nullable=True)
+    box_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    units_per_box: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    cargo_price: Mapped[Decimal] = mapped_column(Numeric(18, 4), default=Decimal("0"))
+    position: Mapped[int] = mapped_column(Integer, default=0)  # kiritilgan tartib
+
+    product: Mapped[Product] = relationship(back_populates="variants")
 
 
 class Order(Base):
@@ -108,6 +141,10 @@ class OrderItem(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"), index=True)
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), index=True)
+    # qaysi o'lcham tanlandi (eski buyurtmalarda null)
+    variant_id: Mapped[int | None] = mapped_column(
+        ForeignKey("product_variants.id"), index=True, nullable=True
+    )
     # donali: dona soni; kiloli: kg
     amount: Mapped[Decimal] = mapped_column(Numeric(18, 4), default=Decimal("0"))
     # kiloli tortilgach aniqlangan dona soni
@@ -119,6 +156,7 @@ class OrderItem(Base):
 
     order: Mapped[Order] = relationship(back_populates="items")
     product: Mapped[Product] = relationship()
+    variant: Mapped[ProductVariant | None] = relationship()
 
 
 class Dispute(Base):

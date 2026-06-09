@@ -55,14 +55,30 @@ export type ProductStatus =
 // Yuk turi: donali | kiloli (qutili) | tekstil. 'weight' — eski (textile bilan bir xil).
 export type ProductType = 'piece' | 'boxed' | 'textile' | 'weight'
 
+// O'lcham varianti — bir mahsulot ichida (39, 40, M, L...)
+export interface ProductVariant {
+  id: number
+  size_label: string        // "39", "M"... (bo'sh = variantsiz eski mahsulot)
+  quantity: number
+  weight_kg: number         // jami kg (tara bilan)
+  tare_kg?: number
+  unit_weight_kg?: number   // 1 dona vazni — limit hisoblash uchun
+  box_weight_kg?: number
+  box_count?: number
+  units_per_box?: number
+  cargo_price: number       // donali: $/dona; kiloli & tekstil: $/kg
+  position: number
+}
+
 export interface Product {
   id: number
   barcode: string
   name: string
   category: string
   type: ProductType
-  quantity: number          // jami dona (boxed: quti × 1 qutidagi soni)
-  weight_kg: number         // jami kg
+  quantity: number          // jami dona (variantlar yig'indisi)
+  weight_kg: number         // jami kg (variantlar yig'indisi)
+  tare_kg?: number          // qadoq/quti vazni (kg). Sof vazn = weight_kg − tare_kg
   unit_weight_kg?: number   // 1 dona vazni (donali) — limit hisoblash uchun
   box_weight_kg?: number    // 1 quti vazni (kiloli)
   box_count?: number        // quti soni (kiloli)
@@ -72,6 +88,7 @@ export interface Product {
   image_url?: string
   actual_quantity?: number  // ombor tortgandan keyingi haqiqiy dona
   actual_kg?: number        // ombor tortgandan keyingi haqiqiy kg
+  variants: ProductVariant[]
 }
 
 // Yo'lovchi bilet ma'lumotlari (har safar yangilanadi)
@@ -79,9 +96,10 @@ export interface Ticket {
   flight_date: string     // uchish sanasi
 }
 
-// Savatdagi element — tanlangan miqdor bilan
+// Savatdagi element — tanlangan o'lcham (variant) va miqdor bilan
 export interface CartItem {
   product: Product
+  variant: ProductVariant   // qaysi o'lcham tanlandi
   // donali bo'lsa: dona soni; kiloli bo'lsa: kg
   amount: number
   // hisoblangan og'irlik (limit uchun) va narx
@@ -92,6 +110,8 @@ export interface CartItem {
 // Buyurtma ichidagi mahsulot detali (so'ralgan + tortilgan)
 export interface CarrierOrderItem {
   product_id: number
+  variant_id?: number
+  size_label?: string
   product_name: string
   type: ProductType
   amount: number            // so'ralgan dona/kg
@@ -118,6 +138,8 @@ export interface CarrierOrder {
 export interface OrderItemDetail {
   item_id: number           // order_item id (confirm uchun)
   product_id: number
+  variant_id?: number
+  size_label?: string
   barcode: string
   product_name: string
   category: string

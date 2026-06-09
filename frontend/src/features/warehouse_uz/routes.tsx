@@ -5,9 +5,9 @@ import Orders from './pages/Orders'
 import Products from './pages/Products'
 import EditProduct from './pages/EditProduct'
 import HandoverCourier from './pages/HandoverCourier'
-import Disputes from '@/features/admin/pages/Disputes'
-import Carriers from '@/features/admin/pages/Carriers'
-import AllProducts from '@/features/admin/pages/Products'
+import Disputes from './pages/Disputes'
+import Carriers from './pages/Carriers'
+import AllProducts from './pages/AllProducts'
 
 export default function WarehouseUzRoutes() {
   return (

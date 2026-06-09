@@ -10,7 +10,6 @@ from aiogram.types import (
     KeyboardButton,
     Message,
     ReplyKeyboardMarkup,
-    ReplyKeyboardRemove,
     WebAppInfo,
 )
 from sqlalchemy import select
@@ -26,10 +25,9 @@ router = Router()
 
 
 class Reg(StatesGroup):
-    """Soddalashtirilgan ro'yxatdan o'tish: telefon -> ism."""
+    """Ro'yxatdan o'tish: faqat telefon (ism Telegram'dan avtomatik)."""
 
     phone = State()
-    name = State()
 
 
 def _miniapp_keyboard() -> InlineKeyboardMarkup:
@@ -48,7 +46,7 @@ def _miniapp_keyboard() -> InlineKeyboardMarkup:
 
 def _phone_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
-        keyboard=[[KeyboardButton(text="📱 Telefon raqamni ulashish", request_contact=True)]],
+        keyboard=[[KeyboardButton(text="✅ Ro'yxatdan o'tish", request_contact=True)]],
         resize_keyboard=True,
         one_time_keyboard=True,
         input_field_placeholder="Pastdagi tugmani bosing",
@@ -83,12 +81,12 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
         )
         return
 
-    # Yangi foydalanuvchi — telefon so'raymiz
+    # Yangi foydalanuvchi — ro'yxatdan o'tish (telefon + ism avtomatik olinadi)
     await state.set_state(Reg.phone)
     await message.answer(
         f"Assalomu alaykum, <b>{tg.first_name}</b>! 👋\n\n"
         "<b>ALI BRIDGE</b> — Xitoy/Turkiya yuk yetkazish tizimi.\n\n"
-        "Boshlash uchun telefon raqamingizni ulashing 👇",
+        "Boshlash uchun pastdagi tugmani bosing 👇",
         reply_markup=_phone_keyboard(),
     )
 
@@ -96,8 +94,9 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
 @router.message(Reg.phone, F.contact)
 async def reg_phone(message: Message, state: FSMContext) -> None:
     contact = message.contact
+    tg = message.from_user
     # Faqat o'z raqamini ulashishi mumkin (boshqaning kontaktini emas)
-    if contact.user_id != message.from_user.id:
+    if contact.user_id != tg.id:
         await message.answer(
             "Iltimos, <b>o'zingizning</b> raqamingizni ulashing 👇",
             reply_markup=_phone_keyboard(),
@@ -107,48 +106,23 @@ async def reg_phone(message: Message, state: FSMContext) -> None:
     phone = contact.phone_number
     if not phone.startswith("+"):
         phone = "+" + phone
-    await state.update_data(phone=phone)
-    await state.set_state(Reg.name)
-    await message.answer(
-        "Rahmat! Endi <b>ism-familiyangizni</b> yozing:",
-        reply_markup=ReplyKeyboardRemove(),
-    )
 
-
-@router.message(Reg.phone)
-async def reg_phone_invalid(message: Message) -> None:
-    await message.answer(
-        "Iltimos, pastdagi <b>📱 Telefon raqamni ulashish</b> tugmasini bosing.",
-        reply_markup=_phone_keyboard(),
-    )
-
-
-@router.message(Reg.name, F.text)
-async def reg_name(message: Message, state: FSMContext) -> None:
-    full_name = message.text.strip()
-    if len(full_name) < 2:
-        await message.answer("Iltimos, to'liq ismingizni yozing:")
-        return
-
-    parts = full_name.split(maxsplit=1)
-    first_name = parts[0]
-    last_name = parts[1] if len(parts) > 1 else ""
-
-    data = await state.get_data()
-    phone = data.get("phone", "")
+    # Ism Telegram profilidan avtomatik olinadi
+    first_name = tg.first_name or ""
+    last_name = tg.last_name or ""
     await state.clear()
 
     # Foydalanuvchini yaratamiz — rol tanlanmagan (NEW). Mini App'da Welcome ko'rsatiladi.
     async with SessionLocal() as db:
-        existing = await db.scalar(select(User).where(User.telegram_id == message.from_user.id))
+        existing = await db.scalar(select(User).where(User.telegram_id == tg.id))
         if existing is None:
             db.add(
                 User(
-                    telegram_id=message.from_user.id,
+                    telegram_id=tg.id,
                     first_name=first_name,
                     last_name=last_name,
                     phone=phone,
-                    role=Role.NEW,  # rol tanlanmagan — Mini App'da Welcome ko'rsatiladi
+                    role=Role.NEW,
                     is_active=True,
                 )
             )
@@ -160,9 +134,12 @@ async def reg_name(message: Message, state: FSMContext) -> None:
     )
 
 
-@router.message(Reg.name)
-async def reg_name_invalid(message: Message) -> None:
-    await message.answer("Iltimos, ism-familiyangizni matn ko'rinishida yozing:")
+@router.message(Reg.phone)
+async def reg_phone_invalid(message: Message) -> None:
+    await message.answer(
+        "Iltimos, pastdagi <b>✅ Ro'yxatdan o'tish</b> tugmasini bosing.",
+        reply_markup=_phone_keyboard(),
+    )
 
 
 @router.message(F.text == "/app")

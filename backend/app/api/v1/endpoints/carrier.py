@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, require_role
+from app.api.deps import require_role
 from app.bot.notify import on_new_order
 from app.core.enums import OrderStatus, ProductStatus, Role
 from app.core.errors import AppError
@@ -13,7 +13,6 @@ from app.db.models import Order, OrderItem, Product, User
 from app.schemas.auth import UserOut
 from app.schemas.common import OkResponse, OrderCreatedResponse
 from app.schemas.order import (
-    AutoReceiveRequest,
     CarrierOrderOut,
     CourierBrief,
     CreateOrderRequest,
@@ -102,7 +101,7 @@ async def my_orders(
 @router.get("/couriers/uz/active", response_model=list[CourierBrief])
 async def active_uz_couriers(
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: User = Depends(require_role(Role.CARRIER)),
 ) -> list[CourierBrief]:
     rows = await db.execute(
         select(User).where(User.role == Role.COURIER_UZ, User.is_active.is_(True))
@@ -111,19 +110,6 @@ async def active_uz_couriers(
         CourierBrief(id=c.id, first_name=c.first_name, last_name=c.last_name)
         for c in rows.scalars().all()
     ]
-
-
-@router.post("/carrier/auto-receive", response_model=OkResponse)
-async def auto_receive(
-    body: AutoReceiveRequest,
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(require_role(Role.CARRIER)),
-) -> OkResponse:
-    """Yo'lovchi aeroportda kuryerni tanlaydi (kuryer keyin barkod skanlaydi)."""
-    courier = await db.get(User, body.courier_id)
-    if courier is None or courier.role != Role.COURIER_UZ:
-        raise AppError("COURIER_NOT_FOUND", "Kuryer topilmadi")
-    return OkResponse(ok=True)
 
 
 class LeaveRoleResponse(OkResponse):

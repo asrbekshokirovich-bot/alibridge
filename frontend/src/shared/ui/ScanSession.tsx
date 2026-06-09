@@ -54,7 +54,7 @@ export function ScanSession({
   const confirm = useMutation({
     mutationFn: () => client.post(confirmUrl, { barcodes: items.map((i) => i.barcode), ...confirmBody }),
     onSuccess: () => { notify('success'); setDone(true) },
-    onError: (err) => setError(extractErrorMessage(err)),
+    onError: (err) => { setError(extractErrorMessage(err)); notify('error') },
   })
 
   // Barkodni skanlash — dublikat tekshiruvi bilan

@@ -102,11 +102,34 @@ async def confirm_pickup(
 
 async def _find_carrier_by_number(db: AsyncSession, carrier_number: int) -> User:
     carrier = await db.scalar(
-        select(User).where(User.carrier_number == carrier_number, User.role == Role.CARRIER)
+        select(User).where(
+            User.carrier_number == carrier_number,
+            User.role == Role.CARRIER,
+            User.is_active.is_(True),
+        )
     )
     if carrier is None:
-        raise AppError("CARRIER_NOT_FOUND", "Yo'lovchi topilmadi", status_code=400)
+        raise AppError("CARRIER_NOT_FOUND", "Yo'lovchi topilmadi yoki faol emas", status_code=400)
     return carrier
+
+
+async def _ensure_belongs_to_carrier(db: AsyncSession, product_id: int, carrier_id: int) -> None:
+    """Yuk shu yo'lovchining buyurtmasiga biriktirilganligini tekshiradi.
+
+    Yuk faqat o'z buyurtmasi orqali olib ketiladi — boshqa yo'lovchiga berib bo'lmaydi.
+    """
+    linked = await db.scalar(
+        select(OrderItem.id)
+        .join(Order, Order.id == OrderItem.order_id)
+        .where(OrderItem.product_id == product_id, Order.carrier_id == carrier_id)
+        .limit(1)
+    )
+    if linked is None:
+        raise AppError(
+            "NOT_CARRIERS_PRODUCT",
+            "Bu yuk ushbu yo'lovchining buyurtmasiga tegishli emas",
+            status_code=400,
+        )
 
 
 @router.post("/scan-airport", response_model=ScanResponse)
@@ -122,6 +145,7 @@ async def scan_airport(
             "Bu mahsulot kuryerda emas, aeroportda topshirib bo'lmaydi",
         )
     carrier = await _find_carrier_by_number(db, body.carrier_number)
+    await _ensure_belongs_to_carrier(db, product.id, carrier.id)
     return ScanResponse(
         barcode=product.barcode,
         product_name=product.name,
@@ -139,6 +163,16 @@ async def confirm_airport(
     carrier = await _find_carrier_by_number(db, body.carrier_number)
     for barcode in body.barcodes:
         product = await get_product_by_barcode(db, barcode)
+        # Status qayta tekshiriladi — scan/confirm orasida o'zgargan bo'lishi yoki
+        # qayta yuborish (double-submit) holatlarida noto'g'ri o'tkazishni bloklaydi
+        if product.status != ProductStatus.WITH_COURIER_UZ:
+            raise AppError(
+                "INVALID_PRODUCT_STATE",
+                f"Mahsulot ({barcode}) kuryerda emas — topshirib bo'lmaydi",
+                status_code=400,
+            )
+        # Yuk shu yo'lovchining buyurtmasiga tegishli ekanligini tekshiramiz
+        await _ensure_belongs_to_carrier(db, product.id, carrier.id)
         await transfer_custody(
             db,
             product,

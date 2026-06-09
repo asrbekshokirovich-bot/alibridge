@@ -46,6 +46,9 @@ ROLE = (Role.ADMIN,)
 # Nizolar (disputes) — admin + Toshkent ombor xodimi ko'radi va hal qiladi
 DISPUTE_ROLE = (Role.ADMIN, Role.WAREHOUSE_UZ)
 
+# Faqat ko'rish (read-only) — admin + Toshkent ombor xodimi yuk harakatini kuzatadi
+VIEW_ROLE = (Role.ADMIN, Role.WAREHOUSE_UZ)
+
 # Adminning xodim rollari (tayinlash/almashtirish uchun ruxsat etilgan)
 STAFF_ROLES = (
     Role.WAREHOUSE_UZ,
@@ -110,7 +113,7 @@ async def stats(
 @router.get("/products", response_model=list[ProductOut])
 async def products(
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(require_role(*ROLE)),
+    user: User = Depends(require_role(*VIEW_ROLE)),
 ) -> list[ProductOut]:
     rows = await db.execute(select(Product).order_by(Product.created_at.desc()))
     # Admin hamma narsani ko'radi (box_weight ham)
@@ -196,7 +199,7 @@ async def reject_staff(
 @router.get("/carriers", response_model=list[CarrierOut])
 async def carriers(
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(require_role(*ROLE)),
+    user: User = Depends(require_role(*VIEW_ROLE)),
 ) -> list[CarrierOut]:
     rows = await db.execute(
         select(User, func.count(Order.id))

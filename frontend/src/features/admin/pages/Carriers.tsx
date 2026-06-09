@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
+import { useAuthStore } from '@/shared/store/auth'
 import { initials } from '@/shared/lib/format'
 import { Header, ListSkeleton, EmptyState, StatusBadge, IconPlane, IconTrash } from '@/shared/ui'
 
@@ -12,6 +13,7 @@ interface Carrier {
 export default function Carriers() {
   const { notify } = useTelegram()
   const qc = useQueryClient()
+  const isAdmin = useAuthStore((s) => s.user?.role) === 'admin'
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-carriers'],
@@ -58,21 +60,23 @@ export default function Carriers() {
                   <StatusBadge tone={c.has_cargo ? 'green' : 'red'} dot>
                     {c.has_cargo ? 'Yuk bor' : 'Yuk yo\'q'}
                   </StatusBadge>
-                  <button
-                    onClick={() => {
-                      if (confirm(`${c.first_name} yo'lovchi rolidan olib tashlansinmi?`)) remove.mutate(c.id)
-                    }}
-                    disabled={busy || c.has_cargo}
-                    title={c.has_cargo ? "Yuk bor — avval topshirilishi kerak" : "Roldan olib tashlash"}
-                    className="press flex items-center gap-1 text-xs font-semibold text-red-600 disabled:opacity-40"
-                  >
-                    {busy ? (
-                      <span className="w-3 h-3 border-2 border-red-300 border-t-red-500 rounded-full animate-spin" />
-                    ) : (
-                      <IconTrash size={14} />
-                    )}
-                    O'chirish
-                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => {
+                        if (confirm(`${c.first_name} yo'lovchi rolidan olib tashlansinmi?`)) remove.mutate(c.id)
+                      }}
+                      disabled={busy || c.has_cargo}
+                      title={c.has_cargo ? "Yuk bor — avval topshirilishi kerak" : "Roldan olib tashlash"}
+                      className="press flex items-center gap-1 text-xs font-semibold text-red-600 disabled:opacity-40"
+                    >
+                      {busy ? (
+                        <span className="w-3 h-3 border-2 border-red-300 border-t-red-500 rounded-full animate-spin" />
+                      ) : (
+                        <IconTrash size={14} />
+                      )}
+                      O'chirish
+                    </button>
+                  )}
                 </div>
               </div>
             )

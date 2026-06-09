@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.enums import OrderStatus, ProductStatus
+from app.core.enums import OrderStatus, ProductStatus, ProductType
 from app.core.errors import AppError
 from app.db.models import Order, OrderItem, Product
 from app.schemas.order import CreateOrderRequest
@@ -109,11 +109,12 @@ async def confirm_order_item(
         raise AppError("ITEM_NOT_FOUND", "Mahsulot buyurtmada topilmadi", status_code=404)
 
     product = item.product
-    if product.type.priced_by_weight and actual_kg is None:
+    by_weight = ProductType(product.type).priced_by_weight
+    if by_weight and actual_kg is None:
         raise AppError("ACTUAL_KG_REQUIRED", "Kiloli yuk uchun kg kiritish shart")
 
     item.actual_quantity = actual_quantity
-    item.actual_kg = actual_kg if product.type.priced_by_weight else None
+    item.actual_kg = actual_kg if by_weight else None
     product.status = ProductStatus.CONFIRMED
 
     order_confirmed = all(it.actual_quantity is not None for it in order.items)

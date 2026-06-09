@@ -30,8 +30,27 @@ export const ROLE_HOME: Record<string, string> = {
   pending: '/staff/pending',
 }
 
+// QR deep link tab'i (bot WebApp URL'iga ?tab=receive qo'shadi) -> qaysi sahifa.
+// start_param (Telegram) yoki query string'dan o'qiladi.
+function getStartTab(): string {
+  const fromQuery = new URLSearchParams(window.location.search).get('tab')
+  const fromTg = window.Telegram?.WebApp?.initDataUnsafe?.start_param
+  return fromQuery || fromTg || ''
+}
+
+const TAB_ROUTES: Record<string, { role: string; path: string }> = {
+  receive: { role: 'carrier', path: '/carrier/auto-receive' },
+}
+
 function RootRedirect() {
   const user = useAuthStore((s) => s.user)
+
+  // QR deep link bilan kelgan bo'lsa va roli mos kelsa — to'g'ridan-to'g'ri o'sha bo'limga
+  const tab = getStartTab()
+  if (user && tab && TAB_ROUTES[tab] && user.role === TAB_ROUTES[tab].role) {
+    return <Navigate to={TAB_ROUTES[tab].path} replace />
+  }
+
   // Roli tayinlangan bo'lsa — to'g'ridan-to'g'ri o'z paneliga.
   // 'new' (hali rol tanlamagan) ROLE_HOME'da yo'q — Welcome'ga boradi.
   if (user && ROLE_HOME[user.role]) {

@@ -113,11 +113,22 @@ async def _find_carrier_by_number(db: AsyncSession, carrier_number: int) -> User
     return carrier
 
 
-async def _ensure_belongs_to_carrier(db: AsyncSession, product_id: int, carrier_id: int) -> None:
-    """Yuk shu yo'lovchining buyurtmasiga biriktirilganligini tekshiradi.
+async def _ensure_can_handover(db: AsyncSession, product_id: int, carrier_id: int) -> None:
+    """Yukni shu yo'lovchiga topshirish mumkinligini tekshiradi.
 
-    Yuk faqat o'z buyurtmasi orqali olib ketiladi — boshqa yo'lovchiga berib bo'lmaydi.
+    - Buyurtmali yuk (biror buyurtmaga biriktirilgan) — faqat o'sha yo'lovchiga.
+    - Buyurtmasiz yuk (hech qaysi buyurtmada yo'q) — istalgan yo'lovchiga ruxsat
+      (kuryer buyurtmadan tashqari olib kelgan yuklar).
     """
+    # Bu yuk umuman biror buyurtmadami?
+    in_any_order = await db.scalar(
+        select(OrderItem.id).where(OrderItem.product_id == product_id).limit(1)
+    )
+    if in_any_order is None:
+        # Buyurtmasiz yuk — istalgan yo'lovchiga berish mumkin
+        return
+
+    # Buyurtmali yuk — faqat o'z buyurtmasi egasiga
     linked = await db.scalar(
         select(OrderItem.id)
         .join(Order, Order.id == OrderItem.order_id)
@@ -127,7 +138,7 @@ async def _ensure_belongs_to_carrier(db: AsyncSession, product_id: int, carrier_
     if linked is None:
         raise AppError(
             "NOT_CARRIERS_PRODUCT",
-            "Bu yuk ushbu yo'lovchining buyurtmasiga tegishli emas",
+            "Bu yuk boshqa yo'lovchining buyurtmasiga tegishli",
             status_code=400,
         )
 
@@ -144,8 +155,15 @@ async def scan_airport(
             "INVALID_PRODUCT_STATE",
             "Bu mahsulot kuryerda emas, aeroportda topshirib bo'lmaydi",
         )
+    # Kuryer faqat o'zi olib kelgan yukni topshira oladi
+    if product.custody_holder_id is not None and product.custody_holder_id != user.id:
+        raise AppError(
+            "NOT_YOUR_PRODUCT",
+            "Bu yuk sizda emas — boshqa kuryer olib kelgan",
+            status_code=400,
+        )
     carrier = await _find_carrier_by_number(db, body.carrier_number)
-    await _ensure_belongs_to_carrier(db, product.id, carrier.id)
+    await _ensure_can_handover(db, product.id, carrier.id)
     return ScanResponse(
         barcode=product.barcode,
         product_name=product.name,
@@ -171,8 +189,15 @@ async def confirm_airport(
                 f"Mahsulot ({barcode}) kuryerda emas — topshirib bo'lmaydi",
                 status_code=400,
             )
-        # Yuk shu yo'lovchining buyurtmasiga tegishli ekanligini tekshiramiz
-        await _ensure_belongs_to_carrier(db, product.id, carrier.id)
+        # Kuryer faqat o'zi olib kelgan yukni topshira oladi
+        if product.custody_holder_id is not None and product.custody_holder_id != user.id:
+            raise AppError(
+                "NOT_YOUR_PRODUCT",
+                f"Yuk ({barcode}) sizda emas — boshqa kuryer olib kelgan",
+                status_code=400,
+            )
+        # Buyurtmali yuk faqat egasiga; buyurtmasiz yuk istalgan yo'lovchiga
+        await _ensure_can_handover(db, product.id, carrier.id)
         await transfer_custody(
             db,
             product,

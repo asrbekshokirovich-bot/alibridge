@@ -85,15 +85,7 @@ app.add_exception_handler(Exception, unhandled_error_handler)
 
 @app.get("/health")
 async def health() -> dict:
-    return {
-        "status": "ok",
-        "app": settings.app_name,
-        "env": settings.app_env,
-        "s3_enabled": settings.s3_enabled,
-        "s3_endpoint_set": bool(settings.s3_endpoint),
-        "s3_access_set": bool(settings.s3_access_key),
-        "s3_secret_set": bool(settings.s3_secret_key),
-    }
+    return {"status": "ok", "app": settings.app_name, "env": settings.app_env}
 
 
 from app.api.v1.router import api_router  # noqa: E402

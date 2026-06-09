@@ -9,8 +9,10 @@ interface Props {
 
 export function RoleGuard({ role, children }: Props) {
   const user = useAuthStore((s) => s.user)
+  const token = useAuthStore((s) => s.token)
 
-  if (!user) return <Navigate to="/welcome" replace />
+  // Token yo'q (o'chirilgan/qaytib kelgan user) — stale user bilan kirsa API 401 beradi
+  if (!token || !user) return <Navigate to="/welcome" replace />
 
   // Admin istalgan panelga kira oladi (rol sifatida ko'rish)
   if (user.role === 'admin') return <>{children}</>

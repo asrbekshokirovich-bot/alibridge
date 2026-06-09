@@ -32,9 +32,11 @@ export const ROLE_HOME: Record<string, string> = {
 
 function RootRedirect() {
   const user = useAuthStore((s) => s.user)
-  // Roli tayinlangan bo'lsa — to'g'ridan-to'g'ri o'z paneliga.
+  const token = useAuthStore((s) => s.token)
+  // Token + roli tayinlangan bo'lsa — to'g'ridan-to'g'ri o'z paneliga.
+  // Token yo'q (o'chirilgan/qaytib kelgan user) bo'lsa — Welcome'ga (qayta login).
   // 'new' (hali rol tanlamagan) ROLE_HOME'da yo'q — Welcome'ga boradi.
-  if (user && ROLE_HOME[user.role]) {
+  if (token && user && ROLE_HOME[user.role]) {
     return <Navigate to={ROLE_HOME[user.role]} replace />
   }
   // Yangi foydalanuvchi ('new') yoki Telegram tashqarisi — rol tanlash ekrani

@@ -10,17 +10,41 @@ export default function Welcome() {
   const navigate = useNavigate()
   const { haptic, notify } = useTelegram()
   const user = useAuthStore((s) => s.user)
+  const token = useAuthStore((s) => s.token)
   const setAuth = useAuthStore((s) => s.setAuth)
   const [loading, setLoading] = useState<Role | null>(null)
   const [error, setError] = useState('')
+
+  // Token yo'q bo'lsa (o'chirilgan/qaytib kelgan user) — Telegram initData bilan login qilamiz
+  const ensureLogin = async (): Promise<boolean> => {
+    if (token) return true
+    const initData = window.Telegram?.WebApp?.initData ?? ''
+    if (!initData) return false
+    try {
+      const res = await client.post<{ token: string; user: User }>('/auth/login', {
+        tg_init_data: initData,
+      })
+      setAuth(res.data.token, res.data.user)
+      return true
+    } catch {
+      return false
+    }
+  }
 
   const selectRole = async (role: Role, home: string) => {
     if (loading) return
     haptic('medium')
     setError('')
-    if (user?.role === role) { navigate(home); return }
+    if (token && user?.role === role) { navigate(home); return }
     setLoading(role)
     try {
+      // Avval login bo'lganligiga ishonch hosil qilamiz (token yo'q bo'lsa)
+      const ok = await ensureLogin()
+      if (!ok) {
+        setError("Iltimos, botga qaytib /start ni bosing va ilovani qayta oching")
+        notify('error')
+        return
+      }
       const res = await client.post<{ token: string; user: User }>('/auth/select-role', { role })
       setAuth(res.data.token, res.data.user)
       notify('success')

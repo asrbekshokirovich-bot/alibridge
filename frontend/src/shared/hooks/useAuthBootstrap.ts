@@ -67,7 +67,12 @@ export function useAuthBootstrap(): boolean {
         })
         if (!cancelled) setAuth(res.data.token, res.data.user)
       } catch {
-        // Ro'yxatda yo'q (404) yoki boshqa xato — Welcome ko'rsatiladi
+        // Ro'yxatda yo'q (404) yoki boshqa xato — eski stale sessiyani tozalaymiz,
+        // aks holda Welcome'da eski rol ko'rinib token'siz navigatsiya 401 beradi
+        if (!cancelled) {
+          clearAuth()
+          localStorage.removeItem('carrier_ticket')
+        }
       }
     }
 

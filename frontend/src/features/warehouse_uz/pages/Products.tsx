@@ -85,79 +85,100 @@ export default function Products() {
             const realVariants = p.variants?.filter((v) => v.size_label || v.quantity || v.weight_kg) ?? []
             // To'ldirilmagan: omborda turibdi, lekin birorta variant ham yo'q
             const incomplete = editable && realVariants.length === 0
+            // Umumiy soni (variantlar yig'indisi)
+            const totalQty = realVariants.reduce((s, v) => s + (v.quantity || 0), 0)
+            // Tekstil/kiloli uchun jami sof kg (tara ayirilgan)
+            const totalKg = realVariants.reduce((s, v) => s + Math.max(0, (v.weight_kg || 0) - (v.tare_kg || 0)), 0)
+            const unit = g === 'piece' ? 'dona' : 'kg'
+            // Jami qatori: donada hamma turda, kg faqat kiloli/tekstilda. Bo'sh segmentlar tushiriladi.
+            const jamiParts = [
+              totalQty > 0 ? `${totalQty} dona` : '',
+              g !== 'piece' && totalKg >= 0.1 ? `${totalKg.toFixed(1)} kg` : '',
+            ].filter(Boolean)
             return (
-              <div key={p.id} className={`bg-white rounded-2xl p-4 border shadow-sm ${incomplete ? 'border-amber-300' : 'border-slate-100'}`}>
-                <div className="flex items-start gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-slate-50 flex items-center justify-center text-xl shrink-0 overflow-hidden">
+              <div key={p.id} className={`bg-white rounded-2xl p-3.5 border shadow-sm ${incomplete ? 'border-amber-300' : 'border-slate-100'}`}>
+                <div className="flex items-stretch gap-3">
+                  {/* Chap: katta rasm */}
+                  <div className="w-24 h-24 rounded-xl bg-slate-50 flex items-center justify-center text-3xl shrink-0 overflow-hidden self-start">
                     {p.image_url
                       ? <img src={p.image_url} alt="" className="w-full h-full object-cover" />
                       : typeEmoji(p.type)}
                   </div>
+
+                  {/* O'rta: nomi, katalog, o'lchamlar + narx, jami */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className="font-bold text-slate-900 truncate">{p.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-slate-900 truncate flex-1">{p.name}</h3>
                       <StatusBadge tone={PRODUCT_STATUS[p.status].tone} dot>{PRODUCT_STATUS[p.status].text}</StatusBadge>
                     </div>
-                    <p className="text-xs text-slate-400">{p.category || '—'}</p>
+                    <p className="text-xs text-slate-400 truncate">{p.category || '—'}</p>
 
                     {incomplete ? (
                       <p className="text-xs text-amber-600 font-medium mt-1.5">⚠️ O'lcham qo'shilmagan — tahrirlang</p>
                     ) : (
-                      <div className="mt-2 space-y-1.5">
-                        {realVariants.map((v) => (
-                          <div key={v.id} className="flex items-center gap-2 flex-wrap text-xs">
-                            {v.size_label && (
-                              <span className="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg">{v.size_label}</span>
-                            )}
-                            {v.quantity > 0 && <span className={CHIP}>{v.quantity} dona</span>}
-                            {g === 'boxed' && v.box_count != null && <span className={CHIP}>{v.box_count} quti</span>}
-                            {v.weight_kg > 0 && <span className={CHIP}>{v.weight_kg} kg</span>}
-                            {v.tare_kg != null && v.tare_kg > 0 && (
-                              <>
-                                <span className={CHIP}>{(v.weight_kg - v.tare_kg).toFixed(1)} kg sof</span>
-                                <span className={CHIP_MUTED}>tara {v.tare_kg}</span>
-                              </>
-                            )}
-                            {v.cargo_price > 0 && (
-                              <span className="font-bold" style={{ color: 'var(--brand)' }}>
-                                ${v.cargo_price}/{g === 'piece' ? 'dona' : 'kg'}
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                      <>
+                        <div className="mt-2 space-y-1">
+                          {realVariants.map((v) => (
+                            <div key={v.id} className="flex items-center gap-2 flex-wrap text-xs">
+                              {v.size_label && (
+                                <span className="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg">{v.size_label}</span>
+                              )}
+                              {v.quantity > 0 && <span className={CHIP}>{v.quantity} dona</span>}
+                              {g === 'boxed' && v.box_count != null && v.box_count > 0 && <span className={CHIP}>{v.box_count} quti</span>}
+                              {v.weight_kg > 0 && <span className={CHIP}>{v.weight_kg} kg</span>}
+                              {v.tare_kg != null && v.tare_kg > 0 && (
+                                <>
+                                  <span className={CHIP}>{Math.max(0, v.weight_kg - v.tare_kg).toFixed(1)} kg sof</span>
+                                  <span className={CHIP_MUTED}>tara {v.tare_kg}</span>
+                                </>
+                              )}
+                              {v.cargo_price > 0 && (
+                                <span className="font-bold ml-auto" style={{ color: 'var(--brand)' }}>
+                                  ${v.cargo_price}/{unit}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        {jamiParts.length > 0 && (
+                          <p className="text-xs font-semibold text-slate-500 mt-1.5">
+                            Jami: {jamiParts.join(' · ')}
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
-                </div>
 
-                {/* Tugmalar: Tahrirlash + Barkod chiqarish */}
-                <div className="flex gap-2 mt-3">
-                  {editable && (
+                  {/* O'ng: barkod + tahrirlash + o'chirish (vertikal) */}
+                  <div className="flex flex-col gap-1.5 shrink-0 w-[88px]">
                     <button
-                      onClick={() => navigate(`/warehouse-uz/products/${p.id}/edit`)}
-                      className={`press flex-1 py-2.5 rounded-xl text-sm font-semibold ${incomplete ? 'text-white' : 'bg-slate-100 text-slate-700'}`}
-                      style={incomplete ? { background: 'var(--brand-gradient)' } : undefined}
+                      onClick={() => openLink(labelUrl(p.barcode, new Date().toISOString().slice(0, 10)))}
+                      className="press py-2 rounded-xl text-[11px] font-semibold bg-slate-100 text-slate-700 flex flex-col items-center gap-0.5"
                     >
-                      {incomplete ? 'To\'ldirish' : '✏️ Tahrirlash'}
+                      <span>🖨️ Barkod</span>
+                      <span className="text-[10px] text-slate-400 font-mono truncate w-full text-center">{p.barcode}</span>
                     </button>
-                  )}
-                  <button
-                    onClick={() => openLink(labelUrl(p.barcode, new Date().toISOString().slice(0, 10)))}
-                    className="press flex-1 py-2.5 rounded-xl text-sm font-semibold bg-slate-100 text-slate-700 text-center"
-                  >
-                    🖨️ Barkod
-                  </button>
-                  {editable && (
-                    <button
-                      onClick={() => {
-                        if (confirm(`"${p.name}" o'chirilsinmi? Bu amalni qaytarib bo'lmaydi.`)) remove.mutate(p.id)
-                      }}
-                      disabled={remove.isPending && remove.variables === p.id}
-                      className="press py-2.5 px-3 rounded-xl text-sm font-semibold bg-red-50 text-red-600 disabled:opacity-50"
-                    >
-                      🗑️
-                    </button>
-                  )}
+                    {editable && (
+                      <button
+                        onClick={() => navigate(`/warehouse-uz/products/${p.id}/edit`)}
+                        className={`press py-2 rounded-xl text-[11px] font-semibold ${incomplete ? 'text-white' : 'bg-slate-100 text-slate-700'}`}
+                        style={incomplete ? { background: 'var(--brand-gradient)' } : undefined}
+                      >
+                        {incomplete ? 'To\'ldirish' : '✏️ Tahrirlash'}
+                      </button>
+                    )}
+                    {editable && (
+                      <button
+                        onClick={() => {
+                          if (confirm(`"${p.name}" o'chirilsinmi? Bu amalni qaytarib bo'lmaydi.`)) remove.mutate(p.id)
+                        }}
+                        disabled={remove.isPending && remove.variables === p.id}
+                        className="press py-2 rounded-xl text-[11px] font-semibold bg-red-50 text-red-600 disabled:opacity-50"
+                      >
+                        🗑️ O'chirish
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             )

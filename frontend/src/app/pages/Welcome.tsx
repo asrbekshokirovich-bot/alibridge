@@ -64,7 +64,7 @@ export default function Welcome() {
           style={{ background: 'var(--brand-gradient)' }}>
           <IconPlane size={38} className="text-white" />
         </div>
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">ALI BRIDGE</h1>
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Ali Bridge</h1>
         <p className="text-sm text-slate-500 mt-1.5">Toshkent → Turkiya kargo tizimi</p>
       </div>
 
@@ -103,7 +103,7 @@ export default function Welcome() {
       </div>
 
       {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl mb-3">{error}</div>}
-      <p className="text-center text-xs text-slate-400 pb-6">ALI BRIDGE © 2026</p>
+      <p className="text-center text-xs text-slate-400 pb-6">Ali Bridge © 2026</p>
     </div>
   )
 }

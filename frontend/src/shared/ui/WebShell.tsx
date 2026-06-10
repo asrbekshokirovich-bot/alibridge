@@ -93,7 +93,7 @@ export function WebShell({ children }: { children: React.ReactNode }) {
               <IconPlane size={20} className="text-white" />
             </div>
             <div className="min-w-0">
-              <p className="font-extrabold text-slate-900 leading-tight">ALI BRIDGE</p>
+              <p className="font-extrabold text-slate-900 leading-tight">Ali Bridge</p>
               <p className="text-[11px] text-slate-400 truncate">{user ? ROLE_TITLE[user.role] ?? user.role : ''}</p>
             </div>
           </div>

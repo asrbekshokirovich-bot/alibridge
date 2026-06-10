@@ -43,7 +43,7 @@ export default function WebLogin() {
             style={{ background: 'var(--brand-gradient)' }}>
             <IconPlane size={38} className="text-white" />
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">ALI BRIDGE</h1>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Ali Bridge</h1>
           <p className="text-sm text-slate-500 mt-1.5">Xodim kirishi</p>
         </div>
 
@@ -80,7 +80,7 @@ export default function WebLogin() {
           </button>
         </form>
 
-        <p className="text-center text-xs text-slate-400 mt-8">ALI BRIDGE © 2026</p>
+        <p className="text-center text-xs text-slate-400 mt-8">Ali Bridge © 2026</p>
       </div>
     </div>
   )

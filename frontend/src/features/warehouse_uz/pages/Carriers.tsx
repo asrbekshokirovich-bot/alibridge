@@ -35,7 +35,7 @@ export default function Carriers() {
       ) : !data?.length ? (
         <EmptyState icon={<IconPlane size={30} />} title="Yo'lovchi yo'q" />
       ) : (
-        <div className="px-4 pt-4 space-y-3">
+        <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((c) => (
             <button
               key={c.id}

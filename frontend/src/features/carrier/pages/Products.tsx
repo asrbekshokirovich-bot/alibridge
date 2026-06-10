@@ -74,7 +74,7 @@ export default function Products() {
       ) : !products?.length ? (
         <EmptyState title="Mahsulot topilmadi" description="Hozircha mahsulot yo'q" />
       ) : (
-        <div className="px-3 pt-3 grid grid-cols-2 gap-3">
+        <div className="px-3 pt-3 grid grid-cols-2 gap-3 web-grid web-grid-catalog">
           {products.map((p) => {
             const vs = realVariants(p)
             if (vs.length === 0) return null

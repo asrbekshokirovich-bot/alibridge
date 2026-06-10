@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/shared/store/auth'
 import type { Role } from '@/shared/types'
+import { WebShell } from '@/shared/ui'
 
 interface Props {
   role: Role | Role[]
@@ -17,11 +18,13 @@ export function RoleGuard({ role, children }: Props) {
   // Token yo'q (o'chirilgan/qaytib kelgan user) — stale user bilan kirsa API 401 beradi
   if (!token || !user) return <Navigate to={isTelegram ? '/welcome' : '/web-login'} replace />
 
-  // Admin istalgan panelga kira oladi (rol sifatida ko'rish)
-  if (user.role === 'admin') return <>{children}</>
+  // Ruxsat tekshiruvi (admin istalgan panelga kira oladi — rol sifatida ko'rish)
+  if (user.role !== 'admin') {
+    const allowed = Array.isArray(role) ? role : [role]
+    if (!allowed.includes(user.role)) return <Navigate to="/unauthorized" replace />
+  }
 
-  const allowed = Array.isArray(role) ? role : [role]
-  if (!allowed.includes(user.role)) return <Navigate to="/unauthorized" replace />
-
+  // Brauzerda (sayt) panellarni sidebar qobig'i bilan o'raymiz; Telegram'da o'zgarishsiz
+  if (!isTelegram) return <WebShell>{children}</WebShell>
   return <>{children}</>
 }

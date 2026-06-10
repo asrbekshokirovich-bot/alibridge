@@ -78,7 +78,7 @@ export default function Orders() {
       ) : !orders?.length ? (
         <EmptyState icon={<IconBag size={30} />} title="Buyurtma yo'q" description="Hozircha tasdiqlash kerak emas" />
       ) : (
-        <div className="px-4 pt-4 space-y-3">
+        <div className="px-4 pt-4 space-y-3 web-grid">
           {orders.map((o) => {
             const badge = orderBadge(o)
             const done = o.items.filter((i) => i.confirmed).length

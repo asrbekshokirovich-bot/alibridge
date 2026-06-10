@@ -39,7 +39,7 @@ export default function Disputes() {
       ) : !data?.length ? (
         <EmptyState icon={<IconCheck size={30} />} title="Nizo yo'q" description="Hamma narsa joyida" />
       ) : (
-        <div className="px-4 pt-4 space-y-3">
+        <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((d) => (
             <div key={d.id} className="bg-white rounded-2xl border border-red-100 shadow-sm overflow-hidden">
               <div className="bg-red-50/60 px-4 py-3 flex items-center justify-between">

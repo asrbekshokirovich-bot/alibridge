@@ -68,7 +68,7 @@ export default function AllProducts() {
       ) : !filtered?.length ? (
         <EmptyState icon={<IconBox size={30} />} title="Yuk yo'q" description="Bu holatda yuk topilmadi" />
       ) : (
-        <div className="px-4 pt-4 space-y-3">
+        <div className="px-4 pt-4 space-y-3 web-grid">
           {filtered.map((p) => {
             const st = STATUS_LABEL[p.status] ?? { label: p.status, tone: 'gray' as const }
             return (

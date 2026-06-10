@@ -17,7 +17,7 @@ export function BottomNav({ items }: Props) {
   const { haptic } = useTelegram()
 
   return (
-    <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-30">
+    <div className="tg-only fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-30">
       <div className="mx-3 mb-3 bg-white/90 backdrop-blur-xl rounded-3xl border border-slate-100 shadow-[var(--shadow-lg)]">
         <div className="flex items-center justify-around px-2 py-2">
           {items.map((item) => {

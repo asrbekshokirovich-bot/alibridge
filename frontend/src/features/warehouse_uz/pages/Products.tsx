@@ -77,7 +77,7 @@ export default function Products() {
       ) : !filtered?.length ? (
         <EmptyState icon={<IconBox size={30} />} title="Mahsulot yo'q" description="Bu turdagi mahsulot omborda yo'q" />
       ) : (
-        <div className="px-4 pt-4 space-y-3">
+        <div className="px-4 pt-4 space-y-3 web-grid">
           {filtered.map((p) => {
             const g = productGroup(p.type)
             const editable = p.status === 'in_warehouse_uz'

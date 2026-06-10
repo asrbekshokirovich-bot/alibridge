@@ -44,7 +44,7 @@ export default function Payments() {
       ) : !data?.length ? (
         <EmptyState icon={<IconMoney size={30} />} title="To'lov yo'q" />
       ) : (
-        <div className="px-4 pt-4 space-y-3">
+        <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((p) => (
             <div key={p.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
               <div className="flex items-start justify-between">

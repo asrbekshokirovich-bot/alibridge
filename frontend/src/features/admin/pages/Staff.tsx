@@ -76,7 +76,7 @@ export default function Staff() {
       ) : !data?.length ? (
         <EmptyState icon={<IconUsers size={30} />} title="Xodim yo'q" description="Tasdiqlangan xodim mavjud emas" />
       ) : (
-        <div className="px-4 pt-4 space-y-3">
+        <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((s) => {
             const open = expanded === s.id
             const busy =

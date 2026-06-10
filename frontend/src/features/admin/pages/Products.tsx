@@ -29,7 +29,7 @@ export default function Products() {
       ) : !data?.length ? (
         <EmptyState icon={<IconBox size={30} />} title="Mahsulot yo'q" description="Hali mahsulot qo'shilmagan" />
       ) : (
-        <div className="px-4 pt-4 space-y-3">
+        <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((p) => {
             const st = STATUS_LABEL[p.status] ?? { label: p.status, tone: 'gray' as const }
             return (

@@ -57,11 +57,90 @@ body {
   min-height: 100dvh;
 }
 
-/* Scrollbar yashirish */
-::-webkit-scrollbar {
+/* ── Sayt (brauzer) rejimi: keng desktop layout ─────────────────────────────
+   Telegram telefon — o'zgarishsiz 480px. Brauzerda <html class="web"> bo'ladi.
+   Desktopda (>=1024px) chap sidebar + keng kontent grid. */
+.web #root {
+  max-width: 100%;
+}
+
+@media (min-width: 1024px) {
+  /* Desktop fonni biroz boshqacha — kontent ajralib tursin */
+  .web body { background: #0a0b0f; }
+
+  /* Sidebar bor bo'lsa, kontent o'ngga suriladi (WebShell beradi) */
+  .web .web-shell {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  .web .web-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    background: var(--card);
+  }
+  .web .web-content {
+    min-width: 0;
+    max-width: 1400px;
+    width: 100%;
+  }
+
+  /* Telegram'ga mo'ljallangan tor "fixed" elementlar (BottomNav, FixedBar,
+     suzuvchi tasdiqlash) desktopda KERAK EMAS — sidebar bor. Yashiramiz. */
+  .web .web-shell .tg-only { display: none !important; }
+
+  /* Sahifa ichidagi qattiq max-w cheklovlarni desktopda yumshatamiz —
+     kontent keng grid'da yoyilsin. Form sahifalari o'zining max-w'ini saqlaydi. */
+  .web .web-content .page-wide { max-width: 100%; }
+
+  /* FixedBar — desktopda pastga qotirmaymiz, kontent oqimida sticky qilamiz */
+  .web .tg-fixedbar {
+    position: sticky;
+    left: auto;
+    transform: none;
+    max-width: 100%;
+    background: var(--card);
+  }
+
+  /* Suzuvchi tasdiqlash tugmasi (carrier) — desktopda markazlamaymiz */
+  .web .tg-float {
+    position: sticky;
+    left: auto;
+    transform: none;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* ── Ro'yxat sahifalarini desktopda grid'ga aylantirish (opt-in) ──
+     Sahifaning asosiy ro'yxat konteyneriga `web-grid` klassi qo'shiladi.
+     Desktopda kartalar 2 ustunli grid'da yoyiladi (forma ichidagi
+     kichik gridlarga ta'sir qilmaydi — faqat shu konteynerga). */
+  .web .web-grid {
+    display: grid !important;
+    grid-template-columns: repeat(var(--web-cols, 2), minmax(0, 1fr));
+    gap: 0.75rem;
+    align-content: start;
+  }
+  .web .web-grid > * { margin-top: 0 !important; }
+
+  /* Keng katalog (mahsulot kartalari) — 4 ustungacha */
+  .web .web-grid-catalog { --web-cols: 4; }
+}
+
+/* Scrollbar yashirish (faqat Telegram telefon; brauzerda ko'rinsin) */
+:root:not(.web) ::-webkit-scrollbar {
   width: 0;
   background: transparent;
 }
+/* Brauzerda nozik scrollbar */
+.web ::-webkit-scrollbar { width: 10px; height: 10px; }
+.web ::-webkit-scrollbar-thumb { background: #2a2e3a; border-radius: 6px; }
+.web ::-webkit-scrollbar-track { background: transparent; }
 
 /* Animatsiyalar */
 @keyframes fadeIn {

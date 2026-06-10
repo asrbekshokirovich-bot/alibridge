@@ -63,7 +63,7 @@ export default function StaffApproval() {
       ) : !requests?.length ? (
         <EmptyState icon={<IconUsers size={30} />} title="So'rov yo'q" description="Yangi xodim so'rovi mavjud emas" />
       ) : (
-        <div className="px-4 pt-4 space-y-3">
+        <div className="px-4 pt-4 space-y-3 web-grid">
           {requests.map((req) => {
             const open = expanded === req.id
             const done = approvedRole[req.id]

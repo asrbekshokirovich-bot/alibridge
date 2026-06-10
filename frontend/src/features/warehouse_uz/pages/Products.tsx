@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import client from '@/shared/api/client'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import client, { extractErrorMessage } from '@/shared/api/client'
 import type { Product } from '@/shared/types'
 import { PRODUCT_STATUS } from '@/shared/lib/status'
 import { productGroup, typeEmoji, labelUrl, type ProductGroup } from '@/shared/lib/product'
@@ -22,12 +22,22 @@ const CHIP_MUTED = 'text-xs font-medium text-slate-400 bg-slate-50 px-2 py-0.5 r
 
 export default function Products() {
   const navigate = useNavigate()
-  const { openLink } = useTelegram()
+  const { openLink, notify } = useTelegram()
+  const qc = useQueryClient()
   const [filter, setFilter] = useState<Filter>('all')
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['warehouse-uz-products'],
     queryFn: () => client.get<Product[]>('/warehouse-uz/products').then((r) => r.data),
+  })
+
+  const remove = useMutation({
+    mutationFn: (id: number) => client.delete(`/warehouse-uz/products/${id}`),
+    onSuccess: () => {
+      notify('success')
+      qc.invalidateQueries({ queryKey: ['warehouse-uz-products'] })
+    },
+    onError: (err) => { alert(extractErrorMessage(err)); notify('error') },
   })
 
   const filtered = products?.filter((p) => filter === 'all' || productGroup(p.type) === filter)
@@ -137,6 +147,17 @@ export default function Products() {
                   >
                     🖨️ Barkod
                   </button>
+                  {editable && (
+                    <button
+                      onClick={() => {
+                        if (confirm(`"${p.name}" o'chirilsinmi? Bu amalni qaytarib bo'lmaydi.`)) remove.mutate(p.id)
+                      }}
+                      disabled={remove.isPending && remove.variables === p.id}
+                      className="press py-2.5 px-3 rounded-xl text-sm font-semibold bg-red-50 text-red-600 disabled:opacity-50"
+                    >
+                      🗑️
+                    </button>
+                  )}
                 </div>
               </div>
             )

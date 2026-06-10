@@ -17,7 +17,7 @@ from app.core.enums import (
 )
 from app.core.errors import AppError
 from app.db.base import get_db
-from app.db.models import Order, OrderItem, Product, ProductVariant, User
+from app.db.models import CustodyEvent, Order, OrderItem, Product, ProductVariant, User
 from app.schemas.admin import CarrierOut
 from app.schemas.common import OkResponse
 from app.schemas.product import ProductOut
@@ -214,6 +214,52 @@ async def delete_variant(
     recompute_product_totals(product)
     await db.flush()
     return product_to_out(product, expose_box_weight=True)
+
+
+@router.delete("/products/{product_id}", response_model=OkResponse)
+async def delete_product(
+    product_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*WH_UZ)),
+) -> OkResponse:
+    """Mahsulotni butunlay o'chiradi (variantlari bilan).
+
+    Faqat hali omborda turgan (jarayonga o'tmagan) mahsulot o'chiriladi.
+    Buyurtmaga kiritilgan yoki custody tarixi bor mahsulot o'chirilmaydi —
+    aks holda tarix/hisob buziladi.
+    """
+    product = await db.get(Product, product_id, options=[selectinload(Product.variants)])
+    if product is None:
+        raise AppError("PRODUCT_NOT_FOUND", "Mahsulot topilmadi", status_code=404)
+    if product.status != ProductStatus.IN_WAREHOUSE_UZ:
+        raise AppError(
+            "PRODUCT_LOCKED",
+            "Bu mahsulot allaqachon jarayonga o'tgan, o'chirib bo'lmaydi",
+        )
+
+    # Buyurtmaga kiritilgan bo'lsa — o'chirib bo'lmaydi (hisob buziladi)
+    in_order = await db.scalar(
+        select(OrderItem.id).where(OrderItem.product_id == product_id).limit(1)
+    )
+    if in_order is not None:
+        raise AppError(
+            "PRODUCT_IN_ORDER",
+            "Bu mahsulot buyurtmaga kiritilgan, o'chirib bo'lmaydi",
+        )
+
+    # custody_events append-only — bog'liq yozuv bo'lsa o'chirib bo'lmaydi
+    has_custody = await db.scalar(
+        select(CustodyEvent.id).where(CustodyEvent.product_id == product_id).limit(1)
+    )
+    if has_custody is not None:
+        raise AppError(
+            "PRODUCT_HAS_HISTORY",
+            "Bu mahsulotda harakat tarixi bor, o'chirib bo'lmaydi",
+        )
+
+    await db.delete(product)  # variantlar CASCADE bilan o'chadi
+    await db.flush()
+    return OkResponse(ok=True)
 
 
 @router.post("/products/{product_id}/image", response_model=ProductOut)

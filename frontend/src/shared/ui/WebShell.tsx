@@ -50,8 +50,8 @@ const MENU: Partial<Record<Role, MenuItem[]>> = {
   ],
   courier_tr: [
     { label: 'Bosh sahifa', path: '/courier-tr', icon: <IconHome size={20} /> },
-    { label: 'UZ\'dan qabul', path: '/courier-tr/receive-from-uz', icon: <IconHandshake size={20} /> },
-    { label: 'Yetkazish', path: '/courier-tr/deliver', icon: <IconTruck size={20} /> },
+    { label: 'Yo\'lovchidan qabul', path: '/courier-tr/receive-from-uz', icon: <IconHandshake size={20} /> },
+    { label: 'Omborga topshirish', path: '/courier-tr/handover-warehouse', icon: <IconTruck size={20} /> },
   ],
 }
 

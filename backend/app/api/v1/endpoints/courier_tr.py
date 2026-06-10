@@ -87,6 +87,47 @@ async def confirm_receive(
     return OkResponse(ok=True)
 
 
+# ─── Turkiya omboriga topshirish ────────────────────────────────────────────────
+
+
+@router.post("/scan-handover-warehouse", response_model=ScanResponse)
+async def scan_handover_warehouse(
+    body: ScanRequest,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*ROLE)),
+) -> ScanResponse:
+    """Omborga topshirishdan oldin barkodni tekshirish."""
+    product = await get_product_by_barcode(db, body.barcode)
+    carrier = await _carrier_for_product(db, product.id)
+    return ScanResponse(
+        barcode=product.barcode,
+        product_name=product.name,
+        carrier_name=f"{carrier.first_name} {carrier.last_name}".strip() if carrier else None,
+        carrier_number=carrier.carrier_number if carrier else None,
+    )
+
+
+@router.post("/confirm-handover-warehouse", response_model=OkResponse)
+async def confirm_handover_warehouse(
+    body: ConfirmRequest,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*ROLE)),
+) -> OkResponse:
+    """Kuryer yukni Turkiya omboriga topshiradi — custody ombor (WAREHOUSE_TR) ga o'tadi.
+    Eslatma: to'lov/status oqimi keyinroq aniqlanadi; hozir faqat custody o'tkaziladi."""
+    for barcode in body.barcodes:
+        product = await get_product_by_barcode(db, barcode)
+        await transfer_custody(
+            db,
+            product,
+            to_holder_type=HolderType.WAREHOUSE_TR,
+            to_holder_id=None,  # umumiy Turkiya ombori (aniq xodim emas)
+            event_type=CustodyEventType.WAREHOUSE_TR_RECEIVED,
+            scanned_by=user.id,
+        )
+    return OkResponse(ok=True)
+
+
 # ─── Shikastlangan yuk ──────────────────────────────────────────────────────────
 
 

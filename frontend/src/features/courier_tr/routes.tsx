@@ -1,14 +1,14 @@
 import { Routes, Route } from 'react-router-dom'
 import Dashboard from './Dashboard'
 import ReceiveFromUZ from './pages/ReceiveFromUZ'
-import Deliver from './pages/Deliver'
+import HandoverWarehouse from './pages/HandoverWarehouse'
 
 export default function CourierTrRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Dashboard />} />
       <Route path="/receive-from-uz" element={<ReceiveFromUZ />} />
-      <Route path="/deliver" element={<Deliver />} />
+      <Route path="/handover-warehouse" element={<HandoverWarehouse />} />
     </Routes>
   )
 }

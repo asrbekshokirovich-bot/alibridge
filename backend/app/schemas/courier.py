@@ -3,6 +3,13 @@ from pydantic import BaseModel, Field
 # ─── Courier UZ ─────────────────────────────────────────────────────────────────
 
 
+class CourierUzQueueProduct(BaseModel):
+    barcode: str
+    product_name: str
+    size_label: str = ""
+    picked_up: bool = False  # custody kuryerda — olib ketilgan
+
+
 class CourierUzQueueItem(BaseModel):
     id: int
     carrier_name: str
@@ -10,6 +17,9 @@ class CourierUzQueueItem(BaseModel):
     address: str
     products_count: int
     status: str  # pending | in_progress | done
+    products: list[CourierUzQueueProduct] = []
+    confirmed_by_name: str | None = None  # buyurtmani olib ketgan kuryer ismi
+    created_at: str = ""
 
 
 class ScanAirportRequest(BaseModel):

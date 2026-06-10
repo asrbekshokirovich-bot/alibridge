@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.api.deps import require_role
 from app.core.enums import (
@@ -13,11 +14,12 @@ from app.core.enums import (
 )
 from app.core.errors import AppError
 from app.db.base import get_db
-from app.db.models import Order, OrderItem, User
+from app.db.models import CustodyEvent, Order, OrderItem, User
 from app.schemas.common import OkResponse
 from app.schemas.courier import (
     ConfirmAirportRequest,
     CourierUzQueueItem,
+    CourierUzQueueProduct,
     ScanAirportRequest,
 )
 from app.schemas.warehouse import ConfirmRequest, ScanRequest, ScanResponse
@@ -33,27 +35,95 @@ async def queue(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*ROLE)),
 ) -> list[CourierUzQueueItem]:
-    """Kuryer olib kelishi kerak bo'lgan buyurtmalar (pickup_type=courier)."""
-    rows = await db.execute(
-        select(Order, User, func.count(OrderItem.id))
-        .join(User, User.id == Order.carrier_id)
-        .join(OrderItem, OrderItem.order_id == Order.id)
-        .where(
-            Order.pickup_type == PickupType.COURIER,
-            Order.status.in_([OrderStatus.CONFIRMED, OrderStatus.PENDING_ADMIN]),
+    """Kuryer olib kelishi kerak bo'lgan buyurtmalar (pickup_type=courier).
+
+    Skladchidagidek buyurtma kartalari: mahsulotlar ro'yxati + olib ketilganmi.
+    Olib ketilgan buyurtma o'chmaydi — '(ism) tasdiqladi' bo'lib qoladi.
+    """
+    orders = (
+        await db.execute(
+            select(Order)
+            .where(
+                Order.pickup_type == PickupType.COURIER,
+                Order.status.in_([OrderStatus.CONFIRMED, OrderStatus.PENDING_ADMIN]),
+            )
+            .options(
+                selectinload(Order.items).selectinload(OrderItem.product),
+                selectinload(Order.items).selectinload(OrderItem.variant),
+                selectinload(Order.carrier),
+            )
+            .order_by(Order.created_at.desc())
         )
-        .group_by(Order.id, User.id)
+    ).scalars().all()
+
+    # Kuryer olib ketganini aniqlash: yuk kuryerga o'tgan yoki undan keyingi bosqichda.
+    # (WITH_CARRIER/DELIVERED_TR ham — kuryer allaqachon olib bo'lgan demakdir.)
+    PICKED_STATES = (
+        ProductStatus.WITH_COURIER_UZ,
+        ProductStatus.WITH_CARRIER,
+        ProductStatus.DELIVERED_TR,
     )
+
+    # Qaysi kuryer olib ketganini custody_events (COURIER_UZ_PICKUP) dan topamiz —
+    # WITH_CARRIER bo'lgach ham kuryer ismi saqlanadi (custody hozirgi egasi emas).
+    product_ids = [it.product_id for o in orders for it in o.items]
+    pickup_by_product: dict[int, int] = {}
+    couriers: dict[int, User] = {}
+    if product_ids:
+        ev_rows = await db.execute(
+            select(CustodyEvent.product_id, CustodyEvent.scanned_by)
+            .where(
+                CustodyEvent.product_id.in_(product_ids),
+                CustodyEvent.event_type == CustodyEventType.COURIER_UZ_PICKUP,
+                CustodyEvent.scanned_by.is_not(None),
+            )
+            .order_by(CustodyEvent.id.asc())
+        )
+        for pid, sb in ev_rows.all():
+            pickup_by_product[pid] = sb  # oxirgi pickup eventi (eng katta id) qoladi
+        # Kuryer ismlari — bitta so'rovda
+        courier_ids = list(set(pickup_by_product.values()))
+        if courier_ids:
+            crows = await db.execute(select(User).where(User.id.in_(courier_ids)))
+            couriers = {u.id: u for u in crows.scalars().all()}
+
     result: list[CourierUzQueueItem] = []
-    for order, carrier, count in rows.all():
+    for order in orders:
+        carrier = order.carrier
+        products = [
+            CourierUzQueueProduct(
+                barcode=it.product.barcode,
+                product_name=it.product.name,
+                size_label=it.variant.size_label if it.variant else "",
+                picked_up=it.product.status in PICKED_STATES,
+            )
+            for it in order.items
+        ]
+        all_picked = bool(products) and all(p.picked_up for p in products)
+
+        # Olib ketgan kuryer ismi (custody_events COURIER_UZ_PICKUP dan)
+        confirmed_by_name: str | None = None
+        if all_picked:
+            courier_id = next(
+                (pickup_by_product.get(it.product_id) for it in order.items
+                 if pickup_by_product.get(it.product_id) is not None),
+                None,
+            )
+            holder = couriers.get(courier_id) if courier_id is not None else None
+            if holder is not None:
+                confirmed_by_name = f"{holder.first_name} {holder.last_name}".strip()
+
         result.append(
             CourierUzQueueItem(
                 id=order.id,
                 carrier_name=f"{carrier.first_name} {carrier.last_name}".strip(),
                 carrier_number=carrier.carrier_number,
                 address=order.pickup_address or "",
-                products_count=count,
-                status="pending",
+                products_count=len(products),
+                status="done" if all_picked else "pending",
+                products=products,
+                confirmed_by_name=confirmed_by_name,
+                created_at=order.created_at.date().isoformat(),
             )
         )
     return result
@@ -85,6 +155,14 @@ async def confirm_pickup(
 ) -> OkResponse:
     for barcode in body.barcodes:
         product = await get_product_by_barcode(db, barcode)
+        # Faqat omborda turgan yukni olish mumkin — allaqachon kuryer/yo'lovchida
+        # bo'lgan yukni qaytarib olishni bloklaymiz (custody regressiyasi, qayta yuborish).
+        if product.status not in (ProductStatus.IN_WAREHOUSE_UZ, ProductStatus.CONFIRMED):
+            raise AppError(
+                "INVALID_PRODUCT_STATE",
+                f"Mahsulot ({barcode}) ombordan olishga tayyor emas yoki allaqachon olingan",
+                status_code=400,
+            )
         await transfer_custody(
             db,
             product,

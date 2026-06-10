@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import { useAuthStore } from '@/shared/store/auth'
-import { DashboardHeader, IconBox, IconTruck } from '@/shared/ui'
+import { DashboardHeader, IconBox, IconHandshake } from '@/shared/ui'
 
 export default function CourierTrDashboard() {
   const navigate = useNavigate()
@@ -9,8 +9,8 @@ export default function CourierTrDashboard() {
   const user = useAuthStore((s) => s.user)
 
   const actions = [
-    { label: 'O\'zbekistondan kelgan yuklar', desc: 'Qabul qilish va shikast belgilash', path: '/courier-tr/receive-from-uz', icon: <IconBox size={26} />, gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
-    { label: 'Yuklarni yetkazish', desc: 'Buyurtmachiga topshirish', path: '/courier-tr/deliver', icon: <IconTruck size={26} />, gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
+    { label: 'Yo\'lovchidan yuk qabul qilish', desc: 'Barkodni skanlab qabul qilish', path: '/courier-tr/receive-from-uz', icon: <IconBox size={26} />, gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
+    { label: 'Yukni omborga topshirish', desc: 'Turkiya omboriga topshirish', path: '/courier-tr/handover-warehouse', icon: <IconHandshake size={26} />, gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
   ]
 
   return (

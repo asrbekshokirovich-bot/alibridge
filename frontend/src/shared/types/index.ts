@@ -19,6 +19,7 @@ export interface User {
   role: Role
   carrier_number?: number // yo'lovchi tartib raqami
   is_active: boolean
+  username?: string | null // sayt (brauzer) login
 }
 
 export interface AuthState {

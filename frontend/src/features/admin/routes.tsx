@@ -7,6 +7,7 @@ import Disputes from './pages/Disputes'
 import Payments from './pages/Payments'
 import Products from './pages/Products'
 import ViewAs from './pages/ViewAs'
+import MyCredentials from './pages/MyCredentials'
 
 export default function AdminRoutes() {
   return (
@@ -19,6 +20,7 @@ export default function AdminRoutes() {
       <Route path="/payments" element={<Payments />} />
       <Route path="/products" element={<Products />} />
       <Route path="/view-as" element={<ViewAs />} />
+      <Route path="/my-credentials" element={<MyCredentials />} />
     </Routes>
   )
 }

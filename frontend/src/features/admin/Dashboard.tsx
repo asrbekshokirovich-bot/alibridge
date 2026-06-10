@@ -25,6 +25,7 @@ export default function AdminDashboard() {
     { label: 'Nizolar', desc: 'Shikast holatlari', path: '/admin/disputes', icon: <IconAlert size={24} />, gradient: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)', badge: stats?.open_disputes },
     { label: 'To\'lovlar', desc: 'Hisobot', path: '/admin/payments', icon: <IconMoney size={24} />, gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', badge: stats?.unpaid_payments },
     { label: 'Rol sifatida ko\'rish', desc: 'Istalgan panelni ochish', path: '/admin/view-as', icon: <IconUser size={24} />, gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' },
+    { label: 'Sayt logini', desc: 'Brauzer orqali kirish', path: '/admin/my-credentials', icon: <IconUser size={24} />, gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' },
   ]
 
   return (

@@ -21,6 +21,7 @@ class UserOut(BaseModel):
     role: Role
     carrier_number: int | None = None
     is_active: bool
+    username: str | None = None  # sayt login (o'rnatilgan bo'lsa)
 
 
 class RegisterResponse(BaseModel):

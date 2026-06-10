@@ -8,7 +8,12 @@ from app.bot.notify import on_staff_request
 from app.core.enums import RegType, Role, StaffRequestStatus
 from app.core.errors import AppError
 from app.core.limiter import limiter
-from app.core.security import create_access_token, verify_init_data, verify_password
+from app.core.security import (
+    create_access_token,
+    hash_password,
+    verify_init_data,
+    verify_password,
+)
 from app.db.base import get_db
 from app.db.models import StaffRequest, User
 from app.schemas.auth import RegisterRequest, RegisterResponse, UserOut
@@ -23,6 +28,11 @@ class LoginRequest(BaseModel):
 
 
 class WebLoginRequest(BaseModel):
+    username: str = Field(min_length=3, max_length=64)
+    password: str = Field(min_length=4, max_length=128)
+
+
+class SetMyCredentialsRequest(BaseModel):
     username: str = Field(min_length=3, max_length=64)
     password: str = Field(min_length=4, max_length=128)
 
@@ -121,6 +131,34 @@ async def register(
 
 @router.get("/auth/me", response_model=UserOut)
 async def me(user: User = Depends(get_current_user)) -> UserOut:
+    return UserOut.model_validate(user, from_attributes=True)
+
+
+@router.post("/auth/my-credentials", response_model=UserOut)
+@limiter.limit("10/minute")
+async def set_my_credentials(
+    request: Request,
+    body: SetMyCredentialsRequest,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> UserOut:
+    """Foydalanuvchi o'ziga sayt (brauzer) logini + parolini o'rnatadi.
+
+    Faqat sayt orqali kirishga ruxsat etilgan rollar (xodim/admin) uchun.
+    """
+    if user.role not in WEB_LOGIN_ROLES:
+        raise AppError("FORBIDDEN", "Sayt orqali kirish ruxsat etilmagan", status_code=403)
+
+    clash = await db.scalar(
+        select(User.id).where(User.username == body.username, User.id != user.id)
+    )
+    if clash is not None:
+        raise AppError("USERNAME_TAKEN", "Bu login allaqachon band")
+
+    user.username = body.username
+    user.password_hash = hash_password(body.password)
+    await db.flush()
+    await db.refresh(user)
     return UserOut.model_validate(user, from_attributes=True)
 
 

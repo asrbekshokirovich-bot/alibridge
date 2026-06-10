@@ -35,8 +35,10 @@ export default function Products() {
             return (
               <div key={p.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                 <div className="flex items-start gap-3">
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}>
-                    <IconBox size={20} />
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0 overflow-hidden" style={p.image_url ? undefined : { background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}>
+                    {p.image_url
+                      ? <img src={p.image_url} alt="" className="w-full h-full object-cover" />
+                      : <IconBox size={20} />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-slate-900 truncate">{p.name}</p>

@@ -116,8 +116,17 @@ export default function Products() {
       <Sheet open={!!open} onClose={() => setOpen(null)}>
         {open && (
           <div className="px-5 pt-2 pb-2">
-            <h3 className="font-bold text-slate-900">{open.category || open.name}</h3>
-            <p className="text-xs text-slate-400 mb-4">O'lchamni tanlang</p>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-14 h-14 rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden shrink-0">
+                {open.image_url
+                  ? <img src={open.image_url} alt="" className="w-full h-full object-cover" />
+                  : <span className="text-3xl">{typeEmoji(open.type)}</span>}
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-bold text-slate-900 truncate">{open.category || open.name}</h3>
+                <p className="text-xs text-slate-400">O'lchamni tanlang</p>
+              </div>
+            </div>
             <div className="space-y-2.5">
               {realVariants(open).map((v) => {
                 const item = inCart(v.id)

@@ -77,17 +77,22 @@ async def list_carrier_orders(db: AsyncSession, carrier_id: int) -> list[Order]:
 
 
 async def list_pending_orders_for_warehouse(db: AsyncSession) -> list[Order]:
-    """Ombor ko'radigan buyurtmalar — admin tasdig'isiz, PENDING_ADMIN holatda.
-    FIFO: eng eski buyurtma birinchi."""
+    """Ombor ko'radigan buyurtmalar — tasdiqlash kutilayotgan (PENDING_ADMIN)
+    va allaqachon tasdiqlangan (CONFIRMED) buyurtmalar.
+    Tasdiqlangan buyurtma ro'yxatdan o'chmaydi — "Tasdiqlandi" bo'lib qoladi.
+    Tartib: tasdiqlanmaganlar tepada, keyin sana bo'yicha (eng yangisi avval)."""
     rows = await db.execute(
         select(Order)
-        .where(Order.status == OrderStatus.PENDING_ADMIN)
+        .where(Order.status.in_([OrderStatus.PENDING_ADMIN, OrderStatus.CONFIRMED]))
         .options(
             selectinload(Order.items).selectinload(OrderItem.product).selectinload(Product.variants),
             selectinload(Order.items).selectinload(OrderItem.variant),
             selectinload(Order.carrier),
         )
-        .order_by(Order.created_at.asc())
+        .order_by(
+            (Order.status == OrderStatus.PENDING_ADMIN).desc(),
+            Order.created_at.desc(),
+        )
     )
     return list(rows.scalars().all())
 

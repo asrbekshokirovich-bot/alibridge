@@ -64,7 +64,7 @@ export default function Orders() {
 
   const orderBadge = (o: WarehouseOrder) => {
     const done = o.items.filter((i) => i.confirmed).length
-    if (done === o.items.length) return { tone: 'green' as const, text: 'Tayyor' }
+    if (o.all_confirmed || done === o.items.length) return { tone: 'green' as const, text: 'Tasdiqlandi' }
     if (done > 0) return { tone: 'yellow' as const, text: 'Jarayonda' }
     return { tone: 'gray' as const, text: 'Yangi' }
   }
@@ -82,8 +82,9 @@ export default function Orders() {
           {orders.map((o) => {
             const badge = orderBadge(o)
             const done = o.items.filter((i) => i.confirmed).length
+            const allDone = o.all_confirmed || done === o.items.length
             return (
-              <div key={o.order_id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+              <div key={o.order_id} className={`rounded-2xl border shadow-sm overflow-hidden ${allDone ? 'bg-emerald-50/40 border-emerald-200' : 'bg-white border-slate-100'}`}>
                 {/* Header */}
                 <div className="px-4 py-3 border-b border-slate-50">
                   <div className="flex items-center justify-between mb-0.5">
@@ -139,8 +140,8 @@ export default function Orders() {
                 </div>
 
                 {/* Footer: progress */}
-                <div className="px-4 py-2.5 bg-slate-50/60 text-xs font-medium text-slate-500">
-                  {done}/{o.items.length} tasdiqlandi
+                <div className={`px-4 py-2.5 text-xs font-medium ${allDone ? 'bg-emerald-100/50 text-emerald-700' : 'bg-slate-50/60 text-slate-500'}`}>
+                  {allDone ? '✓ Tasdiqlandi' : `${done}/${o.items.length} tasdiqlandi`}
                 </div>
               </div>
             )

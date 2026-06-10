@@ -15,6 +15,7 @@ from app.core.enums import (
     StaffRequestStatus,
 )
 from app.core.errors import AppError
+from app.core.security import hash_password
 from app.db.base import get_db
 from app.db.models import (
     CustodyEvent,
@@ -32,6 +33,7 @@ from app.schemas.admin import (
     CarrierOut,
     DisputeOut,
     PaymentOut,
+    SetCredentialsRequest,
     StaffMemberOut,
     StaffRequestOut,
     UpdateDisputeRequest,
@@ -316,9 +318,37 @@ async def staff_members(
             phone=u.phone,
             role=u.role,
             is_active=u.is_active,
+            username=u.username,
         )
         for u in rows.scalars().all()
     ]
+
+
+@router.post("/staff/{user_id}/credentials", response_model=OkResponse)
+async def set_staff_credentials(
+    user_id: int,
+    body: SetCredentialsRequest,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*ROLE)),
+) -> OkResponse:
+    """Xodimga sayt (brauzer) orqali kirish uchun login + parol o'rnatadi."""
+    target = await db.get(User, user_id)
+    if target is None:
+        raise AppError("USER_NOT_FOUND", "Foydalanuvchi topilmadi")
+    if target.role not in STAFF_ROLES:
+        raise AppError("NOT_STAFF", "Bu foydalanuvchi xodim emas")
+
+    # username band emasligini tekshiramiz (o'zinikidan boshqa)
+    clash = await db.scalar(
+        select(User.id).where(User.username == body.username, User.id != user_id)
+    )
+    if clash is not None:
+        raise AppError("USERNAME_TAKEN", "Bu login allaqachon band")
+
+    target.username = body.username
+    target.password_hash = hash_password(body.password)
+    await db.flush()
+    return OkResponse(ok=True)
 
 
 @router.post("/staff/{user_id}/role", response_model=OkResponse)

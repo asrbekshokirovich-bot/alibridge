@@ -8,7 +8,7 @@ from app.bot.notify import on_staff_request
 from app.core.enums import RegType, Role, StaffRequestStatus
 from app.core.errors import AppError
 from app.core.limiter import limiter
-from app.core.security import create_access_token, verify_init_data
+from app.core.security import create_access_token, verify_init_data, verify_password
 from app.db.base import get_db
 from app.db.models import StaffRequest, User
 from app.schemas.auth import RegisterRequest, RegisterResponse, UserOut
@@ -22,6 +22,11 @@ class LoginRequest(BaseModel):
     tg_init_data: str = Field(max_length=4096)
 
 
+class WebLoginRequest(BaseModel):
+    username: str = Field(min_length=3, max_length=64)
+    password: str = Field(min_length=4, max_length=128)
+
+
 class SelectRoleRequest(BaseModel):
     role: Role
 
@@ -30,6 +35,15 @@ class SelectRoleRequest(BaseModel):
 SELF_ROLES = {Role.ORDERER, Role.CARRIER}
 # Rol almashtirishga ruxsat etilgan holatlar (xodim/admin himoyalangan)
 SWITCHABLE_ROLES = {Role.NEW, Role.ORDERER, Role.CARRIER, Role.PENDING}
+# Sayt (brauzer) orqali kirishga ruxsat etilgan rollar — xodim/admin
+WEB_LOGIN_ROLES = {
+    Role.ADMIN,
+    Role.WAREHOUSE_UZ,
+    Role.WAREHOUSE_TR,
+    Role.COURIER_UZ,
+    Role.COURIER_TR,
+    Role.CHINA_WORKER,
+}
 
 
 @router.post("/auth/login", response_model=RegisterResponse)
@@ -50,6 +64,30 @@ async def login(
         raise AppError("USER_NOT_FOUND", "Ro'yxatdan o'tilmagan", status_code=404)
     if not user.is_active:
         raise AppError("FORBIDDEN", "Hisob faol emas", status_code=403)
+
+    token = create_access_token(user.id, str(user.role))
+    return RegisterResponse(token=token, user=UserOut.model_validate(user, from_attributes=True))
+
+
+@router.post("/auth/web-login", response_model=RegisterResponse)
+@limiter.limit("10/minute")
+async def web_login(
+    request: Request,
+    body: WebLoginRequest,
+    db: AsyncSession = Depends(get_db),
+) -> RegisterResponse:
+    """Sayt (brauzer) orqali username + parol bilan kirish.
+
+    Faqat xodim/admin rollari kira oladi (yo'lovchi/buyurtmachi botda qoladi).
+    """
+    user = await db.scalar(select(User).where(User.username == body.username))
+    # Foydalanuvchi yo'q yoki parol noto'g'ri — bir xil javob (foydalanuvchi borligini oshkor qilmaymiz)
+    if user is None or not verify_password(body.password, user.password_hash):
+        raise AppError("INVALID_CREDENTIALS", "Login yoki parol noto'g'ri", status_code=401)
+    if not user.is_active:
+        raise AppError("FORBIDDEN", "Hisob faol emas", status_code=403)
+    if user.role not in WEB_LOGIN_ROLES:
+        raise AppError("FORBIDDEN", "Sayt orqali kirish ruxsat etilmagan", status_code=403)
 
     token = create_access_token(user.id, str(user.role))
     return RegisterResponse(token=token, user=UserOut.model_validate(user, from_attributes=True))

@@ -5,10 +5,26 @@ import time
 from datetime import UTC, datetime, timedelta
 from urllib.parse import parse_qsl
 
+import bcrypt
 from jose import JWTError, jwt
 
 from app.core.config import settings
 from app.core.errors import AppError
+
+# ─── Parol (sayt login uchun) ───────────────────────────────────────────────────
+
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+
+def verify_password(password: str, password_hash: str | None) -> bool:
+    if not password_hash:
+        return False
+    try:
+        return bcrypt.checkpw(password.encode(), password_hash.encode())
+    except ValueError:
+        return False
 
 # ─── JWT ──────────────────────────────────────────────────────────────────────
 

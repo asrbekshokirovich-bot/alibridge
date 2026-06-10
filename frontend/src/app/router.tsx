@@ -5,8 +5,12 @@ import { useTelegramBackButton } from '@/shared/hooks/useTelegramBackButton'
 
 // Pages
 import Welcome from './pages/Welcome'
+import WebLogin from './pages/WebLogin'
 import StaffPending from './pages/StaffPending'
 import ComingSoon from './pages/ComingSoon'
+
+// Telegram Mini App ichidamizmi? (initData bo'lsa — Telegram, aks holda brauzer/sayt)
+const isTelegram = !!window.Telegram?.WebApp?.initData
 
 // Features
 import CarrierRoutes from '@/features/carrier/routes'
@@ -39,6 +43,10 @@ function RootRedirect() {
   if (token && user && ROLE_HOME[user.role]) {
     return <Navigate to={ROLE_HOME[user.role]} replace />
   }
+  // Brauzerda (Telegram emas) tokensiz — xodim login sahifasi
+  if (!isTelegram) {
+    return <Navigate to="/web-login" replace />
+  }
   // Yangi foydalanuvchi ('new') yoki Telegram tashqarisi — rol tanlash ekrani
   return <Navigate to="/welcome" replace />
 }
@@ -52,6 +60,7 @@ function AppRoutes() {
       {/* Onboarding — ro'yxatdan o'tish botda, bu yerda faqat rol tanlanadi */}
       <Route path="/" element={<RootRedirect />} />
       <Route path="/welcome" element={<Welcome />} />
+      <Route path="/web-login" element={<WebLogin />} />
       <Route path="/staff/pending" element={<StaffPending />} />
 
       {/* Carrier */}

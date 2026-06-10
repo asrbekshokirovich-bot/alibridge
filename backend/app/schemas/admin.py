@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.core.enums import DisputeStatus, PaymentStatus, Role
 
@@ -41,6 +41,12 @@ class StaffMemberOut(BaseModel):
     phone: str
     role: Role
     is_active: bool
+    username: str | None = None  # sayt login (o'rnatilgan bo'lsa)
+
+
+class SetCredentialsRequest(BaseModel):
+    username: str = Field(min_length=3, max_length=64)
+    password: str = Field(min_length=4, max_length=128)
 
 
 class DisputeOut(BaseModel):

@@ -46,6 +46,9 @@ class User(Base):
     passport: Mapped[str | None] = mapped_column(String(256), nullable=True)
     role: Mapped[Role] = mapped_column(String(32), default=Role.NEW, index=True)
     carrier_number: Mapped[int | None] = mapped_column(Integer, unique=True, nullable=True)
+    # Sayt (brauzer) orqali kirish — Telegram'siz. Telegram foydalanuvchilarda bo'sh.
+    username: Mapped[str | None] = mapped_column(String(64), unique=True, index=True, nullable=True)
+    password_hash: Mapped[str | None] = mapped_column(String(256), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 

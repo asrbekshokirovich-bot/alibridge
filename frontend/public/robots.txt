@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://alibridge-frontend.onrender.com/sitemap.xml

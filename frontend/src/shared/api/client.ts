@@ -16,13 +16,25 @@ client.interceptors.request.use((config) => {
   return config
 })
 
-// Xato normalizatsiya — 401 bo'lsa eskirgan sessiyani tozalaymiz
+// Xato normalizatsiya + network uzilishida qayta urinish.
+// Render starter plan deploy/cold start paytida ulanish uzilishi mumkin —
+// javobsiz (network) xatoda 2 marta qayta urinamiz (1s, 2s kutib).
 client.interceptors.response.use(
   (res) => res,
-  (err) => {
+  async (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
+      return Promise.reject(err)
+    }
+    // Faqat javobsiz (network/timeout) xatoda qayta urinamiz
+    const cfg = err.config as (typeof err.config & { _retryCount?: number }) | undefined
+    if (cfg && !err.response) {
+      cfg._retryCount = (cfg._retryCount ?? 0) + 1
+      if (cfg._retryCount <= 2) {
+        await new Promise((r) => setTimeout(r, (cfg._retryCount as number) * 1000))
+        return client(cfg)
+      }
     }
     return Promise.reject(err)
   }
@@ -31,7 +43,12 @@ client.interceptors.response.use(
 export function extractErrorMessage(err: unknown): string {
   if (axios.isAxiosError(err)) {
     const data = err.response?.data as ApiError | undefined
-    return data?.error?.message ?? err.message
+    if (data?.error?.message) return data.error.message
+    // Server javob bermadi — ulanish/timeout (Render cold start yoki deploy paytida)
+    if (!err.response) {
+      return 'Serverga ulanib bo\'lmadi — internetni tekshiring yoki bir oz kutib qayta urinib ko\'ring.'
+    }
+    return err.message
   }
   return 'Xatolik yuz berdi'
 }

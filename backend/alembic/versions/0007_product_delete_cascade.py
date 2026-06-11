@@ -27,21 +27,11 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     # 1) Trigger: DELETE'ga ruxsat, UPDATE taqiqlanadi.
-    #    Eski triggerni o'chirib, faqat UPDATE'da ishlaydigan qilib qayta yaratamiz.
+    #    MUHIM: funksiyani O'ZGARTIRMAYMIZ (CREATE FUNCTION pooler'da muammoli).
+    #    Trigger endi faqat BEFORE UPDATE'da ishlaydi — DELETE paytida funksiya
+    #    umuman chaqirilmaydi, shuning uchun uning eski tanasi (DELETE bloklash)
+    #    ahamiyatsiz. Eski triggerni o'chirib, UPDATE-only qilib qayta yaratamiz.
     op.execute("DROP TRIGGER IF EXISTS enforce_custody_append_only ON custody_events")
-    op.execute(
-        """
-        CREATE OR REPLACE FUNCTION prevent_custody_update_delete()
-        RETURNS TRIGGER AS $func$
-        BEGIN
-            IF TG_OP = 'UPDATE' THEN
-                RAISE EXCEPTION 'custody_events table is append-only: UPDATE is not allowed';
-            END IF;
-            RETURN NULL;
-        END;
-        $func$ LANGUAGE plpgsql;
-        """
-    )
     op.execute(
         "CREATE TRIGGER enforce_custody_append_only "
         "BEFORE UPDATE ON custody_events "
@@ -82,23 +72,10 @@ def downgrade() -> None:
         "FOREIGN KEY (product_id) REFERENCES products(id)"
     )
 
-    # Triggerni DELETE'ni ham taqiqlaydigan eski holatga qaytaramiz
+    # Triggerni DELETE'ni ham taqiqlaydigan eski holatga qaytaramiz.
+    # Funksiya tanasi 0001 dan beri DELETE'ni ham bloklaydi — uni o'zgartirish
+    # shart emas, faqat triggerni BEFORE UPDATE OR DELETE qilib qayta yaratamiz.
     op.execute("DROP TRIGGER IF EXISTS enforce_custody_append_only ON custody_events")
-    op.execute(
-        """
-        CREATE OR REPLACE FUNCTION prevent_custody_update_delete()
-        RETURNS TRIGGER AS $func$
-        BEGIN
-            IF TG_OP = 'UPDATE' THEN
-                RAISE EXCEPTION 'custody_events table is append-only: UPDATE is not allowed';
-            ELSIF TG_OP = 'DELETE' THEN
-                RAISE EXCEPTION 'custody_events table is append-only: DELETE is not allowed';
-            END IF;
-            RETURN NULL;
-        END;
-        $func$ LANGUAGE plpgsql;
-        """
-    )
     op.execute(
         "CREATE TRIGGER enforce_custody_append_only "
         "BEFORE UPDATE OR DELETE ON custody_events "

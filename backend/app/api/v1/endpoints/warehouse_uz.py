@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, File, UploadFile
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -247,16 +247,24 @@ async def delete_product(
             "Bu mahsulot buyurtmaga kiritilgan, o'chirib bo'lmaydi",
         )
 
-    # custody_events append-only — bog'liq yozuv bo'lsa o'chirib bo'lmaydi
-    has_custody = await db.scalar(
-        select(CustodyEvent.id).where(CustodyEvent.product_id == product_id).limit(1)
+    # custody_events append-only — birlamchi RECEIVED yozuvi har doim bo'ladi.
+    # Faqat keyingi harakat (boshqa joyga jo'natilgan) bo'lsa o'chirib bo'lmaydi.
+    has_movement = await db.scalar(
+        select(CustodyEvent.id)
+        .where(
+            CustodyEvent.product_id == product_id,
+            CustodyEvent.event_type != CustodyEventType.RECEIVED,
+        )
+        .limit(1)
     )
-    if has_custody is not None:
+    if has_movement is not None:
         raise AppError(
             "PRODUCT_HAS_HISTORY",
             "Bu mahsulotda harakat tarixi bor, o'chirib bo'lmaydi",
         )
 
+    # Birlamchi RECEIVED yozuvini tozalaymiz (FK CASCADE yo'q)
+    await db.execute(delete(CustodyEvent).where(CustodyEvent.product_id == product_id))
     await db.delete(product)  # variantlar CASCADE bilan o'chadi
     await db.flush()
     return OkResponse(ok=True)

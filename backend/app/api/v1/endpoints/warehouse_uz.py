@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, File, UploadFile
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -263,9 +263,9 @@ async def delete_product(
             "Bu mahsulotda harakat tarixi bor, o'chirib bo'lmaydi",
         )
 
-    # Birlamchi RECEIVED yozuvini tozalaymiz (FK CASCADE yo'q)
-    await db.execute(delete(CustodyEvent).where(CustodyEvent.product_id == product_id))
-    await db.delete(product)  # variantlar CASCADE bilan o'chadi
+    # Mahsulotni butunlay o'chiramiz. Bog'liq yozuvlar (variantlar, custody_events,
+    # disputes) ON DELETE CASCADE bilan avtomatik o'chadi (0007 migration).
+    await db.delete(product)
     await db.flush()
     return OkResponse(ok=True)
 

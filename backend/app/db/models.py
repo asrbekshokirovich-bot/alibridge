@@ -166,7 +166,9 @@ class Dispute(Base):
     __tablename__ = "disputes"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    product_id: Mapped[int | None] = mapped_column(ForeignKey("products.id"), nullable=True)
+    product_id: Mapped[int | None] = mapped_column(
+        ForeignKey("products.id", ondelete="CASCADE"), nullable=True
+    )
     carrier_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     reported_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     barcode: Mapped[str] = mapped_column(String(32), default="")
@@ -216,12 +218,15 @@ class StaffRequest(Base):
 
 
 class CustodyEvent(Base):
-    """APPEND ONLY — faqat INSERT. UPDATE/DELETE trigger orqali taqiqlanadi."""
+    """APPEND ONLY — faqat INSERT. UPDATE trigger orqali taqiqlanadi.
+    DELETE faqat mahsulot o'chirilganda CASCADE bilan sodir bo'ladi."""
 
     __tablename__ = "custody_events"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), index=True)
+    product_id: Mapped[int] = mapped_column(
+        ForeignKey("products.id", ondelete="CASCADE"), index=True
+    )
     from_holder_type: Mapped[HolderType | None] = mapped_column(String(32), nullable=True)
     from_holder_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     to_holder_type: Mapped[HolderType | None] = mapped_column(String(32), nullable=True)

@@ -17,8 +17,9 @@ client.interceptors.request.use((config) => {
 })
 
 // Xato normalizatsiya + network uzilishida qayta urinish.
-// Render starter plan deploy/cold start paytida ulanish uzilishi mumkin —
-// javobsiz (network) xatoda 2 marta qayta urinamiz (1s, 2s kutib).
+// Render starter plan deploy/cold start paytida ulanish uzilishi mumkin.
+// FAQAT GET (idempotent) so'rovlarni qayta urinamiz — POST/DELETE qayta
+// yuborilsa ikki marta bajarilishi mumkin (masalan, bir yuk ikki marta o'chadi).
 client.interceptors.response.use(
   (res) => res,
   async (err) => {
@@ -27,9 +28,10 @@ client.interceptors.response.use(
       localStorage.removeItem('user')
       return Promise.reject(err)
     }
-    // Faqat javobsiz (network/timeout) xatoda qayta urinamiz
     const cfg = err.config as (typeof err.config & { _retryCount?: number }) | undefined
-    if (cfg && !err.response) {
+    const isGet = (cfg?.method ?? 'get').toLowerCase() === 'get'
+    // Javobsiz (network/timeout) xato + GET + bekor qilinmagan bo'lsa qayta urinamiz
+    if (cfg && isGet && !err.response && !axios.isCancel(err)) {
       cfg._retryCount = (cfg._retryCount ?? 0) + 1
       if (cfg._retryCount <= 2) {
         await new Promise((r) => setTimeout(r, (cfg._retryCount as number) * 1000))

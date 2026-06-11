@@ -145,8 +145,9 @@ class OrderItem(Base):
     order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"), index=True)
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), index=True)
     # qaysi o'lcham tanlandi (eski buyurtmalarda null)
+    # SET NULL — mahsulot/variant o'chsa buyurtma tarixi saqlanadi, havola bo'shaydi
     variant_id: Mapped[int | None] = mapped_column(
-        ForeignKey("product_variants.id"), index=True, nullable=True
+        ForeignKey("product_variants.id", ondelete="SET NULL"), index=True, nullable=True
     )
     # donali: dona soni; kiloli: kg
     amount: Mapped[Decimal] = mapped_column(Numeric(18, 4), default=Decimal("0"))

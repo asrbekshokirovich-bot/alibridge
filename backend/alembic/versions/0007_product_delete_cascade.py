@@ -21,24 +21,28 @@ depends_on: str | Sequence[str] | None = None
 
 
 def _drop_product_fk(table: str) -> None:
-    """{table}.product_id ustunidagi FK'ni nomidan qat'i nazar topib o'chiradi."""
+    """{table}.product_id ustunidagi BARCHA FK'larni nomidan qat'i nazar o'chiradi.
+
+    Bir nechta bo'lsa (oldingi qisman migratsiya qoldig'i) hammasini drop qiladi —
+    shunda keyingi create_foreign_key 'already exists' xato bermaydi.
+    """
     op.execute(
         f"""
         DO $$
-        DECLARE fk_name text;
+        DECLARE r record;
         BEGIN
-            SELECT con.conname INTO fk_name
-            FROM pg_constraint con
-            JOIN pg_class rel ON rel.oid = con.conrelid
-            JOIN pg_attribute att ON att.attrelid = con.conrelid
-                AND att.attnum = ANY(con.conkey)
-            WHERE rel.relname = '{table}'
-              AND con.contype = 'f'
-              AND att.attname = 'product_id'
-            LIMIT 1;
-            IF fk_name IS NOT NULL THEN
-                EXECUTE format('ALTER TABLE {table} DROP CONSTRAINT %I', fk_name);
-            END IF;
+            FOR r IN
+                SELECT con.conname
+                FROM pg_constraint con
+                JOIN pg_class rel ON rel.oid = con.conrelid
+                JOIN pg_attribute att ON att.attrelid = con.conrelid
+                    AND att.attnum = ANY(con.conkey)
+                WHERE rel.relname = '{table}'
+                  AND con.contype = 'f'
+                  AND att.attname = 'product_id'
+            LOOP
+                EXECUTE format('ALTER TABLE {table} DROP CONSTRAINT %I', r.conname);
+            END LOOP;
         END $$;
         """
     )

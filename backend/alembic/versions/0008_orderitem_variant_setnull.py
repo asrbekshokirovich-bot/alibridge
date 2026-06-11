@@ -19,24 +19,24 @@ depends_on: str | Sequence[str] | None = None
 
 
 def _drop_variant_fk() -> None:
-    """order_items.variant_id ustunidagi FK'ni nomidan qat'i nazar topib o'chiradi."""
+    """order_items.variant_id ustunidagi BARCHA FK'larni nomidan qat'i nazar o'chiradi."""
     op.execute(
         """
         DO $$
-        DECLARE fk_name text;
+        DECLARE r record;
         BEGIN
-            SELECT con.conname INTO fk_name
-            FROM pg_constraint con
-            JOIN pg_class rel ON rel.oid = con.conrelid
-            JOIN pg_attribute att ON att.attrelid = con.conrelid
-                AND att.attnum = ANY(con.conkey)
-            WHERE rel.relname = 'order_items'
-              AND con.contype = 'f'
-              AND att.attname = 'variant_id'
-            LIMIT 1;
-            IF fk_name IS NOT NULL THEN
-                EXECUTE format('ALTER TABLE order_items DROP CONSTRAINT %I', fk_name);
-            END IF;
+            FOR r IN
+                SELECT con.conname
+                FROM pg_constraint con
+                JOIN pg_class rel ON rel.oid = con.conrelid
+                JOIN pg_attribute att ON att.attrelid = con.conrelid
+                    AND att.attnum = ANY(con.conkey)
+                WHERE rel.relname = 'order_items'
+                  AND con.contype = 'f'
+                  AND att.attname = 'variant_id'
+            LOOP
+                EXECUTE format('ALTER TABLE order_items DROP CONSTRAINT %I', r.conname);
+            END LOOP;
         END $$;
         """
     )

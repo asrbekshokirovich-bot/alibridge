@@ -19,103 +19,75 @@ down_revision: str | None = "0006_web_login"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-
-def _drop_product_fk(table: str) -> None:
-    """{table}.product_id ustunidagi BARCHA FK'larni nomidan qat'i nazar o'chiradi.
-
-    Bir nechta bo'lsa (oldingi qisman migratsiya qoldig'i) hammasini drop qiladi —
-    shunda keyingi create_foreign_key 'already exists' xato bermaydi.
-    """
-    op.execute(
-        f"""
-        DO $$
-        DECLARE r record;
-        BEGIN
-            FOR r IN
-                SELECT con.conname
-                FROM pg_constraint con
-                JOIN pg_class rel ON rel.oid = con.conrelid
-                JOIN pg_attribute att ON att.attrelid = con.conrelid
-                    AND att.attnum = ANY(con.conkey)
-                WHERE rel.relname = '{table}'
-                  AND con.contype = 'f'
-                  AND att.attname = 'product_id'
-            LOOP
-                EXECUTE format('ALTER TABLE {table} DROP CONSTRAINT %I', r.conname);
-            END LOOP;
-        END $$;
-        """
-    )
+# Eslatma: Supabase transaction pooler (port 6543) anonim `DO $$` PL/pgSQL
+# bloklarini ishonchli uzatmaydi — shu sababli bu yerda DO bloklar ISHLATILMAYDI.
+# FK nomlari 0001/0005 dan aniq ma'lum, shuning uchun to'g'ridan-to'g'ri
+# DROP CONSTRAINT IF EXISTS + ADD CONSTRAINT ishlatamiz (sof DDL, pooler-mos).
 
 
 def upgrade() -> None:
-    # 1) Trigger funksiyasi: UPDATE taqiqlanadi, DELETE ruxsat (CASCADE uchun)
+    # 1) Trigger: DELETE'ga ruxsat, UPDATE taqiqlanadi.
+    #    Eski triggerni o'chirib, faqat UPDATE'da ishlaydigan qilib qayta yaratamiz.
+    op.execute("DROP TRIGGER IF EXISTS enforce_custody_append_only ON custody_events")
     op.execute(
         """
         CREATE OR REPLACE FUNCTION prevent_custody_update_delete()
-        RETURNS TRIGGER AS $$
+        RETURNS TRIGGER AS $func$
         BEGIN
             IF TG_OP = 'UPDATE' THEN
                 RAISE EXCEPTION 'custody_events table is append-only: UPDATE is not allowed';
             END IF;
             RETURN NULL;
         END;
-        $$ LANGUAGE plpgsql;
+        $func$ LANGUAGE plpgsql;
         """
     )
-    # Triggerni faqat UPDATE'da ishlaydigan qilib qayta yaratamiz
-    op.execute("DROP TRIGGER IF EXISTS enforce_custody_append_only ON custody_events")
     op.execute(
-        """
-        CREATE TRIGGER enforce_custody_append_only
-            BEFORE UPDATE ON custody_events
-            FOR EACH ROW EXECUTE FUNCTION prevent_custody_update_delete();
-        """
+        "CREATE TRIGGER enforce_custody_append_only "
+        "BEFORE UPDATE ON custody_events "
+        "FOR EACH ROW EXECUTE FUNCTION prevent_custody_update_delete()"
     )
 
-    # 2) custody_events.product_id FK -> ON DELETE CASCADE
-    _drop_product_fk("custody_events")
-    op.create_foreign_key(
-        "custody_events_product_id_fkey",
-        "custody_events",
-        "products",
-        ["product_id"],
-        ["id"],
-        ondelete="CASCADE",
+    # 2) custody_events.product_id FK -> ON DELETE CASCADE (nom 0001 dan ma'lum)
+    op.execute(
+        "ALTER TABLE custody_events DROP CONSTRAINT IF EXISTS custody_events_product_id_fkey"
+    )
+    op.execute(
+        "ALTER TABLE custody_events ADD CONSTRAINT custody_events_product_id_fkey "
+        "FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE"
     )
 
-    # 3) disputes.product_id FK -> ON DELETE CASCADE
-    _drop_product_fk("disputes")
-    op.create_foreign_key(
-        "disputes_product_id_fkey",
-        "disputes",
-        "products",
-        ["product_id"],
-        ["id"],
-        ondelete="CASCADE",
+    # 3) disputes.product_id FK -> ON DELETE CASCADE (nom 0001 dan ma'lum)
+    op.execute(
+        "ALTER TABLE disputes DROP CONSTRAINT IF EXISTS disputes_product_id_fkey"
+    )
+    op.execute(
+        "ALTER TABLE disputes ADD CONSTRAINT disputes_product_id_fkey "
+        "FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE"
     )
 
 
 def downgrade() -> None:
     # FK'larni CASCADE'siz holatga qaytaramiz
-    _drop_product_fk("disputes")
-    op.create_foreign_key(
-        "disputes_product_id_fkey", "disputes", "products", ["product_id"], ["id"]
+    op.execute("ALTER TABLE disputes DROP CONSTRAINT IF EXISTS disputes_product_id_fkey")
+    op.execute(
+        "ALTER TABLE disputes ADD CONSTRAINT disputes_product_id_fkey "
+        "FOREIGN KEY (product_id) REFERENCES products(id)"
     )
-    _drop_product_fk("custody_events")
-    op.create_foreign_key(
-        "custody_events_product_id_fkey",
-        "custody_events",
-        "products",
-        ["product_id"],
-        ["id"],
+    op.execute(
+        "ALTER TABLE custody_events DROP CONSTRAINT IF EXISTS custody_events_product_id_fkey"
+    )
+    op.execute(
+        "ALTER TABLE custody_events ADD CONSTRAINT custody_events_product_id_fkey "
+        "FOREIGN KEY (product_id) REFERENCES products(id)"
     )
 
     # Triggerni DELETE'ni ham taqiqlaydigan eski holatga qaytaramiz
+    op.execute("DROP TRIGGER IF EXISTS enforce_custody_append_only ON custody_events")
     op.execute(
         """
         CREATE OR REPLACE FUNCTION prevent_custody_update_delete()
-        RETURNS TRIGGER AS $$
+        RETURNS TRIGGER AS $func$
         BEGIN
             IF TG_OP = 'UPDATE' THEN
                 RAISE EXCEPTION 'custody_events table is append-only: UPDATE is not allowed';
@@ -124,14 +96,11 @@ def downgrade() -> None:
             END IF;
             RETURN NULL;
         END;
-        $$ LANGUAGE plpgsql;
+        $func$ LANGUAGE plpgsql;
         """
     )
-    op.execute("DROP TRIGGER IF EXISTS enforce_custody_append_only ON custody_events")
     op.execute(
-        """
-        CREATE TRIGGER enforce_custody_append_only
-            BEFORE UPDATE OR DELETE ON custody_events
-            FOR EACH ROW EXECUTE FUNCTION prevent_custody_update_delete();
-        """
+        "CREATE TRIGGER enforce_custody_append_only "
+        "BEFORE UPDATE OR DELETE ON custody_events "
+        "FOR EACH ROW EXECUTE FUNCTION prevent_custody_update_delete()"
     )

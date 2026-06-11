@@ -7,6 +7,9 @@ Create Date: 2026-06-11
 Mahsulot o'chirilganda variantlari CASCADE bilan o'chadi (0005/0007).
 Lekin order_items.variant_id o'sha variantga ishora qilsa, FK bloklaydi.
 SET NULL bilan: buyurtma tarixi saqlanadi, faqat variant havolasi bo'shaydi.
+
+Eslatma: Supabase transaction pooler DO-bloklarni qo'llamaydi —
+FK nomi (fk_order_items_variant_id, 0005 dan) ma'lum, sof DDL ishlatamiz.
 """
 from collections.abc import Sequence
 
@@ -18,48 +21,21 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
-def _drop_variant_fk() -> None:
-    """order_items.variant_id ustunidagi BARCHA FK'larni nomidan qat'i nazar o'chiradi."""
-    op.execute(
-        """
-        DO $$
-        DECLARE r record;
-        BEGIN
-            FOR r IN
-                SELECT con.conname
-                FROM pg_constraint con
-                JOIN pg_class rel ON rel.oid = con.conrelid
-                JOIN pg_attribute att ON att.attrelid = con.conrelid
-                    AND att.attnum = ANY(con.conkey)
-                WHERE rel.relname = 'order_items'
-                  AND con.contype = 'f'
-                  AND att.attname = 'variant_id'
-            LOOP
-                EXECUTE format('ALTER TABLE order_items DROP CONSTRAINT %I', r.conname);
-            END LOOP;
-        END $$;
-        """
-    )
-
-
 def upgrade() -> None:
-    _drop_variant_fk()
-    op.create_foreign_key(
-        "fk_order_items_variant_id",
-        "order_items",
-        "product_variants",
-        ["variant_id"],
-        ["id"],
-        ondelete="SET NULL",
+    op.execute(
+        "ALTER TABLE order_items DROP CONSTRAINT IF EXISTS fk_order_items_variant_id"
+    )
+    op.execute(
+        "ALTER TABLE order_items ADD CONSTRAINT fk_order_items_variant_id "
+        "FOREIGN KEY (variant_id) REFERENCES product_variants(id) ON DELETE SET NULL"
     )
 
 
 def downgrade() -> None:
-    _drop_variant_fk()
-    op.create_foreign_key(
-        "fk_order_items_variant_id",
-        "order_items",
-        "product_variants",
-        ["variant_id"],
-        ["id"],
+    op.execute(
+        "ALTER TABLE order_items DROP CONSTRAINT IF EXISTS fk_order_items_variant_id"
+    )
+    op.execute(
+        "ALTER TABLE order_items ADD CONSTRAINT fk_order_items_variant_id "
+        "FOREIGN KEY (variant_id) REFERENCES product_variants(id)"
     )

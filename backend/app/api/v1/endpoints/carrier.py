@@ -5,15 +5,30 @@ from sqlalchemy.orm import selectinload
 
 from app.api.deps import require_role
 from app.bot.notify import on_new_order
-from app.core.enums import HolderType, OrderStatus, ProductStatus, Role
+from app.core.enums import (
+    CustodyEventType,
+    HolderType,
+    OrderStatus,
+    ProductStatus,
+    Role,
+)
 from app.core.errors import AppError
 from app.core.limiter import limiter
 from app.core.security import create_access_token
 from app.db.base import get_db
-from app.db.models import CustodyHolding, Order, OrderItem, Product, User
+from app.db.models import (
+    CustodyEvent,
+    CustodyHolding,
+    Order,
+    OrderItem,
+    Product,
+    ProductVariant,
+    User,
+)
 from app.schemas.auth import UserOut
 from app.schemas.common import OkResponse, OrderCreatedResponse
 from app.schemas.order import (
+    CarrierMyProduct,
     CarrierOrderOut,
     CourierBrief,
     CreateOrderRequest,
@@ -103,6 +118,57 @@ async def my_orders(
             )
         )
     return result
+
+
+@router.get("/carrier/my-products", response_model=list[CarrierMyProduct])
+async def my_products(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(Role.CARRIER)),
+) -> list[CarrierMyProduct]:
+    """Yo'lovchi hozir o'zida olib yurgan yuklar — kuryer aeroportда topshirganlari.
+    custody_holdings dan (CARRIER, holder_id=shu yo'lovchi, quantity>0), har o'lcham alohida."""
+    rows = await db.execute(
+        select(CustodyHolding, Product, ProductVariant)
+        .join(Product, Product.id == CustodyHolding.product_id)
+        .join(ProductVariant, ProductVariant.id == CustodyHolding.variant_id)
+        .where(
+            CustodyHolding.holder_type == HolderType.CARRIER,
+            CustodyHolding.holder_id == user.id,
+            CustodyHolding.quantity > 0,
+        )
+    )
+    holdings = rows.all()
+    if not holdings:
+        return []
+
+    product_ids = list({p.id for _, p, _ in holdings})
+
+    # Qachon qabul qilingani (AIRPORT_HANDOVER eventi sanasi)
+    ev_rows = await db.execute(
+        select(CustodyEvent.product_id, CustodyEvent.created_at)
+        .where(
+            CustodyEvent.product_id.in_(product_ids),
+            CustodyEvent.event_type == CustodyEventType.AIRPORT_HANDOVER,
+        )
+        .order_by(CustodyEvent.id.desc())
+    )
+    received_at: dict[int, str] = {}
+    for pid, created in ev_rows.all():
+        received_at.setdefault(pid, created.date().isoformat())
+
+    return [
+        CarrierMyProduct(
+            product_id=p.id,
+            barcode=p.barcode,
+            product_name=p.name,
+            category=p.category,
+            image_url=p.image_url,
+            size_label=v.size_label,
+            quantity=h.quantity,
+            received_at=received_at.get(p.id, ""),
+        )
+        for h, p, v in holdings
+    ]
 
 
 @router.get("/couriers/uz/active", response_model=list[CourierBrief])

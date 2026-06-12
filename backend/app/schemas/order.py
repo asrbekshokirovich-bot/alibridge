@@ -46,6 +46,20 @@ class CarrierOrderOut(BaseModel):
     created_at: str
 
 
+class CarrierMyProduct(BaseModel):
+    """Yo'lovchi hozir o'zida olib yurgan yuk (custody CARRIER'da).
+    Kuryer aeroportда topshirgandan keyin shu ro'yxatda chiqadi."""
+
+    product_id: int
+    barcode: str
+    product_name: str
+    category: str = ""
+    image_url: str | None = None
+    size_label: str = ""
+    quantity: int = 0  # yo'lovchida shu variantdan nechta
+    received_at: str = ""  # AIRPORT_HANDOVER eventi sanasi
+
+
 class CourierBrief(BaseModel):
     id: int
     first_name: str

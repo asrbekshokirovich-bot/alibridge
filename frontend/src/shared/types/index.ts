@@ -135,6 +135,18 @@ export interface CarrierOrder {
   created_at: string
 }
 
+// Yo'lovchi hozir o'zida olib yurgan yuk (kuryer aeroportда topshirgan)
+export interface CarrierMyProduct {
+  product_id: number
+  barcode: string
+  product_name: string
+  category: string
+  image_url?: string | null
+  size_label: string
+  quantity: number
+  received_at: string
+}
+
 // === Ombor: yo'lovchi buyurtmasi item detali ===
 export interface OrderItemDetail {
   item_id: number           // order_item id (confirm uchun)

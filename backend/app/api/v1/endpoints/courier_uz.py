@@ -272,6 +272,7 @@ async def my_products(
         result.append(
             CourierUzMyProduct(
                 product_id=p.id,
+                variant_id=v.id,
                 barcode=p.barcode,
                 product_name=p.name,
                 category=p.category,

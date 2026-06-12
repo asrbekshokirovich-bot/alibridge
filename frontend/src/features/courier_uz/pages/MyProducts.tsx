@@ -4,6 +4,7 @@ import { Header, ListSkeleton, EmptyState, IconBox } from '@/shared/ui'
 
 interface MyProduct {
   product_id: number
+  variant_id: number
   barcode: string
   product_name: string
   category: string

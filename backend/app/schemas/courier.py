@@ -28,6 +28,7 @@ class CourierUzMyProduct(BaseModel):
     """Kuryer hozir o'zida olib yurgan yuk (WITH_COURIER_UZ, custody kuryerda)."""
 
     product_id: int
+    variant_id: int  # qaysi o'lcham — topshirishda kerak (split custody)
     barcode: str
     product_name: str
     category: str = ""

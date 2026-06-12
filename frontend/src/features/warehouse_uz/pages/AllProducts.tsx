@@ -3,8 +3,14 @@ import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
 import { money } from '@/shared/lib/format'
 import { isPiece, unitWord } from '@/shared/lib/product'
-import { Header, ListSkeleton, EmptyState, StatusBadge, IconBox } from '@/shared/ui'
+import { Header, ListSkeleton, EmptyState, StatusBadge, Sheet, IconBox } from '@/shared/ui'
 import type { Product } from '@/shared/types'
+
+interface StageQuantity { holder_type: string; label: string; quantity: number }
+interface Distribution {
+  product_id: number; barcode: string; product_name: string
+  total: number; stages: StageQuantity[]
+}
 
 const STATUS_LABEL: Record<string, { label: string; tone: 'green' | 'yellow' | 'red' | 'gray' | 'blue' }> = {
   in_warehouse_uz: { label: 'Toshkent omborida', tone: 'blue' },
@@ -27,10 +33,18 @@ const FILTERS: { key: string; label: string; match: (s: string) => boolean }[] =
 
 export default function AllProducts() {
   const [filter, setFilter] = useState('all')
+  const [openId, setOpenId] = useState<number | null>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ['warehouse-uz-all-products'],
     queryFn: () => client.get<Product[]>('/warehouse-uz/all-products').then((r) => r.data),
+  })
+
+  // Tanlangan mahsulotning bosqichlar bo'ylab taqsimoti
+  const { data: dist, isLoading: distLoading } = useQuery({
+    queryKey: ['warehouse-uz-distribution', openId],
+    queryFn: () => client.get<Distribution>(`/warehouse-uz/products/${openId}/distribution`).then((r) => r.data),
+    enabled: openId !== null,
   })
 
   const active = FILTERS.find((f) => f.key === filter) ?? FILTERS[0]
@@ -72,7 +86,8 @@ export default function AllProducts() {
           {filtered.map((p) => {
             const st = STATUS_LABEL[p.status] ?? { label: p.status, tone: 'gray' as const }
             return (
-              <div key={p.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+              <button key={p.id} onClick={() => setOpenId(p.id)}
+                className="press w-full text-left bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                 <div className="flex items-start gap-3">
                   <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}>
                     <IconBox size={20} />
@@ -92,11 +107,36 @@ export default function AllProducts() {
                     <p className="text-[11px] text-slate-400">${p.cargo_price}/{unitWord(p.type)}</p>
                   </div>
                 </div>
-              </div>
+              </button>
             )
           })}
         </div>
       )}
+
+      {/* Bosqichlar bo'ylab taqsimot */}
+      <Sheet open={openId !== null} onClose={() => setOpenId(null)}>
+        {dist && (
+          <div className="px-5 pt-2">
+            <h3 className="font-bold text-slate-900 mb-1">{dist.product_name}</h3>
+            <p className="text-xs text-slate-400 font-mono mb-4">{dist.barcode} · jami {dist.total} ta</p>
+            {dist.stages.length === 0 ? (
+              <p className="text-sm text-slate-400 py-6 text-center">Hali taqsimlanmagan</p>
+            ) : (
+              <div className="space-y-2 pb-2">
+                {dist.stages.map((s) => (
+                  <div key={s.holder_type} className="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3">
+                    <span className="text-sm font-semibold text-slate-700">{s.label}</span>
+                    <span className="text-sm font-bold text-white px-2.5 py-0.5 rounded-lg" style={{ background: 'var(--brand)' }}>
+                      {s.quantity} ta
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        {distLoading && <div className="px-5 py-6"><ListSkeleton /></div>}
+      </Sheet>
     </div>
   )
 }

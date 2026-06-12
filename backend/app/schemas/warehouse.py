@@ -117,16 +117,71 @@ class ScanRequest(BaseModel):
     barcode: str
 
 
+class VariantAvailability(BaseModel):
+    """Skan paytida manba egada shu variantdan nechta bor."""
+
+    variant_id: int
+    size_label: str
+    available: int
+
+
 class ScanResponse(BaseModel):
     barcode: str
     product_name: str
     carrier_name: str | None = None
     carrier_number: int | None = None
     quantity: int | None = None
+    # Split custody: skan qilayotgan ega(manba)da har o'lchamdan nechta bor
+    available_by_variant: list[VariantAvailability] = Field(default_factory=list)
+
+
+class CustodyTransferItem(BaseModel):
+    """Bitta o'tkazma: qaysi barkod, qaysi o'lcham, nechta dona."""
+
+    barcode: str
+    variant_id: int | None = None  # 1 ta variant bo'lsa avtomatik aniqlanadi
+    quantity: int = Field(gt=0)
 
 
 class ConfirmRequest(BaseModel):
-    barcodes: list[str] = Field(min_length=1, max_length=200)
+    items: list[CustodyTransferItem] = Field(min_length=1, max_length=200)
+    courier_id: int | None = None  # kuryerga topshirishda — qaysi kuryer
+
+
+class CourierOption(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    phone: str
+
+
+class HeldCargoItem(BaseModel):
+    """Bir ega(holder)da turgan yuk: mahsulot + o'lcham + nechta dona."""
+
+    product_id: int
+    barcode: str
+    product_name: str
+    type: ProductType
+    size_label: str
+    quantity: int
+
+
+class StageQuantity(BaseModel):
+    """Bir bosqichda (holder_type) jami nechta."""
+
+    holder_type: str
+    label: str
+    quantity: int
+
+
+class ProductDistribution(BaseModel):
+    """Bir mahsulotning bosqichlar bo'ylab taqsimoti (split custody)."""
+
+    product_id: int
+    barcode: str
+    product_name: str
+    total: int
+    stages: list[StageQuantity]
 
 
 # ─── Walk-in (TR) ───────────────────────────────────────────────────────────────

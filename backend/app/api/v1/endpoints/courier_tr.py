@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.api.deps import require_role
+from app.bot import notify
 from app.bot.notify import on_damage_reported
 from app.core.enums import (
     CustodyEventType,
@@ -12,8 +14,9 @@ from app.core.enums import (
     ProductStatus,
     Role,
 )
+from app.core.errors import AppError
 from app.db.base import get_db
-from app.db.models import Dispute, Order, OrderItem, User
+from app.db.models import Dispute, Order, OrderItem, Product, User
 from app.schemas.common import OkResponse
 from app.schemas.courier import (
     ConfirmDeliveryRequest,
@@ -21,9 +24,41 @@ from app.schemas.courier import (
     ReportDamagedRequest,
     ScanDeliveryRequest,
 )
-from app.schemas.warehouse import ConfirmRequest, ScanRequest, ScanResponse
-from app.services.custody_service import get_product_by_barcode, transfer_custody
+from app.schemas.warehouse import (
+    ConfirmRequest,
+    ScanRequest,
+    ScanResponse,
+    VariantAvailability,
+)
+from app.services.custody_service import (
+    availability_by_type,
+    find_source_holder_id,
+    get_product_by_barcode,
+    is_fully_arrived,
+    resolve_variant_id,
+    transfer_custody,
+)
 from app.services.payment_service import recompute_carrier_payment
+
+
+async def _scan_avail(
+    db: AsyncSession, barcode: str, holder_type: HolderType
+) -> tuple[Product, list[tuple[int, str, int]], User | None]:
+    """Scan yordamchisi: product + manba turdagi mavjudlik + yo'lovchi."""
+    product = await db.scalar(
+        select(Product)
+        .options(selectinload(Product.variants))
+        .where(Product.barcode == barcode)
+    )
+    if product is None:
+        raise AppError("BARCODE_NOT_FOUND", "Barkod topilmadi", status_code=400)
+    avail = await availability_by_type(db, product=product, holder_type=holder_type)
+    if not avail:
+        raise AppError(
+            "INVALID_PRODUCT_STATE", "Bu yukdan bu bosqichda qolmagan"
+        )
+    carrier = await _carrier_for_product(db, product.id)
+    return product, avail, carrier
 
 router = APIRouter(prefix="/courier-tr", tags=["courier_tr"])
 
@@ -49,13 +84,18 @@ async def scan_receive(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*ROLE)),
 ) -> ScanResponse:
-    product = await get_product_by_barcode(db, body.barcode)
-    carrier = await _carrier_for_product(db, product.id)
+    # Manba: yo'lovchi (CARRIER) — TR kuryeri yo'lovchidan oladi
+    product, avail, carrier = await _scan_avail(db, body.barcode, HolderType.CARRIER)
     return ScanResponse(
         barcode=product.barcode,
         product_name=product.name,
         carrier_name=f"{carrier.first_name} {carrier.last_name}".strip() if carrier else None,
         carrier_number=carrier.carrier_number if carrier else None,
+        quantity=sum(a[2] for a in avail),
+        available_by_variant=[
+            VariantAvailability(variant_id=vid, size_label=sl, available=q)
+            for vid, sl, q in avail
+        ],
     )
 
 
@@ -66,16 +106,37 @@ async def confirm_receive(
     user: User = Depends(require_role(*ROLE)),
 ) -> OkResponse:
     affected_carriers: set[int] = set()
-    for barcode in body.barcodes:
-        product = await get_product_by_barcode(db, barcode)
+    for item in body.items:
+        product = await db.scalar(
+            select(Product)
+            .options(selectinload(Product.variants))
+            .where(Product.barcode == item.barcode)
+        )
+        if product is None:
+            raise AppError("BARCODE_NOT_FOUND", f"Barkod topilmadi: {item.barcode}")
+        variant_id = await resolve_variant_id(
+            db, product=product, variant_id=item.variant_id
+        )
+        src_id = await find_source_holder_id(
+            db, variant_id=variant_id, holder_type=HolderType.CARRIER
+        )
+        if src_id is None:
+            raise AppError(
+                "INVALID_PRODUCT_STATE",
+                f"Yuk ({item.barcode}) yo'lovchida emas",
+                status_code=400,
+            )
         await transfer_custody(
             db,
             product,
+            variant_id=variant_id,
+            quantity=item.quantity,
+            from_holder_type=HolderType.CARRIER,
+            from_holder_id=src_id,
             to_holder_type=HolderType.COURIER_TR,
             to_holder_id=user.id,
             event_type=CustodyEventType.COURIER_TR_RECEIVED,
             scanned_by=user.id,
-            new_status=ProductStatus.DELIVERED_TR,
         )
         carrier = await _carrier_for_product(db, product.id)
         if carrier:
@@ -96,14 +157,18 @@ async def scan_handover_warehouse(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*ROLE)),
 ) -> ScanResponse:
-    """Omborga topshirishdan oldin barkodni tekshirish."""
-    product = await get_product_by_barcode(db, body.barcode)
-    carrier = await _carrier_for_product(db, product.id)
+    """Omborga topshirishdan oldin barkodni tekshirish (manba: TR kuryer)."""
+    product, avail, carrier = await _scan_avail(db, body.barcode, HolderType.COURIER_TR)
     return ScanResponse(
         barcode=product.barcode,
         product_name=product.name,
         carrier_name=f"{carrier.first_name} {carrier.last_name}".strip() if carrier else None,
         carrier_number=carrier.carrier_number if carrier else None,
+        quantity=sum(a[2] for a in avail),
+        available_by_variant=[
+            VariantAvailability(variant_id=vid, size_label=sl, available=q)
+            for vid, sl, q in avail
+        ],
     )
 
 
@@ -113,18 +178,39 @@ async def confirm_handover_warehouse(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*ROLE)),
 ) -> OkResponse:
-    """Kuryer yukni Turkiya omboriga topshiradi — custody ombor (WAREHOUSE_TR) ga o'tadi.
-    Eslatma: to'lov/status oqimi keyinroq aniqlanadi; hozir faqat custody o'tkaziladi."""
-    for barcode in body.barcodes:
-        product = await get_product_by_barcode(db, barcode)
+    """Kuryer yukni Turkiya omboriga topshiradi — custody ombor (WAREHOUSE_TR) ga o'tadi."""
+    for item in body.items:
+        product = await db.scalar(
+            select(Product)
+            .options(selectinload(Product.variants))
+            .where(Product.barcode == item.barcode)
+        )
+        if product is None:
+            raise AppError("BARCODE_NOT_FOUND", f"Barkod topilmadi: {item.barcode}")
+        variant_id = await resolve_variant_id(
+            db, product=product, variant_id=item.variant_id
+        )
         await transfer_custody(
             db,
             product,
+            variant_id=variant_id,
+            quantity=item.quantity,
+            from_holder_type=HolderType.COURIER_TR,
+            from_holder_id=user.id,
             to_holder_type=HolderType.WAREHOUSE_TR,
-            to_holder_id=None,  # umumiy Turkiya ombori (aniq xodim emas)
+            to_holder_id=0,  # umumiy Turkiya ombori (aniq xodim emas)
             event_type=CustodyEventType.WAREHOUSE_TR_RECEIVED,
             scanned_by=user.id,
         )
+        # Bu mahsulotning hammasi TR omborga yetdimi?
+        if await is_fully_arrived(db, product.id):
+            carrier = await _carrier_for_product(db, product.id)
+            await notify.on_all_arrived(
+                db,
+                barcode=product.barcode,
+                product_name=product.name,
+                carrier_id=carrier.id if carrier else None,
+            )
     return OkResponse(ok=True)
 
 
@@ -196,8 +282,17 @@ async def scan_delivery(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*ROLE)),
 ) -> ScanResponse:
-    product = await get_product_by_barcode(db, body.barcode)
-    return ScanResponse(barcode=product.barcode, product_name=product.name)
+    # Manba: TR ombor (WAREHOUSE_TR) — kuryer omborldan olib buyurtmachiga yetkazadi
+    product, avail, _ = await _scan_avail(db, body.barcode, HolderType.WAREHOUSE_TR)
+    return ScanResponse(
+        barcode=product.barcode,
+        product_name=product.name,
+        quantity=sum(a[2] for a in avail),
+        available_by_variant=[
+            VariantAvailability(variant_id=vid, size_label=sl, available=q)
+            for vid, sl, q in avail
+        ],
+    )
 
 
 @router.post("/confirm-delivery", response_model=OkResponse)
@@ -206,13 +301,26 @@ async def confirm_delivery(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*ROLE)),
 ) -> OkResponse:
-    for barcode in body.barcodes:
-        product = await get_product_by_barcode(db, barcode)
+    for item in body.items:
+        product = await db.scalar(
+            select(Product)
+            .options(selectinload(Product.variants))
+            .where(Product.barcode == item.barcode)
+        )
+        if product is None:
+            raise AppError("BARCODE_NOT_FOUND", f"Barkod topilmadi: {item.barcode}")
+        variant_id = await resolve_variant_id(
+            db, product=product, variant_id=item.variant_id
+        )
         await transfer_custody(
             db,
             product,
+            variant_id=variant_id,
+            quantity=item.quantity,
+            from_holder_type=HolderType.WAREHOUSE_TR,
+            from_holder_id=0,
             to_holder_type=HolderType.ORDERER,
-            to_holder_id=None,
+            to_holder_id=0,
             event_type=CustodyEventType.DELIVERED,
             scanned_by=user.id,
         )

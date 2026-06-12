@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
-import type { Product } from '@/shared/types'
+import type { ProductType } from '@/shared/types'
 import { initials } from '@/shared/lib/format'
 import { isPiece, typeEmoji } from '@/shared/lib/product'
 import { Header, ListSkeleton, EmptyState, StatusBadge, Sheet, IconPlane } from '@/shared/ui'
@@ -9,6 +9,11 @@ import { Header, ListSkeleton, EmptyState, StatusBadge, Sheet, IconPlane } from 
 interface Carrier {
   id: number; first_name: string; last_name: string; phone: string
   carrier_number: number; is_active: boolean; total_trips: number; has_cargo: boolean
+}
+
+interface HeldCargo {
+  product_id: number; barcode: string; product_name: string
+  type: ProductType; size_label: string; quantity: number
 }
 
 export default function Carriers() {
@@ -22,7 +27,7 @@ export default function Carriers() {
   // Tanlangan yo'lovchining yuklari (faqat sheet ochilganda)
   const { data: cargo, isLoading: cargoLoading } = useQuery({
     queryKey: ['warehouse-uz-carrier-products', open?.id],
-    queryFn: () => client.get<Product[]>(`/warehouse-uz/carriers/${open!.id}/products`).then((r) => r.data),
+    queryFn: () => client.get<HeldCargo[]>(`/warehouse-uz/carriers/${open!.id}/products`).then((r) => r.data),
     enabled: !!open,
   })
 
@@ -83,16 +88,18 @@ export default function Carriers() {
             ) : (
               <div className="space-y-2.5 pb-2">
                 {cargo.map((p) => (
-                  <div key={p.id} className="flex items-center gap-3 bg-slate-50 rounded-xl p-3">
+                  <div key={`${p.product_id}:${p.size_label}`} className="flex items-center gap-3 bg-slate-50 rounded-xl p-3">
                     <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center text-lg shrink-0">
                       {typeEmoji(p.type)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-900 truncate">{p.name}</p>
+                      <p className="text-sm font-semibold text-slate-900 truncate">
+                        {p.product_name}{p.size_label ? ` · ${p.size_label}` : ''}
+                      </p>
                       <p className="text-xs text-slate-400 font-mono">{p.barcode}</p>
                     </div>
-                    <span className="text-xs font-medium text-slate-600 shrink-0">
-                      {isPiece(p.type) ? `${p.quantity} dona` : `${p.weight_kg} kg`}
+                    <span className="text-xs font-bold text-white px-2 py-0.5 rounded-lg shrink-0" style={{ background: 'var(--brand)' }}>
+                      {p.quantity} {isPiece(p.type) ? 'dona' : 'ta'}
                     </span>
                   </div>
                 ))}

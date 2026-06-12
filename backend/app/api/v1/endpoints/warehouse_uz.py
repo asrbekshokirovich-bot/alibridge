@@ -17,7 +17,15 @@ from app.core.enums import (
 )
 from app.core.errors import AppError
 from app.db.base import get_db
-from app.db.models import CustodyEvent, Order, OrderItem, Product, ProductVariant, User
+from app.db.models import (
+    CustodyEvent,
+    CustodyHolding,
+    Order,
+    OrderItem,
+    Product,
+    ProductVariant,
+    User,
+)
 from app.schemas.admin import CarrierOut
 from app.schemas.common import OkResponse
 from app.schemas.product import ProductOut
@@ -27,11 +35,16 @@ from app.schemas.warehouse import (
     ConfirmOrderItemRequest,
     ConfirmOrderItemResponse,
     ConfirmRequest,
+    CourierOption,
+    HeldCargoItem,
+    ProductDistribution,
     ReceiveGoodsRequest,
     ReceiveGoodsResponse,
     ScanRequest,
     ScanResponse,
+    StageQuantity,
     UpdateProductRequest,
+    VariantAvailability,
     WarehouseOrderItemOut,
     WarehouseOrderOut,
     WarehouseUzStats,
@@ -42,7 +55,12 @@ from app.services.barcode_service import (
     create_received_product,
     recompute_product_totals,
 )
-from app.services.custody_service import get_product_by_barcode, transfer_custody
+from app.services.custody_service import (
+    availability_for_holder,
+    resolve_variant_id,
+    sync_warehouse_holding,
+    transfer_custody,
+)
 from app.services.order_service import (
     confirm_order_item,
     list_pending_orders_for_warehouse,
@@ -194,6 +212,8 @@ async def add_variant(
     await db.flush()
     recompute_product_totals(product)
     await db.flush()
+    # Ombor qoldig'i (WAREHOUSE_UZ holding) yangi variant miqdoriga tenglashtiriladi
+    await sync_warehouse_holding(db, variant)
     return product_to_out(product, expose_box_weight=True)
 
 
@@ -401,30 +421,55 @@ async def products(
 
 
 async def _scan_for_handover(db: AsyncSession, barcode: str) -> ScanResponse:
-    product = await get_product_by_barcode(db, barcode)
-    if product.status not in (
-        ProductStatus.IN_WAREHOUSE_UZ,
-        ProductStatus.CONFIRMED,
-        ProductStatus.PENDING_ADMIN,
-    ):
+    product = await db.scalar(
+        select(Product)
+        .options(selectinload(Product.variants))
+        .where(Product.barcode == barcode)
+    )
+    if product is None:
+        raise AppError("BARCODE_NOT_FOUND", "Barkod topilmadi", status_code=400)
+
+    # Omborda (WAREHOUSE_UZ, holder_id=0) shu mahsulotdan nechta qolgan
+    avail = await availability_for_holder(
+        db, product=product, holder_type=HolderType.WAREHOUSE_UZ, holder_id=0
+    )
+    if not avail:
         raise AppError(
             "INVALID_PRODUCT_STATE",
-            "Bu yuk topshirishga tayyor emas yoki allaqachon topshirilgan",
-        )
-    # quantity/weight variantlar yig'indisi (recompute bilan); ikkalasi 0 bo'lsa to'ldirilmagan
-    if product.quantity == 0 and (product.weight_kg or 0) == 0:
-        raise AppError(
-            "PRODUCT_INCOMPLETE",
-            "Bu mahsulotga o'lcham qo'shilmagan",
+            "Omborda bu yukdan qolmagan yoki o'lcham qo'shilmagan",
         )
 
     return ScanResponse(
         barcode=product.barcode,
         product_name=product.name,
-        carrier_name=None,
-        carrier_number=None,
-        quantity=product.quantity,
+        quantity=sum(a[2] for a in avail),
+        available_by_variant=[
+            VariantAvailability(variant_id=vid, size_label=sl, available=q)
+            for vid, sl, q in avail
+        ],
     )
+
+
+@router.get("/couriers", response_model=list[CourierOption])
+async def list_couriers(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*WH_UZ)),
+) -> list[CourierOption]:
+    """Toshkent kuryerlari — topshirishda tanlash uchun."""
+    rows = await db.execute(
+        select(User)
+        .where(User.role == Role.COURIER_UZ, User.is_active.is_(True))
+        .order_by(User.first_name)
+    )
+    return [
+        CourierOption(
+            id=u.id,
+            first_name=u.first_name,
+            last_name=u.last_name or "",
+            phone=u.phone or "",
+        )
+        for u in rows.scalars().all()
+    ]
 
 
 @router.post("/scan-for-courier", response_model=ScanResponse)
@@ -442,16 +487,44 @@ async def confirm_courier_handover(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*WH_UZ)),
 ) -> OkResponse:
-    for barcode in body.barcodes:
-        product = await get_product_by_barcode(db, barcode)
+    # Kuryer tanlangan bo'lishi shart — yuk aynan shu kuryerga o'tadi,
+    # shunda kuryerning "Mening yuklarim" oynasida ko'rinadi.
+    if body.courier_id is None:
+        raise AppError("COURIER_REQUIRED", "Avval kuryerni tanlang")
+    courier = (
+        await db.execute(
+            select(User).where(
+                User.id == body.courier_id, User.role == Role.COURIER_UZ
+            )
+        )
+    ).scalar_one_or_none()
+    if courier is None:
+        raise AppError("COURIER_NOT_FOUND", "Kuryer topilmadi")
+
+    for item in body.items:
+        product = await db.scalar(
+            select(Product)
+            .options(selectinload(Product.variants))
+            .where(Product.barcode == item.barcode)
+        )
+        if product is None:
+            raise AppError("BARCODE_NOT_FOUND", f"Barkod topilmadi: {item.barcode}")
+        variant_id = await resolve_variant_id(
+            db, product=product, variant_id=item.variant_id
+        )
+        # Ombordan (WAREHOUSE_UZ, 0) kuryerga. COURIER_UZ_PICKUP eventi —
+        # kuryer o'zi olgani bilan bir xil, my-products hech o'zgarishsiz ishlaydi.
         await transfer_custody(
             db,
             product,
+            variant_id=variant_id,
+            quantity=item.quantity,
+            from_holder_type=HolderType.WAREHOUSE_UZ,
+            from_holder_id=0,
             to_holder_type=HolderType.COURIER_UZ,
-            to_holder_id=None,
-            event_type=CustodyEventType.HANDOVER_TO_COURIER_UZ,
+            to_holder_id=courier.id,
+            event_type=CustodyEventType.COURIER_UZ_PICKUP,
             scanned_by=user.id,
-            new_status=ProductStatus.WITH_COURIER_UZ,
         )
     return OkResponse(ok=True)
 
@@ -474,10 +547,11 @@ async def warehouse_carriers(
     )
     carriers_list = rows.all()
 
+    # Yo'lovchida yuk bor-yo'qligi — custody_holdings (CARRIER, quantity>0) dan
     cargo_rows = await db.execute(
-        select(Product.custody_holder_id).where(
-            Product.custody_holder_type == HolderType.CARRIER,
-            Product.custody_holder_id.is_not(None),
+        select(CustodyHolding.holder_id).where(
+            CustodyHolding.holder_type == HolderType.CARRIER,
+            CustodyHolding.quantity > 0,
         ).distinct()
     )
     with_cargo = {row[0] for row in cargo_rows.all()}
@@ -497,23 +571,35 @@ async def warehouse_carriers(
     ]
 
 
-@router.get("/carriers/{carrier_id}/products", response_model=list[ProductOut])
+@router.get("/carriers/{carrier_id}/products", response_model=list[HeldCargoItem])
 async def carrier_products(
     carrier_id: int,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*WH_UZ)),
-) -> list[ProductOut]:
-    """Bitta yo'lovchi hozir olib ketayotgan yuklar (custody = shu yo'lovchida)."""
+) -> list[HeldCargoItem]:
+    """Bitta yo'lovchi hozir olib ketayotgan yuklar — har o'lcham aniq miqdor bilan."""
     rows = await db.execute(
-        select(Product)
-        .options(selectinload(Product.variants))
+        select(CustodyHolding, Product, ProductVariant)
+        .join(Product, Product.id == CustodyHolding.product_id)
+        .join(ProductVariant, ProductVariant.id == CustodyHolding.variant_id)
         .where(
-            Product.custody_holder_type == HolderType.CARRIER,
-            Product.custody_holder_id == carrier_id,
+            CustodyHolding.holder_type == HolderType.CARRIER,
+            CustodyHolding.holder_id == carrier_id,
+            CustodyHolding.quantity > 0,
         )
         .order_by(Product.created_at.desc())
     )
-    return [product_to_out(p, expose_box_weight=True) for p in rows.scalars().all()]
+    return [
+        HeldCargoItem(
+            product_id=p.id,
+            barcode=p.barcode,
+            product_name=p.name,
+            type=p.type,
+            size_label=v.size_label,
+            quantity=h.quantity,
+        )
+        for h, p, v in rows.all()
+    ]
 
 
 # ─── Barcha yuklar (ombor: kuzatuv, status filtri frontendda) ───────────────────
@@ -529,3 +615,43 @@ async def all_products(
         select(Product).options(selectinload(Product.variants)).order_by(Product.created_at.desc())
     )
     return [product_to_out(p, expose_box_weight=True) for p in rows.scalars().all()]
+
+
+_STAGE_LABELS: dict[HolderType, str] = {
+    HolderType.WAREHOUSE_UZ: "Toshkent omborida",
+    HolderType.COURIER_UZ: "Toshkent kuryerida",
+    HolderType.CARRIER: "Yo'lovchida",
+    HolderType.COURIER_TR: "Turkiya kuryerida",
+    HolderType.WAREHOUSE_TR: "Turkiya omborida",
+    HolderType.ORDERER: "Buyurtmachida",
+}
+
+
+@router.get("/products/{product_id}/distribution", response_model=ProductDistribution)
+async def product_distribution(
+    product_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*WH_UZ)),
+) -> ProductDistribution:
+    """Bir mahsulotning bosqichlar bo'ylab taqsimoti: qaysi bosqichda nechta."""
+    product = await db.get(Product, product_id)
+    if product is None:
+        raise AppError("PRODUCT_NOT_FOUND", "Mahsulot topilmadi", status_code=404)
+    rows = await db.execute(
+        select(CustodyHolding.holder_type, func.sum(CustodyHolding.quantity))
+        .where(CustodyHolding.product_id == product_id, CustodyHolding.quantity > 0)
+        .group_by(CustodyHolding.holder_type)
+    )
+    by_stage: dict[str, int] = {ht: int(q or 0) for ht, q in rows.all()}
+    stages = [
+        StageQuantity(holder_type=ht.value, label=label, quantity=by_stage.get(ht.value, 0))
+        for ht, label in _STAGE_LABELS.items()
+        if by_stage.get(ht.value, 0) > 0
+    ]
+    return ProductDistribution(
+        product_id=product.id,
+        barcode=product.barcode,
+        product_name=product.name,
+        total=sum(s.quantity for s in stages),
+        stages=stages,
+    )

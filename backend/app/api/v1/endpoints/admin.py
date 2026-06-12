@@ -19,6 +19,7 @@ from app.core.security import hash_password
 from app.db.base import get_db
 from app.db.models import (
     CustodyEvent,
+    CustodyHolding,
     Dispute,
     Order,
     Payment,
@@ -215,12 +216,12 @@ async def carriers(
     )
     carriers_list = rows.all()
 
-    # Hozir qaysi yo'lovchilarda yuk borligini aniqlaymiz (custody = yo'lovchida)
+    # Hozir qaysi yo'lovchilarda yuk borligini aniqlaymiz (custody_holdings — CARRIER)
     cargo_rows = await db.execute(
-        select(Product.custody_holder_id)
+        select(CustodyHolding.holder_id)
         .where(
-            Product.custody_holder_type == HolderType.CARRIER,
-            Product.custody_holder_id.is_not(None),
+            CustodyHolding.holder_type == HolderType.CARRIER,
+            CustodyHolding.quantity > 0,
         )
         .distinct()
     )
@@ -260,10 +261,11 @@ async def remove_carrier(
     # Yo'lovchida hozir yuk bo'lsa — o'chirib bo'lmaydi
     has_cargo = await db.scalar(
         select(func.count())
-        .select_from(Product)
+        .select_from(CustodyHolding)
         .where(
-            Product.custody_holder_type == HolderType.CARRIER,
-            Product.custody_holder_id == target.id,
+            CustodyHolding.holder_type == HolderType.CARRIER,
+            CustodyHolding.holder_id == target.id,
+            CustodyHolding.quantity > 0,
         )
     )
     if has_cargo:

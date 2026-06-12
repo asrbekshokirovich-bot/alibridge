@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
 
+from app.schemas.warehouse import CustodyTransferItem
+
 # ─── Courier UZ ─────────────────────────────────────────────────────────────────
 
 
@@ -34,6 +36,8 @@ class CourierUzMyProduct(BaseModel):
     carrier_name: str | None = None
     carrier_number: int | None = None
     picked_up_at: str = ""  # COURIER_UZ_PICKUP eventi sanasi
+    size_label: str = ""
+    quantity: int = 0  # kuryerda shu variantdan nechta
 
 
 class ScanAirportRequest(BaseModel):
@@ -43,7 +47,7 @@ class ScanAirportRequest(BaseModel):
 
 class ConfirmAirportRequest(BaseModel):
     carrier_number: int
-    barcodes: list[str] = Field(min_length=1, max_length=200)
+    items: list[CustodyTransferItem] = Field(min_length=1, max_length=200)
 
 
 # ─── Courier TR ─────────────────────────────────────────────────────────────────
@@ -69,4 +73,4 @@ class ScanDeliveryRequest(BaseModel):
 
 class ConfirmDeliveryRequest(BaseModel):
     delivery_id: int
-    barcodes: list[str] = Field(min_length=1, max_length=200)
+    items: list[CustodyTransferItem] = Field(min_length=1, max_length=200)

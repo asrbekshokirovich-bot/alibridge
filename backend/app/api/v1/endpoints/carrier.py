@@ -5,12 +5,12 @@ from sqlalchemy.orm import selectinload
 
 from app.api.deps import require_role
 from app.bot.notify import on_new_order
-from app.core.enums import OrderStatus, ProductStatus, Role
+from app.core.enums import HolderType, OrderStatus, ProductStatus, Role
 from app.core.errors import AppError
 from app.core.limiter import limiter
 from app.core.security import create_access_token
 from app.db.base import get_db
-from app.db.models import Order, OrderItem, Product, User
+from app.db.models import CustodyHolding, Order, OrderItem, Product, User
 from app.schemas.auth import UserOut
 from app.schemas.common import OkResponse, OrderCreatedResponse
 from app.schemas.order import (
@@ -132,21 +132,14 @@ async def leave_role(
     """Yo'lovchi rolidan chiqish — faqat barcha yuklari WITH_CARRIER emas yoki DELIVERED_TR bo'lsa.
     Shartlar: hech qanday faol yuki qolmagan bo'lishi kerak (pending_admin, confirmed, with_courier_uz, with_carrier).
     """
-    active_statuses = [
-        ProductStatus.PENDING_ADMIN,
-        ProductStatus.CONFIRMED,
-        ProductStatus.WITH_COURIER_UZ,
-        ProductStatus.WITH_CARRIER,
-    ]
-    # Yo'lovchining faol yuklar bormi
+    # Yo'lovchida hozir yuk turgan bo'lsa (CARRIER holding) — chiqib bo'lmaydi
     active_count = await db.scalar(
         select(func.count())
-        .select_from(Order)
-        .join(OrderItem, OrderItem.order_id == Order.id)
-        .join(Product, Product.id == OrderItem.product_id)
+        .select_from(CustodyHolding)
         .where(
-            Order.carrier_id == user.id,
-            Product.status.in_(active_statuses),
+            CustodyHolding.holder_type == HolderType.CARRIER,
+            CustodyHolding.holder_id == user.id,
+            CustodyHolding.quantity > 0,
         )
     )
     if active_count and active_count > 0:

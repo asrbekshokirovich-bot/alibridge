@@ -13,6 +13,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -228,6 +229,11 @@ class CustodyEvent(Base):
     product_id: Mapped[int] = mapped_column(
         ForeignKey("products.id", ondelete="CASCADE"), index=True
     )
+    # Qaysi o'lcham (variant) va nechta dona ko'chirildi (split custody)
+    variant_id: Mapped[int | None] = mapped_column(
+        ForeignKey("product_variants.id", ondelete="SET NULL"), nullable=True
+    )
+    quantity: Mapped[int] = mapped_column(Integer, default=0)
     from_holder_type: Mapped[HolderType | None] = mapped_column(String(32), nullable=True)
     from_holder_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     to_holder_type: Mapped[HolderType | None] = mapped_column(String(32), nullable=True)
@@ -235,6 +241,35 @@ class CustodyEvent(Base):
     event_type: Mapped[CustodyEventType] = mapped_column(String(32))
     scanned_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+
+class CustodyHolding(Base):
+    """Joriy holat: bir variant (o'lcham) bir egada nechta turibdi.
+    Split custody — bir mahsulot miqdori bir vaqtda bir necha egada bo'linadi.
+    O'zgaruvchan (UPDATE/DELETE bo'ladi) — append-only trigger QO'YILMAYDI.
+    quantity > 0 saqlanadi; 0 bo'lsa satr o'chiriladi.
+    holder_id=0 = sentinel (TR ombor/orderer — xodimsiz ega)."""
+
+    __tablename__ = "custody_holdings"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    product_id: Mapped[int] = mapped_column(
+        ForeignKey("products.id", ondelete="CASCADE"), index=True
+    )
+    variant_id: Mapped[int] = mapped_column(
+        ForeignKey("product_variants.id", ondelete="CASCADE")
+    )
+    holder_type: Mapped[HolderType] = mapped_column(String(32))
+    holder_id: Mapped[int] = mapped_column(Integer, default=0)  # 0 = xodimsiz ega
+    quantity: Mapped[int] = mapped_column(Integer, default=0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_now, onupdate=_now)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "variant_id", "holder_type", "holder_id",
+            name="uq_custody_holdings_variant_holder",
+        ),
+    )
 
 
 class Counter(Base):
@@ -256,5 +291,6 @@ __all__ = [
     "WalkInCustomer",
     "StaffRequest",
     "CustodyEvent",
+    "CustodyHolding",
     "Counter",
 ]

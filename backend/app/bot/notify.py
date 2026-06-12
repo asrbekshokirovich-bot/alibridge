@@ -89,3 +89,20 @@ async def on_damage_reported(
     cn = f" (yo'lovchi #{carrier_number})" if carrier_number else ""
     text = f"⚠️ Shikast qayd etildi{cn}\nBarkod: {barcode}\nIzoh: {note}"
     await notify_roles(db, (Role.ADMIN, Role.WAREHOUSE_TR), text)
+
+
+async def on_all_arrived(
+    db: AsyncSession,
+    *,
+    barcode: str,
+    product_name: str,
+    carrier_id: int | None = None,
+) -> None:
+    """Bir barkod ostidagi BARCHA miqdor Turkiya omboriga yetib bordi."""
+    text = (
+        f"🎯 Yetib bordi!\n{product_name} ({barcode})\n"
+        "Bu mahsulotning barcha miqdori Turkiyaga yetib keldi."
+    )
+    await notify_roles(db, (Role.ADMIN, Role.WAREHOUSE_TR, Role.WAREHOUSE_UZ), text)
+    if carrier_id:
+        await notify_user(db, carrier_id, text)

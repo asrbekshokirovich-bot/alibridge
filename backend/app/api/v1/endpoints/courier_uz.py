@@ -14,10 +14,11 @@ from app.core.enums import (
 )
 from app.core.errors import AppError
 from app.db.base import get_db
-from app.db.models import CustodyEvent, Order, OrderItem, User
+from app.db.models import CustodyEvent, Order, OrderItem, Product, User
 from app.schemas.common import OkResponse
 from app.schemas.courier import (
     ConfirmAirportRequest,
+    CourierUzMyProduct,
     CourierUzQueueItem,
     CourierUzQueueProduct,
     ScanAirportRequest,
@@ -173,6 +174,74 @@ async def confirm_pickup(
             new_status=ProductStatus.WITH_COURIER_UZ,
         )
     return OkResponse(ok=True)
+
+
+# ─── Mening yuklarim (kuryer hozir olib yurgan) ─────────────────────────────────
+
+
+@router.get("/my-products", response_model=list[CourierUzMyProduct])
+async def my_products(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*ROLE)),
+) -> list[CourierUzMyProduct]:
+    """Kuryer hozir o'zida olib yurgan yuklar — ombordan olib, hali aeroportda
+    topshirmagan (status=WITH_COURIER_UZ, custody_holder shu kuryer)."""
+    products = (
+        await db.execute(
+            select(Product).where(
+                Product.status == ProductStatus.WITH_COURIER_UZ,
+                Product.custody_holder_type == HolderType.COURIER_UZ,
+                Product.custody_holder_id == user.id,
+            )
+        )
+    ).scalars().all()
+    if not products:
+        return []
+
+    product_ids = [p.id for p in products]
+
+    # Har yuk qaysi yo'lovchining buyurtmasiga tegishli (buyurtmasiz bo'lsa null)
+    carrier_rows = await db.execute(
+        select(OrderItem.product_id, User)
+        .join(Order, Order.id == OrderItem.order_id)
+        .join(User, User.id == Order.carrier_id)
+        .where(OrderItem.product_id.in_(product_ids))
+    )
+    carrier_by_product: dict[int, User] = {}
+    for pid, carrier in carrier_rows.all():
+        carrier_by_product.setdefault(pid, carrier)
+
+    # Qachon olib ketilgani (COURIER_UZ_PICKUP eventi sanasi)
+    ev_rows = await db.execute(
+        select(CustodyEvent.product_id, CustodyEvent.created_at)
+        .where(
+            CustodyEvent.product_id.in_(product_ids),
+            CustodyEvent.event_type == CustodyEventType.COURIER_UZ_PICKUP,
+        )
+        .order_by(CustodyEvent.id.desc())
+    )
+    picked_at: dict[int, str] = {}
+    for pid, created in ev_rows.all():
+        picked_at.setdefault(pid, created.date().isoformat())
+
+    result: list[CourierUzMyProduct] = []
+    for p in products:
+        carrier = carrier_by_product.get(p.id)
+        result.append(
+            CourierUzMyProduct(
+                product_id=p.id,
+                barcode=p.barcode,
+                product_name=p.name,
+                category=p.category,
+                image_url=p.image_url,
+                carrier_name=(
+                    f"{carrier.first_name} {carrier.last_name}".strip() if carrier else None
+                ),
+                carrier_number=carrier.carrier_number if carrier else None,
+                picked_up_at=picked_at.get(p.id, ""),
+            )
+        )
+    return result
 
 
 # ─── Aeroportda yo'lovchiga topshirish ──────────────────────────────────────────

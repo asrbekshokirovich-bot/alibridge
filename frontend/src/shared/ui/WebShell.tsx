@@ -46,6 +46,7 @@ const MENU: Partial<Record<Role, MenuItem[]>> = {
     { label: 'Bosh sahifa', path: '/courier-uz', icon: <IconHome size={20} /> },
     { label: 'Navbat', path: '/courier-uz/queue', icon: <IconList size={20} /> },
     { label: 'Olib ketish (skan)', path: '/courier-uz/scan-pickup', icon: <IconScan size={20} /> },
+    { label: 'Mening yuklarim', path: '/courier-uz/my-products', icon: <IconBox size={20} /> },
     { label: 'Aeroport topshirish', path: '/courier-uz/airport-handover', icon: <IconPlane size={20} /> },
   ],
   courier_tr: [

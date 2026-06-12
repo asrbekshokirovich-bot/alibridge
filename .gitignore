@@ -13,6 +13,12 @@
 # Secrets
 **/secrets/
 *.pem
+
+# Vaqtinchalik diagnostika/backup skriptlari (jonli DB paroli bo'lishi mumkin)
+backend/_*.py
+stock_backup.json
+backend/stock_backup.json
+.claude/launch.json
 *.key
 *.crt
 

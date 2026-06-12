@@ -22,6 +22,20 @@ class CourierUzQueueItem(BaseModel):
     created_at: str = ""
 
 
+class CourierUzMyProduct(BaseModel):
+    """Kuryer hozir o'zida olib yurgan yuk (WITH_COURIER_UZ, custody kuryerda)."""
+
+    product_id: int
+    barcode: str
+    product_name: str
+    category: str = ""
+    image_url: str | None = None
+    # qaysi yo'lovchining buyurtmasiga tegishli (buyurtmasiz bo'lsa null)
+    carrier_name: str | None = None
+    carrier_number: int | None = None
+    picked_up_at: str = ""  # COURIER_UZ_PICKUP eventi sanasi
+
+
 class ScanAirportRequest(BaseModel):
     barcode: str
     carrier_number: int

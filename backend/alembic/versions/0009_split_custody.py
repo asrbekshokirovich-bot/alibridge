@@ -59,9 +59,10 @@ def upgrade() -> None:
         ondelete="SET NULL",
     )
 
-    # ── 3) Backfill: har variant uchun WAREHOUSE_UZ holding (test yuklar) ──
-    #    holder_id: product.custody_holder_id bo'lsa o'shani, bo'lmasa 0 (sentinel).
+    # ── 3) Backfill: har variant uchun holding (test yuklar ko'rinib tursin) ──
     #    holder_type: product.custody_holder_type bo'lsa o'shani, bo'lmasa warehouse_uz.
+    #    holder_id: WAREHOUSE_UZ/WAREHOUSE_TR/ORDERER da DOIM 0 (xodimsiz, sentinel);
+    #               kuryer/yo'lovchi da custody_holder_id (aniq shaxs).
     op.execute(
         """
         INSERT INTO custody_holdings (product_id, variant_id, holder_type, holder_id, quantity)
@@ -69,7 +70,11 @@ def upgrade() -> None:
             v.product_id,
             v.id,
             COALESCE(p.custody_holder_type, 'warehouse_uz'),
-            COALESCE(p.custody_holder_id, 0),
+            CASE
+                WHEN COALESCE(p.custody_holder_type, 'warehouse_uz')
+                     IN ('warehouse_uz', 'warehouse_tr', 'orderer') THEN 0
+                ELSE COALESCE(p.custody_holder_id, 0)
+            END,
             v.quantity
         FROM product_variants v
         JOIN products p ON p.id = v.product_id

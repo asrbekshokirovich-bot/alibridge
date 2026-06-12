@@ -124,15 +124,12 @@ async def receive(
         category=body.category,
         created_by=user.id,
     )
-    # Qabul qilindi — custody warehouse_uz da
-    await transfer_custody(
-        db,
-        product,
-        to_holder_type=HolderType.WAREHOUSE_UZ,
-        to_holder_id=user.id,
-        event_type=CustodyEventType.RECEIVED,
-        scanned_by=user.id,
-    )
+    # Mahsulot hali bo'sh (variant yo'q, quantity=0). Custody holding
+    # variant qo'shilganda (add_variant -> sync_warehouse_holding) yaratiladi.
+    # Denormalizatsiyani ko'rsatuv uchun WAREHOUSE_UZ ga qo'yamiz.
+    product.custody_holder_type = HolderType.WAREHOUSE_UZ
+    product.custody_holder_id = 0
+    await db.flush()
     return ReceiveGoodsResponse(
         id=product.id,
         barcode=product.barcode,

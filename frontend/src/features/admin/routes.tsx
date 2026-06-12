@@ -8,6 +8,7 @@ import Payments from './pages/Payments'
 import Products from './pages/Products'
 import ViewAs from './pages/ViewAs'
 import MyCredentials from './pages/MyCredentials'
+import DailyReport from './pages/DailyReport'
 
 export default function AdminRoutes() {
   return (
@@ -21,6 +22,7 @@ export default function AdminRoutes() {
       <Route path="/products" element={<Products />} />
       <Route path="/view-as" element={<ViewAs />} />
       <Route path="/my-credentials" element={<MyCredentials />} />
+      <Route path="/daily-report" element={<DailyReport />} />
     </Routes>
   )
 }

@@ -8,6 +8,7 @@ import HandoverCourier from './pages/HandoverCourier'
 import Disputes from './pages/Disputes'
 import Carriers from './pages/Carriers'
 import AllProducts from './pages/AllProducts'
+import DailyReport from './pages/DailyReport'
 
 export default function WarehouseUzRoutes() {
   return (
@@ -21,6 +22,7 @@ export default function WarehouseUzRoutes() {
       <Route path="/disputes" element={<Disputes />} />
       <Route path="/carriers" element={<Carriers />} />
       <Route path="/all-products" element={<AllProducts />} />
+      <Route path="/daily-report" element={<DailyReport />} />
     </Routes>
   )
 }

@@ -1,3 +1,4 @@
+from datetime import date, datetime
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, File, UploadFile
@@ -36,6 +37,8 @@ from app.schemas.warehouse import (
     ConfirmOrderItemResponse,
     ConfirmRequest,
     CourierOption,
+    DailyOutItem,
+    DailyOutReport,
     HeldCargoItem,
     ProductDistribution,
     ReceiveGoodsRequest,
@@ -652,3 +655,57 @@ async def product_distribution(
         total=sum(s.quantity for s in stages),
         stages=stages,
     )
+
+
+async def build_daily_out(
+    db: AsyncSession, *, day: date, from_types: list[HolderType]
+) -> DailyOutReport:
+    """Berilgan kunda ombor(lar)dan chiqqan custody eventlar hisoboti.
+    from_holder_type ombor bo'lgan eventlar = ombordan chiqish."""
+    start = datetime.combine(day, datetime.min.time())
+    end = datetime.combine(day, datetime.max.time())
+    rows = await db.execute(
+        select(CustodyEvent, Product, ProductVariant, User)
+        .join(Product, Product.id == CustodyEvent.product_id)
+        .outerjoin(ProductVariant, ProductVariant.id == CustodyEvent.variant_id)
+        .outerjoin(User, User.id == CustodyEvent.scanned_by)
+        .where(
+            CustodyEvent.from_holder_type.in_(from_types),
+            CustodyEvent.created_at >= start,
+            CustodyEvent.created_at <= end,
+            CustodyEvent.quantity > 0,
+        )
+        .order_by(CustodyEvent.created_at.desc())
+    )
+    items: list[DailyOutItem] = []
+    for ev, p, v, u in rows.all():
+        from_label = _STAGE_LABELS.get(ev.from_holder_type, ev.from_holder_type or "")
+        to_label = _STAGE_LABELS.get(ev.to_holder_type, ev.to_holder_type or "")
+        items.append(
+            DailyOutItem(
+                barcode=p.barcode,
+                product_name=p.name,
+                size_label=v.size_label if v else "",
+                quantity=ev.quantity,
+                from_label=from_label,
+                to_label=to_label,
+                by_name=(f"{u.first_name} {u.last_name}".strip() if u else ""),
+                time=ev.created_at.strftime("%H:%M"),
+            )
+        )
+    return DailyOutReport(
+        date=day.isoformat(),
+        total=sum(i.quantity for i in items),
+        items=items,
+    )
+
+
+@router.get("/daily-out", response_model=DailyOutReport)
+async def daily_out(
+    date_str: str | None = None,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*WH_UZ)),
+) -> DailyOutReport:
+    """Toshkent ombordan kunlik chiqqan yuklar (default bugun)."""
+    day = date.fromisoformat(date_str) if date_str else date.today()
+    return await build_daily_out(db, day=day, from_types=[HolderType.WAREHOUSE_UZ])

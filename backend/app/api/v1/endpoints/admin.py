@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import delete, func, select, update
@@ -39,9 +39,11 @@ from app.schemas.admin import (
     StaffRequestOut,
     UpdateDisputeRequest,
 )
+from app.api.v1.endpoints.warehouse_uz import build_daily_out
 from app.schemas.common import OkResponse
 from app.schemas.product import ProductOut
 from app.schemas.serializers import product_to_out
+from app.schemas.warehouse import DailyOutReport
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -124,6 +126,19 @@ async def products(
     )
     # Admin hamma narsani ko'radi (box_weight ham)
     return [product_to_out(p, expose_box_weight=True) for p in rows.scalars().all()]
+
+
+@router.get("/daily-out", response_model=DailyOutReport)
+async def daily_out(
+    date_str: str | None = None,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*VIEW_ROLE)),
+) -> DailyOutReport:
+    """Ikkala ombordan (Toshkent + Turkiya) kunlik chiqqan yuklar (default bugun)."""
+    day = date.fromisoformat(date_str) if date_str else date.today()
+    return await build_daily_out(
+        db, day=day, from_types=[HolderType.WAREHOUSE_UZ, HolderType.WAREHOUSE_TR]
+    )
 
 
 # ─── Staff requests ─────────────────────────────────────────────────────────────

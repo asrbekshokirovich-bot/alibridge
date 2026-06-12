@@ -174,6 +174,27 @@ class StageQuantity(BaseModel):
     quantity: int
 
 
+class DailyOutItem(BaseModel):
+    """Ombordan chiqqan bitta harakat (custody event)."""
+
+    barcode: str
+    product_name: str
+    size_label: str
+    quantity: int
+    from_label: str  # qaysi ombordan
+    to_label: str    # qayerga ketdi
+    by_name: str     # kim skanladi
+    time: str        # HH:MM
+
+
+class DailyOutReport(BaseModel):
+    """Bir kunlik ombordan chiqish hisoboti."""
+
+    date: str
+    total: int
+    items: list[DailyOutItem]
+
+
 class ProductDistribution(BaseModel):
     """Bir mahsulotning bosqichlar bo'ylab taqsimoti (split custody)."""
 

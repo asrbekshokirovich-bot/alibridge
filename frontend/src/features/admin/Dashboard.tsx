@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import client from '@/shared/api/client'
-import { ActionGrid, IconUsers, IconPlane, IconAlert, IconMoney, IconUser } from '@/shared/ui'
+import { ActionGrid, IconUsers, IconPlane, IconAlert, IconMoney, IconUser, IconList } from '@/shared/ui'
 import type { Action } from '@/shared/ui'
 
 interface AdminStats {
@@ -24,6 +24,7 @@ export default function AdminDashboard() {
     { label: 'Yo\'lovchilar', desc: 'Boshqaruv', path: '/admin/carriers', icon: <IconPlane size={24} />, gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
     { label: 'Nizolar', desc: 'Shikast holatlari', path: '/admin/disputes', icon: <IconAlert size={24} />, gradient: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)', badge: stats?.open_disputes },
     { label: 'To\'lovlar', desc: 'Hisobot', path: '/admin/payments', icon: <IconMoney size={24} />, gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', badge: stats?.unpaid_payments },
+    { label: 'Kunlik hisobot', desc: 'Ombordan chiqqan yuklar', path: '/admin/daily-report', icon: <IconList size={24} />, gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' },
     { label: 'Rol sifatida ko\'rish', desc: 'Istalgan panelni ochish', path: '/admin/view-as', icon: <IconUser size={24} />, gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' },
     { label: 'Sayt logini', desc: 'Brauzer orqali kirish', path: '/admin/my-credentials', icon: <IconUser size={24} />, gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' },
   ]

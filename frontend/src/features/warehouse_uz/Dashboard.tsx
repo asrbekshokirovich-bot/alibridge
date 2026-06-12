@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
-import { ActionGrid, IconPackagePlus, IconBag, IconTruck, IconBox, IconAlert, IconPlane } from '@/shared/ui'
+import { ActionGrid, IconPackagePlus, IconBag, IconTruck, IconBox, IconAlert, IconPlane, IconList } from '@/shared/ui'
 import type { Action } from '@/shared/ui'
 
 interface Stats { pending_receive: number; in_warehouse: number; pending_orders: number }
@@ -19,6 +19,7 @@ export default function WarehouseUzDashboard() {
     { label: 'Yo\'lovchilar', desc: 'Yo\'lovchilar va yuk holati', path: '/warehouse-uz/carriers', icon: <IconPlane size={24} />, gradient: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' },
     { label: 'Barcha yuklar', desc: 'Yuk harakatini kuzatish', path: '/warehouse-uz/all-products', icon: <IconBox size={24} />, gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' },
     { label: 'Nizolar', desc: 'Shikast holatlari', path: '/warehouse-uz/disputes', icon: <IconAlert size={24} />, gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
+    { label: 'Kunlik hisobot', desc: 'Ombordan chiqqan yuklar', path: '/warehouse-uz/daily-report', icon: <IconList size={24} />, gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' },
   ]
 
   return (

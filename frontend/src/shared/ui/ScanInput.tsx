@@ -14,17 +14,23 @@ export function ScanInput({ value, onChange, onScan, loading, placeholder = 'Bar
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Pistoletcha skaner Enter yuboradi — avtofokus muhim.
-  // Fokus YO'QOLSA (tap, blur) qayta tiklaymiz — tez ketma-ket skan uchun.
+  // Fokus YO'QOLSA qayta tiklaymiz, LEKIN foydalanuvchi boshqa interaktiv
+  // elementni (tugma, input, ssilka) bosган bo'lsa tegmaymiz — aks holda
+  // miqdor +/−/🗑️ tugmalarini bosib bo'lmaydi (fokus darhol o'g'irlanadi).
   useEffect(() => {
     const el = inputRef.current
     if (!el) return
     el.focus()
-    // Fokus ketsa darhol qaytaramiz (qator/tugma bosilsa ham pistolet ishlayveradi)
+    const INTERACTIVE = new Set(['INPUT', 'TEXTAREA', 'BUTTON', 'A', 'SELECT'])
     const refocus = () => {
-      // Boshqa input/textarea fokusda bo'lsa tegmaymiz (miqdor tahriri)
-      const active = document.activeElement
-      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') && active !== el) return
-      el.focus()
+      // blur'dan keyin fokus qayerga ketganini aniqlash uchun keyingi tick'ni kutamiz
+      setTimeout(() => {
+        const active = document.activeElement
+        if (active && active !== el && (INTERACTIVE.has(active.tagName) || (active as HTMLElement).isContentEditable)) {
+          return // foydalanuvchi atayin boshqa elementга o'tdi — fokusni o'g'irlamaymiz
+        }
+        el.focus()
+      }, 0)
     }
     el.addEventListener('blur', refocus)
     return () => el.removeEventListener('blur', refocus)

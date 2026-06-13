@@ -111,24 +111,6 @@ async def availability_for_holder(
     return result
 
 
-async def find_source_holder_id(
-    db: AsyncSession, *, variant_id: int, holder_type: HolderType
-) -> int | None:
-    """Shu variant shu turdagi qaysi egada (holder_id) turibdi — eng ko'p
-    miqdorli birinchisi. TR ombor/kuryer qabul qilganda manba yo'lovchini topish
-    uchun (qaysi yo'lovchida turgani scan'da noma'lum)."""
-    h = await db.scalar(
-        select(CustodyHolding)
-        .where(
-            CustodyHolding.variant_id == variant_id,
-            CustodyHolding.holder_type == holder_type,
-            CustodyHolding.quantity > 0,
-        )
-        .order_by(CustodyHolding.quantity.desc())
-    )
-    return h.holder_id if h else None
-
-
 async def availability_by_type(
     db: AsyncSession, *, product: Product, holder_type: HolderType
 ) -> list[tuple[int, str, int]]:

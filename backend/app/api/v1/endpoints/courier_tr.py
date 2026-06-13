@@ -32,7 +32,6 @@ from app.schemas.warehouse import (
 from app.services.custody_service import (
     availability_by_type,
     drain_from_type,
-    find_source_holder_id,
     get_product_by_barcode,
     is_fully_arrived,
     resolve_variant_id,
@@ -172,24 +171,14 @@ async def confirm_handover_warehouse(
         if product is None:
             raise AppError("BARCODE_NOT_FOUND", f"Barkod topilmadi: {item.barcode}")
         variant_id = await resolve_variant_id(db, product=product, variant_id=item.variant_id)
-        # Yuk COURIER_TR'da qaysi holder_id'da turibdi — o'zida (user.id) yoki
-        # ombordan kelganda (holder_id=0). Manbani holdings'dan topamiz.
-        src_id = await find_source_holder_id(
-            db, variant_id=variant_id, holder_type=HolderType.COURIER_TR
-        )
-        if src_id is None:
-            raise AppError(
-                "INVALID_PRODUCT_STATE",
-                f"Yuk ({item.barcode}) kuryerda emas",
-                status_code=400,
-            )
-        await transfer_custody(
+        # Yuk COURIER_TR'da bir nechta holder_id'ga bo'linган bo'lishi mumkin —
+        # o'zida (user.id) va ombordan kelgan (holder_id=0). Hammasidan yig'ib olamiz.
+        await drain_from_type(
             db,
             product,
             variant_id=variant_id,
             quantity=item.quantity,
             from_holder_type=HolderType.COURIER_TR,
-            from_holder_id=src_id,
             to_holder_type=HolderType.WAREHOUSE_TR,
             to_holder_id=0,  # umumiy Turkiya ombori (aniq xodim emas)
             event_type=CustodyEventType.WAREHOUSE_TR_RECEIVED,
@@ -253,15 +242,15 @@ async def deliveries(
     Manba sifatida custody_holdings ishlatiladi (yagona haqiqat) — Order.status
     custody bosqichlarini kuzatmaydi, shuning uchun unga tayanmaymiz.
     """
+    # Mahsulot (product_id) bo'yicha join — OrderItem.variant_id NULL bo'lishi
+    # mumkin (eski/variantsiz buyurtmalar), shuning uchun variant_id'ni
+    # tenglashtirmaymiz (NULL = NULL SQLда FALSE bo'lib buyurtmani yo'qotardi).
+    # products_count = TR omborga yetgan mahsulot turlari soni (DISTINCT OrderItem).
     rows = await db.execute(
-        select(Order, User, func.count(CustodyHolding.id))
+        select(Order, User, func.count(func.distinct(OrderItem.id)))
         .join(User, User.id == Order.carrier_id)
         .join(OrderItem, OrderItem.order_id == Order.id)
-        .join(
-            CustodyHolding,
-            (CustodyHolding.product_id == OrderItem.product_id)
-            & (CustodyHolding.variant_id == OrderItem.variant_id),
-        )
+        .join(CustodyHolding, CustodyHolding.product_id == OrderItem.product_id)
         .where(
             CustodyHolding.holder_type == HolderType.WAREHOUSE_TR,
             CustodyHolding.quantity > 0,

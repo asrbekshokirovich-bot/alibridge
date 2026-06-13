@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
-import type { CarrierOrder, OrderStatus } from '@/shared/types'
+import type { CarrierOrder, OrderStatus, CarrierMyProduct } from '@/shared/types'
 import { ORDER_STATUS } from '@/shared/lib/status'
 import { isPiece, typeEmoji } from '@/shared/lib/product'
-import { Header, ListSkeleton, EmptyState, StatusBadge, IconBag } from '@/shared/ui'
+import { Header, ListSkeleton, EmptyState, StatusBadge, IconBag, IconBox } from '@/shared/ui'
 
 export default function MyOrders() {
   const { data: orders, isLoading } = useQuery({
@@ -11,18 +11,61 @@ export default function MyOrders() {
     queryFn: () => client.get<CarrierOrder[]>('/carrier/orders').then((r) => r.data),
   })
 
+  // Kuryer aeroportда topshirgan, hozir qo'limizда turgan yuklar
+  const { data: received } = useQuery({
+    queryKey: ['carrier-my-products'],
+    queryFn: () => client.get<CarrierMyProduct[]>('/carrier/my-products').then((r) => r.data),
+    refetchInterval: 15000, // kuryer topshirsa o'zi yangilanadi
+  })
+
+  const receivedTotal = (received ?? []).reduce((s, p) => s + p.quantity, 0)
+  const hasContent = (orders?.length ?? 0) > 0 || (received?.length ?? 0) > 0
+
   return (
     <div className="min-h-screen pb-28 animate-fade-in">
       <Header title="Mening yuklarim" subtitle="Buyurtmalaringiz holati" />
 
+      {/* Qo'limdagi yuklar — kuryer aeroportда topshirgan, hozir yo'lovchida */}
+      {(received?.length ?? 0) > 0 && (
+        <div className="px-4 pt-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold text-slate-900 text-[15px]">Qo'limdagi yuklar</h3>
+            <span className="text-xs font-bold text-white px-2.5 py-0.5 rounded-full" style={{ background: 'var(--brand)' }}>
+              {receivedTotal} dona
+            </span>
+          </div>
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm divide-y divide-slate-50">
+            {received!.map((p) => (
+              <div key={`${p.product_id}-${p.size_label}`} className="flex items-center gap-3 p-3.5">
+                <div className="w-11 h-11 rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden shrink-0">
+                  {p.image_url
+                    ? <img src={p.image_url} alt="" className="w-full h-full object-cover" />
+                    : <IconBox size={20} />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm text-slate-900 truncate">
+                    {p.category || p.product_name}
+                    {p.size_label && <span className="text-slate-400 font-normal"> · {p.size_label}</span>}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {p.barcode}{p.received_at && ` · ${p.received_at}`}
+                  </p>
+                </div>
+                <span className="text-sm font-bold text-slate-700 shrink-0">{p.quantity} dona</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {isLoading ? (
         <ListSkeleton />
-      ) : !orders?.length ? (
+      ) : !hasContent ? (
         <EmptyState icon={<IconBag size={30} />} title="Hali yuk yo'q"
           description="Mahsulotlar bo'limidan yuk tanlang" />
       ) : (
         <div className="px-4 pt-4 space-y-3">
-          {orders.map((order) => {
+          {(orders ?? []).map((order) => {
             const st = ORDER_STATUS[order.status as OrderStatus] ?? { text: order.status, tone: 'gray' as const }
             const damaged = order.products.some((p) => p.status === 'damaged')
             return (

@@ -256,9 +256,7 @@ class CustodyHolding(Base):
     product_id: Mapped[int] = mapped_column(
         ForeignKey("products.id", ondelete="CASCADE"), index=True
     )
-    variant_id: Mapped[int] = mapped_column(
-        ForeignKey("product_variants.id", ondelete="CASCADE")
-    )
+    variant_id: Mapped[int] = mapped_column(ForeignKey("product_variants.id", ondelete="CASCADE"))
     holder_type: Mapped[HolderType] = mapped_column(String(32))
     holder_id: Mapped[int] = mapped_column(Integer, default=0)  # 0 = xodimsiz ega
     quantity: Mapped[int] = mapped_column(Integer, default=0)
@@ -266,7 +264,9 @@ class CustodyHolding(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "variant_id", "holder_type", "holder_id",
+            "variant_id",
+            "holder_type",
+            "holder_id",
             name="uq_custody_holdings_variant_holder",
         ),
     )

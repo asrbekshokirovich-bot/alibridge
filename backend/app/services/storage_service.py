@@ -79,6 +79,8 @@ async def upload_product_image(raw: bytes, product_id: int) -> str:
             CacheControl="public, max-age=31536000",
         )
     except (BotoCoreError, ClientError) as exc:
-        raise AppError("UPLOAD_FAILED", "Rasm yuklashda xatolik yuz berdi", status_code=502) from exc
+        raise AppError(
+            "UPLOAD_FAILED", "Rasm yuklashda xatolik yuz berdi", status_code=502
+        ) from exc
 
     return _public_url(key)

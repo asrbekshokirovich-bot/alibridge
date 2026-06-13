@@ -59,20 +59,24 @@ async def queue(
     Olib ketilgan buyurtma o'chmaydi — '(ism) tasdiqladi' bo'lib qoladi.
     """
     orders = (
-        await db.execute(
-            select(Order)
-            .where(
-                Order.pickup_type == PickupType.COURIER,
-                Order.status.in_([OrderStatus.CONFIRMED, OrderStatus.PENDING_ADMIN]),
+        (
+            await db.execute(
+                select(Order)
+                .where(
+                    Order.pickup_type == PickupType.COURIER,
+                    Order.status.in_([OrderStatus.CONFIRMED, OrderStatus.PENDING_ADMIN]),
+                )
+                .options(
+                    selectinload(Order.items).selectinload(OrderItem.product),
+                    selectinload(Order.items).selectinload(OrderItem.variant),
+                    selectinload(Order.carrier),
+                )
+                .order_by(Order.created_at.desc())
             )
-            .options(
-                selectinload(Order.items).selectinload(OrderItem.product),
-                selectinload(Order.items).selectinload(OrderItem.variant),
-                selectinload(Order.carrier),
-            )
-            .order_by(Order.created_at.desc())
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     # Kuryer olib ketganini aniqlash: yuk kuryerga o'tgan yoki undan keyingi bosqichda.
     # (WITH_CARRIER/DELIVERED_TR ham — kuryer allaqachon olib bo'lgan demakdir.)
@@ -123,8 +127,11 @@ async def queue(
         confirmed_by_name: str | None = None
         if all_picked:
             courier_id = next(
-                (pickup_by_product.get(it.product_id) for it in order.items
-                 if pickup_by_product.get(it.product_id) is not None),
+                (
+                    pickup_by_product.get(it.product_id)
+                    for it in order.items
+                    if pickup_by_product.get(it.product_id) is not None
+                ),
                 None,
             )
             holder = couriers.get(courier_id) if courier_id is not None else None
@@ -177,8 +184,7 @@ async def scan_pickup(
         product_name=product.name,
         quantity=sum(a[2] for a in avail),
         available_by_variant=[
-            VariantAvailability(variant_id=vid, size_label=sl, available=q)
-            for vid, sl, q in avail
+            VariantAvailability(variant_id=vid, size_label=sl, available=q) for vid, sl, q in avail
         ],
     )
 
@@ -197,9 +203,7 @@ async def confirm_pickup(
         )
         if product is None:
             raise AppError("BARCODE_NOT_FOUND", f"Barkod topilmadi: {item.barcode}")
-        variant_id = await resolve_variant_id(
-            db, product=product, variant_id=item.variant_id
-        )
+        variant_id = await resolve_variant_id(db, product=product, variant_id=item.variant_id)
         # Ombordan (WAREHOUSE_UZ, 0) kuryerning o'ziga
         await transfer_custody(
             db,
@@ -367,8 +371,7 @@ async def scan_airport(
         carrier_number=carrier.carrier_number,
         quantity=sum(a[2] for a in avail),
         available_by_variant=[
-            VariantAvailability(variant_id=vid, size_label=sl, available=q)
-            for vid, sl, q in avail
+            VariantAvailability(variant_id=vid, size_label=sl, available=q) for vid, sl, q in avail
         ],
     )
 
@@ -388,9 +391,7 @@ async def confirm_airport(
         )
         if product is None:
             raise AppError("BARCODE_NOT_FOUND", f"Barkod topilmadi: {item.barcode}")
-        variant_id = await resolve_variant_id(
-            db, product=product, variant_id=item.variant_id
-        )
+        variant_id = await resolve_variant_id(db, product=product, variant_id=item.variant_id)
         # Buyurtmali yuk faqat egasiga; buyurtmasiz yuk istalgan yo'lovchiga
         await _ensure_can_handover(db, product.id, carrier.id)
         # Kuryerning o'zidan (COURIER_UZ, user.id) yo'lovchiga

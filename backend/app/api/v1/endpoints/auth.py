@@ -91,7 +91,8 @@ async def web_login(
     Faqat xodim/admin rollari kira oladi (yo'lovchi/buyurtmachi botda qoladi).
     """
     user = await db.scalar(select(User).where(User.username == body.username))
-    # Foydalanuvchi yo'q yoki parol noto'g'ri — bir xil javob (foydalanuvchi borligini oshkor qilmaymiz)
+    # Foydalanuvchi yo'q yoki parol noto'g'ri — bir xil javob
+    # (foydalanuvchi borligini oshkor qilmaymiz)
     if user is None or not verify_password(body.password, user.password_hash):
         raise AppError("INVALID_CREDENTIALS", "Login yoki parol noto'g'ri", status_code=401)
     if not user.is_active:

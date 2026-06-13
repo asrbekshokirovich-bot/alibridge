@@ -26,6 +26,7 @@ def verify_password(password: str, password_hash: str | None) -> bool:
     except ValueError:
         return False
 
+
 # ─── JWT ──────────────────────────────────────────────────────────────────────
 
 

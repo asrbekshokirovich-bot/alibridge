@@ -68,7 +68,9 @@ async def list_carrier_orders(db: AsyncSession, carrier_id: int) -> list[Order]:
         select(Order)
         .where(Order.carrier_id == carrier_id)
         .options(
-            selectinload(Order.items).selectinload(OrderItem.product).selectinload(Product.variants),
+            selectinload(Order.items)
+            .selectinload(OrderItem.product)
+            .selectinload(Product.variants),
             selectinload(Order.items).selectinload(OrderItem.variant),
         )
         .order_by(Order.created_at.desc())
@@ -85,7 +87,9 @@ async def list_pending_orders_for_warehouse(db: AsyncSession) -> list[Order]:
         select(Order)
         .where(Order.status.in_([OrderStatus.PENDING_ADMIN, OrderStatus.CONFIRMED]))
         .options(
-            selectinload(Order.items).selectinload(OrderItem.product).selectinload(Product.variants),
+            selectinload(Order.items)
+            .selectinload(OrderItem.product)
+            .selectinload(Product.variants),
             selectinload(Order.items).selectinload(OrderItem.variant),
             selectinload(Order.carrier),
         )

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import require_role
+from app.api.v1.endpoints.warehouse_uz import build_daily_out
 from app.bot.notify import notify_user, on_staff_approved
 from app.core.enums import (
     DisputeStatus,
@@ -39,7 +40,6 @@ from app.schemas.admin import (
     StaffRequestOut,
     UpdateDisputeRequest,
 )
-from app.api.v1.endpoints.warehouse_uz import build_daily_out
 from app.schemas.common import OkResponse
 from app.schemas.product import ProductOut
 from app.schemas.serializers import product_to_out
@@ -294,9 +294,7 @@ async def remove_carrier(
         select(func.count()).select_from(Payment).where(Payment.carrier_id == target.id)
     )
     if has_orders or has_payments or await _has_work_history(db, target.id):
-        raise AppError(
-            "HAS_HISTORY", "Yo'lovchida buyurtma/to'lov tarixi bor — o'chirib bo'lmaydi"
-        )
+        raise AppError("HAS_HISTORY", "Yo'lovchida buyurtma/to'lov tarixi bor — o'chirib bo'lmaydi")
 
     # O'chirishdan oldin xabar yuboramiz
     await notify_user(
@@ -306,9 +304,7 @@ async def remove_carrier(
         "Qaytadan kirish uchun /start ni bosing.",
     )
     # Dispute'lar carrier_id null bo'lishi mumkin — yetim qilmaymiz
-    await db.execute(
-        update(Dispute).where(Dispute.carrier_id == target.id).values(carrier_id=None)
-    )
+    await db.execute(update(Dispute).where(Dispute.carrier_id == target.id).values(carrier_id=None))
     await db.execute(delete(StaffRequest).where(StaffRequest.user_id == target.id))
     await db.delete(target)
     await db.flush()
@@ -410,9 +406,7 @@ async def remove_staff(
         raise AppError("NOT_STAFF", "Bu foydalanuvchi xodim emas")
 
     if await _has_work_history(db, target.id):
-        raise AppError(
-            "HAS_HISTORY", "Xodimda ish tarixi bor — o'chirib bo'lmaydi"
-        )
+        raise AppError("HAS_HISTORY", "Xodimda ish tarixi bor — o'chirib bo'lmaydi")
 
     # O'chirishdan oldin xabar yuboramiz (keyin user qoldmaydi)
     await notify_user(

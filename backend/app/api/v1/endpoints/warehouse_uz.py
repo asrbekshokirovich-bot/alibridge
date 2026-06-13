@@ -422,9 +422,7 @@ async def products(
 
 async def _scan_for_handover(db: AsyncSession, barcode: str) -> ScanResponse:
     product = await db.scalar(
-        select(Product)
-        .options(selectinload(Product.variants))
-        .where(Product.barcode == barcode)
+        select(Product).options(selectinload(Product.variants)).where(Product.barcode == barcode)
     )
     if product is None:
         raise AppError("BARCODE_NOT_FOUND", "Barkod topilmadi", status_code=400)
@@ -444,8 +442,7 @@ async def _scan_for_handover(db: AsyncSession, barcode: str) -> ScanResponse:
         product_name=product.name,
         quantity=sum(a[2] for a in avail),
         available_by_variant=[
-            VariantAvailability(variant_id=vid, size_label=sl, available=q)
-            for vid, sl, q in avail
+            VariantAvailability(variant_id=vid, size_label=sl, available=q) for vid, sl, q in avail
         ],
     )
 
@@ -493,9 +490,7 @@ async def confirm_courier_handover(
         raise AppError("COURIER_REQUIRED", "Avval kuryerni tanlang")
     courier = (
         await db.execute(
-            select(User).where(
-                User.id == body.courier_id, User.role == Role.COURIER_UZ
-            )
+            select(User).where(User.id == body.courier_id, User.role == Role.COURIER_UZ)
         )
     ).scalar_one_or_none()
     if courier is None:
@@ -509,9 +504,7 @@ async def confirm_courier_handover(
         )
         if product is None:
             raise AppError("BARCODE_NOT_FOUND", f"Barkod topilmadi: {item.barcode}")
-        variant_id = await resolve_variant_id(
-            db, product=product, variant_id=item.variant_id
-        )
+        variant_id = await resolve_variant_id(db, product=product, variant_id=item.variant_id)
         # Ombordan (WAREHOUSE_UZ, 0) kuryerga. COURIER_UZ_PICKUP eventi —
         # kuryer o'zi olgani bilan bir xil, my-products hech o'zgarishsiz ishlaydi.
         await transfer_custody(
@@ -549,10 +542,12 @@ async def warehouse_carriers(
 
     # Yo'lovchida yuk bor-yo'qligi — custody_holdings (CARRIER, quantity>0) dan
     cargo_rows = await db.execute(
-        select(CustodyHolding.holder_id).where(
+        select(CustodyHolding.holder_id)
+        .where(
             CustodyHolding.holder_type == HolderType.CARRIER,
             CustodyHolding.quantity > 0,
-        ).distinct()
+        )
+        .distinct()
     )
     with_cargo = {row[0] for row in cargo_rows.all()}
 

@@ -46,19 +46,16 @@ async def _scan_avail(
 ) -> tuple[Product, list[tuple[int, str, int]], User | None]:
     """Scan yordamchisi: product + manba turdagi mavjudlik + yo'lovchi."""
     product = await db.scalar(
-        select(Product)
-        .options(selectinload(Product.variants))
-        .where(Product.barcode == barcode)
+        select(Product).options(selectinload(Product.variants)).where(Product.barcode == barcode)
     )
     if product is None:
         raise AppError("BARCODE_NOT_FOUND", "Barkod topilmadi", status_code=400)
     avail = await availability_by_type(db, product=product, holder_type=holder_type)
     if not avail:
-        raise AppError(
-            "INVALID_PRODUCT_STATE", "Bu yukdan bu bosqichda qolmagan"
-        )
+        raise AppError("INVALID_PRODUCT_STATE", "Bu yukdan bu bosqichda qolmagan")
     carrier = await _carrier_for_product(db, product.id)
     return product, avail, carrier
+
 
 router = APIRouter(prefix="/courier-tr", tags=["courier_tr"])
 
@@ -93,8 +90,7 @@ async def scan_receive(
         carrier_number=carrier.carrier_number if carrier else None,
         quantity=sum(a[2] for a in avail),
         available_by_variant=[
-            VariantAvailability(variant_id=vid, size_label=sl, available=q)
-            for vid, sl, q in avail
+            VariantAvailability(variant_id=vid, size_label=sl, available=q) for vid, sl, q in avail
         ],
     )
 
@@ -114,9 +110,7 @@ async def confirm_receive(
         )
         if product is None:
             raise AppError("BARCODE_NOT_FOUND", f"Barkod topilmadi: {item.barcode}")
-        variant_id = await resolve_variant_id(
-            db, product=product, variant_id=item.variant_id
-        )
+        variant_id = await resolve_variant_id(db, product=product, variant_id=item.variant_id)
         src_id = await find_source_holder_id(
             db, variant_id=variant_id, holder_type=HolderType.CARRIER
         )
@@ -166,8 +160,7 @@ async def scan_handover_warehouse(
         carrier_number=carrier.carrier_number if carrier else None,
         quantity=sum(a[2] for a in avail),
         available_by_variant=[
-            VariantAvailability(variant_id=vid, size_label=sl, available=q)
-            for vid, sl, q in avail
+            VariantAvailability(variant_id=vid, size_label=sl, available=q) for vid, sl, q in avail
         ],
     )
 
@@ -187,9 +180,7 @@ async def confirm_handover_warehouse(
         )
         if product is None:
             raise AppError("BARCODE_NOT_FOUND", f"Barkod topilmadi: {item.barcode}")
-        variant_id = await resolve_variant_id(
-            db, product=product, variant_id=item.variant_id
-        )
+        variant_id = await resolve_variant_id(db, product=product, variant_id=item.variant_id)
         await transfer_custody(
             db,
             product,
@@ -289,8 +280,7 @@ async def scan_delivery(
         product_name=product.name,
         quantity=sum(a[2] for a in avail),
         available_by_variant=[
-            VariantAvailability(variant_id=vid, size_label=sl, available=q)
-            for vid, sl, q in avail
+            VariantAvailability(variant_id=vid, size_label=sl, available=q) for vid, sl, q in avail
         ],
     )
 
@@ -309,9 +299,7 @@ async def confirm_delivery(
         )
         if product is None:
             raise AppError("BARCODE_NOT_FOUND", f"Barkod topilmadi: {item.barcode}")
-        variant_id = await resolve_variant_id(
-            db, product=product, variant_id=item.variant_id
-        )
+        variant_id = await resolve_variant_id(db, product=product, variant_id=item.variant_id)
         await transfer_custody(
             db,
             product,

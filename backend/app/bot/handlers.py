@@ -161,13 +161,17 @@ async def cmd_ishchi(message: Message) -> None:
 
         # Ro'yxatdan o'tmagan — avval /start bossin
         if user is None:
-            await message.answer(
-                "Avval ro'yxatdan o'ting — /start ni bosing."
-            )
+            await message.answer("Avval ro'yxatdan o'ting — /start ni bosing.")
             return
 
         # Allaqachon xodim yoki admin
-        staff_roles = {Role.WAREHOUSE_UZ, Role.WAREHOUSE_TR, Role.COURIER_UZ, Role.COURIER_TR, Role.ADMIN}
+        staff_roles = {
+            Role.WAREHOUSE_UZ,
+            Role.WAREHOUSE_TR,
+            Role.COURIER_UZ,
+            Role.COURIER_TR,
+            Role.ADMIN,
+        }
         if user.role in staff_roles:
             await message.answer("Siz allaqachon xodim sifatida tizimda ro'yxatdansiz.")
             return
@@ -196,5 +200,6 @@ async def cmd_ishchi(message: Message) -> None:
 
     # Adminlarga xabar
     from app.bot.notify import on_staff_request
+
     async with SessionLocal() as db:
         await on_staff_request(db, name=f"{tg.first_name} {tg.last_name or ''}".strip())

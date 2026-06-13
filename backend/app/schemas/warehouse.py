@@ -182,9 +182,9 @@ class DailyOutItem(BaseModel):
     size_label: str
     quantity: int
     from_label: str  # qaysi ombordan
-    to_label: str    # qayerga ketdi
-    by_name: str     # kim skanladi
-    time: str        # HH:MM
+    to_label: str  # qayerga ketdi
+    by_name: str  # kim skanladi
+    time: str  # HH:MM
 
 
 class DailyOutReport(BaseModel):

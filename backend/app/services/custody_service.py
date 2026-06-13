@@ -40,12 +40,8 @@ async def get_product_by_barcode(db: AsyncSession, barcode: str) -> Product:
     return product
 
 
-async def get_holdings_for_product(
-    db: AsyncSession, product_id: int
-) -> list[CustodyHolding]:
-    rows = await db.execute(
-        select(CustodyHolding).where(CustodyHolding.product_id == product_id)
-    )
+async def get_holdings_for_product(db: AsyncSession, product_id: int) -> list[CustodyHolding]:
+    rows = await db.execute(select(CustodyHolding).where(CustodyHolding.product_id == product_id))
     return list(rows.scalars().all())
 
 
@@ -75,9 +71,7 @@ async def available_qty(
     holder_id: int,
 ) -> int:
     """Shu egada shu variantdan nechta bor (yo'q bo'lsa 0)."""
-    h = await get_holding(
-        db, variant_id=variant_id, holder_type=holder_type, holder_id=holder_id
-    )
+    h = await get_holding(db, variant_id=variant_id, holder_type=holder_type, holder_id=holder_id)
     return h.quantity if h else 0
 
 
@@ -148,9 +142,7 @@ async def availability_by_type(
     return result
 
 
-async def resolve_variant_id(
-    db: AsyncSession, *, product: Product, variant_id: int | None
-) -> int:
+async def resolve_variant_id(db: AsyncSession, *, product: Product, variant_id: int | None) -> int:
     """variant_id berilmasa: product yagona variantli bo'lsa o'shani, aks holda xato."""
     if variant_id is not None:
         if not any(v.id == variant_id for v in product.variants):

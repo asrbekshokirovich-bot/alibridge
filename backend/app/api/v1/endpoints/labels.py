@@ -18,7 +18,10 @@ _DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.doc
 async def label_docx(
     barcode: str,
     db: AsyncSession = Depends(get_db),
-    print_date: str | None = Query(default=None, description="Chop etish sanasi (YYYY-MM-DD). Berilmasa received_date ishlatiladi."),
+    print_date: str | None = Query(
+        default=None,
+        description="Chop etish sanasi (YYYY-MM-DD). Berilmasa received_date ishlatiladi.",
+    ),
 ) -> Response:
     """Word (.docx) yorliq — yuklab olib chop etiladi. Auth talab qilmaydi (print_url)."""
     # print_date berilsa o'sha sanani ishlatamiz, aks holda received_date

@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.api.deps import require_role
+from app.bot import notify
 from app.core.enums import (
     CustodyEventType,
     HolderType,
@@ -12,7 +13,6 @@ from app.core.enums import (
 )
 from app.core.errors import AppError
 from app.db.base import get_db
-from app.bot import notify
 from app.db.models import Order, OrderItem, Product, User, WalkInCustomer
 from app.schemas.common import OkResponse
 from app.schemas.product import ProductOut
@@ -65,9 +65,7 @@ async def scan_receive(
         raise AppError("BARCODE_NOT_FOUND", "Barkod topilmadi", status_code=400)
     carrier = await _carrier_for_product(db, product.id)
     # Yo'lovchi(lar)da (CARRIER) shu yukdan nechta bor — TR ombor qabul qiladi
-    avail = await availability_by_type(
-        db, product=product, holder_type=HolderType.CARRIER
-    )
+    avail = await availability_by_type(db, product=product, holder_type=HolderType.CARRIER)
     if not avail:
         raise AppError(
             "INVALID_PRODUCT_STATE",
@@ -79,8 +77,7 @@ async def scan_receive(
         carrier_name=f"{carrier.first_name} {carrier.last_name}".strip() if carrier else None,
         quantity=sum(a[2] for a in avail),
         available_by_variant=[
-            VariantAvailability(variant_id=vid, size_label=sl, available=q)
-            for vid, sl, q in avail
+            VariantAvailability(variant_id=vid, size_label=sl, available=q) for vid, sl, q in avail
         ],
     )
 
@@ -99,9 +96,7 @@ async def confirm_receive(
         )
         if product is None:
             raise AppError("BARCODE_NOT_FOUND", f"Barkod topilmadi: {item.barcode}")
-        variant_id = await resolve_variant_id(
-            db, product=product, variant_id=item.variant_id
-        )
+        variant_id = await resolve_variant_id(db, product=product, variant_id=item.variant_id)
         # Manba: yuk qaysi yo'lovchida turibdi (scan'da noma'lum, holdingsdan topamiz)
         src_id = await find_source_holder_id(
             db, variant_id=variant_id, holder_type=HolderType.CARRIER
@@ -152,20 +147,15 @@ async def scan_handover(
     )
     if product is None:
         raise AppError("BARCODE_NOT_FOUND", "Barkod topilmadi", status_code=400)
-    avail = await availability_by_type(
-        db, product=product, holder_type=HolderType.WAREHOUSE_TR
-    )
+    avail = await availability_by_type(db, product=product, holder_type=HolderType.WAREHOUSE_TR)
     if not avail:
-        raise AppError(
-            "INVALID_PRODUCT_STATE", "Bu yukdan omborda qolmagan"
-        )
+        raise AppError("INVALID_PRODUCT_STATE", "Bu yukdan omborda qolmagan")
     return ScanResponse(
         barcode=product.barcode,
         product_name=product.name,
         quantity=sum(a[2] for a in avail),
         available_by_variant=[
-            VariantAvailability(variant_id=vid, size_label=sl, available=q)
-            for vid, sl, q in avail
+            VariantAvailability(variant_id=vid, size_label=sl, available=q) for vid, sl, q in avail
         ],
     )
 
@@ -184,9 +174,7 @@ async def confirm_handover(
         )
         if product is None:
             raise AppError("BARCODE_NOT_FOUND", f"Barkod topilmadi: {item.barcode}")
-        variant_id = await resolve_variant_id(
-            db, product=product, variant_id=item.variant_id
-        )
+        variant_id = await resolve_variant_id(db, product=product, variant_id=item.variant_id)
         await transfer_custody(
             db,
             product,

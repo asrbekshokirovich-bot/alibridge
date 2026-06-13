@@ -8,7 +8,6 @@ from app.bot.notify import on_new_order
 from app.core.enums import (
     CustodyEventType,
     HolderType,
-    OrderStatus,
     ProductStatus,
     Role,
 )
@@ -19,8 +18,6 @@ from app.db.base import get_db
 from app.db.models import (
     CustodyEvent,
     CustodyHolding,
-    Order,
-    OrderItem,
     Product,
     ProductVariant,
     User,
@@ -196,7 +193,8 @@ async def leave_role(
     user: User = Depends(require_role(Role.CARRIER)),
 ) -> LeaveRoleResponse:
     """Yo'lovchi rolidan chiqish — faqat barcha yuklari WITH_CARRIER emas yoki DELIVERED_TR bo'lsa.
-    Shartlar: hech qanday faol yuki qolmagan bo'lishi kerak (pending_admin, confirmed, with_courier_uz, with_carrier).
+    Shartlar: hech qanday faol yuki qolmagan bo'lishi kerak
+    (pending_admin, confirmed, with_courier_uz, with_carrier).
     """
     # Yo'lovchida hozir yuk turgan bo'lsa (CARRIER holding) — chiqib bo'lmaydi
     active_count = await db.scalar(

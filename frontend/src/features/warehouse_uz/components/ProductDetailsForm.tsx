@@ -45,7 +45,7 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Rasm (majburiy)
+  // Rasm (ixtiyoriy)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [imageUrl, setImageUrl] = useState(initial?.image_url ?? '')
   const [imagePreview, setImagePreview] = useState('')
@@ -142,9 +142,9 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
   }
 
   // "Qabul qilish": agar joriy o'lcham to'ldirilgan bo'lsa avval uni qo'shamiz, keyin tugatamiz
+  // Rasm IXTIYORIY — xodim xohlasa kiritadi, xohlamasa kiritmaydi.
   const finish = async () => {
     if (loading || adding) return
-    if (!imageUrl) { setError('Rasm majburiy'); return }
 
     let last: Product | null = null
     if (currentFilled) {
@@ -179,10 +179,10 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
   return (
     <>
       <div className="px-4 pt-5 space-y-4">
-        {/* Rasm (majburiy) */}
+        {/* Rasm (ixtiyoriy) */}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
-            Mahsulot rasmi <span className="text-red-500">*</span>
+            Mahsulot rasmi <span className="text-slate-400 font-normal">(ixtiyoriy)</span>
           </label>
           <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={onPickImage} />
           {imageUrl || imagePreview ? (
@@ -292,7 +292,7 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
             placeholder="Dollarda ($)" value={cargoPrice} onChange={(e) => setCargoPrice(e.target.value)} />
 
           {/* + O'lcham qo'shish */}
-          <Button variant="ghost" fullWidth loading={adding} disabled={!imageUrl || !currentFilled} onClick={addVariant}>
+          <Button variant="ghost" fullWidth loading={adding} disabled={!currentFilled} onClick={addVariant}>
             + O'lcham qo'shish
           </Button>
         </div>
@@ -301,7 +301,7 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
       </div>
 
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100">
-        <Button fullWidth loading={loading} disabled={!imageUrl || (variants.length === 0 && !currentFilled)} onClick={finish}>
+        <Button fullWidth loading={loading} disabled={variants.length === 0 && !currentFilled} onClick={finish}>
           {submitLabel}
         </Button>
       </div>

@@ -674,22 +674,31 @@ async def build_daily_out(
     if to_types is not None:
         stmt = stmt.where(CustodyEvent.to_holder_type.in_(to_types))
     rows = await db.execute(stmt)
-    items: list[DailyOutItem] = []
+
+    # Barkod + o'lcham bo'yicha GURUHLAYMIZ — har mahsulot bitta qator, jami soni.
+    # (Bir barkod kun davomida bir necha marta kelishi mumkin — donalab emas, yig'ib.)
+    grouped: dict[tuple[str, str], DailyOutItem] = {}
+    order: list[tuple[str, str]] = []  # birinchi ko'rinish tartibini saqlash (eng yangi avval)
     for ev, p, v, u in rows.all():
-        from_label = STAGE_LABELS.get(ev.from_holder_type, ev.from_holder_type or "")
-        to_label = STAGE_LABELS.get(ev.to_holder_type, ev.to_holder_type or "")
-        items.append(
-            DailyOutItem(
+        size = v.size_label if v else ""
+        key = (p.barcode, size)
+        g = grouped.get(key)
+        if g is None:
+            grouped[key] = DailyOutItem(
                 barcode=p.barcode,
                 product_name=p.name,
-                size_label=v.size_label if v else "",
+                size_label=size,
                 quantity=ev.quantity,
-                from_label=from_label,
-                to_label=to_label,
+                from_label=STAGE_LABELS.get(ev.from_holder_type, ev.from_holder_type or ""),
+                to_label=STAGE_LABELS.get(ev.to_holder_type, ev.to_holder_type or ""),
                 by_name=(f"{u.first_name} {u.last_name}".strip() if u else ""),
-                time=ev.created_at.strftime("%H:%M"),
+                time=ev.created_at.strftime("%H:%M"),  # eng so'nggi vaqt
             )
-        )
+            order.append(key)
+        else:
+            g.quantity += ev.quantity  # bir xil mahsulot — sonini qo'shamiz
+
+    items = [grouped[k] for k in order]
     return DailyOutReport(
         date=day.isoformat(),
         total=sum(i.quantity for i in items),

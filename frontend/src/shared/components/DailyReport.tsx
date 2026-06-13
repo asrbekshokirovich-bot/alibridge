@@ -99,14 +99,12 @@ export function DailyReport({
                   <span className="bg-slate-100 px-1.5 py-0.5 rounded">{it.from_label}</span>
                   <span>→</span>
                   <span className="bg-slate-100 px-1.5 py-0.5 rounded">{it.to_label}</span>
-                  {it.by_name && <span className="text-slate-400">· {it.by_name}</span>}
                 </div>
               </div>
               <div className="text-right shrink-0">
-                <span className="text-sm font-bold text-white px-2 py-0.5 rounded-lg" style={{ background: 'var(--brand)' }}>
+                <span className="text-base font-extrabold text-white px-2.5 py-1 rounded-lg" style={{ background: 'var(--brand)' }}>
                   {it.quantity} ta
                 </span>
-                <p className="text-[11px] text-slate-400 mt-1">{it.time}</p>
               </div>
             </div>
           ))}

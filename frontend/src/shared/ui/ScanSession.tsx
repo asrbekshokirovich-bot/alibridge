@@ -20,15 +20,21 @@ interface ScanData {
   [key: string]: unknown
 }
 
-// Skanlangan qator: barkod + variant + tanlangan miqdor (+ manbada bori)
+// Qator holati: pending (server javobi kutilmoqda) | ok | error | choose (ko'p o'lcham)
+type RowStatus = 'pending' | 'ok' | 'error' | 'choose'
+
+// Skanlangan qator — barcode bo'yicha kalitlangan (optimistik: darhol qo'shiladi,
+// mahsulot ma'lumoti fonда to'ldiriladi).
 interface ScannedRow {
-  key: string // `${barcode}:${variant_id}`
   barcode: string
   product_name: string
-  variant_id: number
+  variant_id: number | null   // server aniqlagach to'ladi (1 variantli yoki tanlangach)
   size_label: string
-  available: number
+  available: number           // manbada bori (server javobidan); 0 = noma'lum
   quantity: number
+  status: RowStatus
+  error?: string              // xato matni (status=error)
+  variants?: VariantAvailability[] // status=choose bo'lsa tanlash uchun
 }
 
 interface Props {
@@ -44,9 +50,8 @@ interface Props {
   onBack?: () => void
 }
 
-const rowKey = (barcode: string, variantId: number) => `${barcode}:${variantId}`
-
-// Miqdor bo'yicha skanlash sessiyasi (split custody) — har skan +1, qo'lda tahrir
+// Miqdor bo'yicha skanlash sessiyasi (split custody) — optimistik live rejim:
+// pistolet tezligida skan darhol ro'yxatga tushadi, tekshiruv fonда parallel ketadi.
 export function ScanSession({
   title, subtitle, scanUrl, confirmUrl, scanBody = {}, confirmBody = {},
   successTitle, successDesc, showBack, onBack,
@@ -56,96 +61,132 @@ export function ScanSession({
   const [rows, setRows] = useState<ScannedRow[]>([])
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
-  // O'lcham tanlash kerak bo'lganda (ko'p variant): skan natijasi shu yerda kutadi
-  const [pending, setPending] = useState<ScanData | null>(null)
-  // Qayta ishlanayotgan skanlar soni (pistolet tez ursa navbatda kutayotganlar)
-  const [scanning, setScanning] = useState(0)
+  // Fonда tekshirilayotgan (hali javob kelmagan) skanlar soni
+  const [checking, setChecking] = useState(0)
+  const checkingRef = useRef(0)
+  // rows'ning joriy nusxasi — handleScan'da sinxron qaror qabul qilish uchun
+  // (setRows updater keyinroq ishlaydi, undan needVerify'ni o'qib bo'lmaydi)
+  const rowsRef = useRef<ScannedRow[]>([])
+  const setRowsSync = useCallback((fn: (prev: ScannedRow[]) => ScannedRow[]) => {
+    rowsRef.current = fn(rowsRef.current)
+    setRows(rowsRef.current)
+  }, [])
 
-  // Pistolet tez ketma-ket ursa — barkodlar navbatga yig'iladi va bittadan
-  // server'ga yuboriladi (hech biri yo'qolmaydi). useRef — render'siz boshqaramiz.
-  const queueRef = useRef<string[]>([])
-  const runningRef = useRef(false)
-  const pausedRef = useRef(false) // o'lcham tanlash kutilganda navbat to'xtaydi
+  // Faqat tasdiqqa tayyor (ok) qatorlar hisobga olinadi
+  const validRows = rows.filter((r) => r.status === 'ok')
+  const totalQty = validRows.reduce((s, r) => s + r.quantity, 0)
+  const hasErrors = rows.some((r) => r.status === 'error')
 
-  const totalQty = rows.reduce((s, r) => s + r.quantity, 0)
+  const bump = (delta: number) => {
+    checkingRef.current = Math.max(0, checkingRef.current + delta)
+    setChecking(checkingRef.current)
+  }
 
-  // Skanlangan variantni ro'yxatga qo'shadi yoki mavjud bo'lsa +1
-  const addVariant = useCallback((data: ScanData, v: VariantAvailability) => {
-    let overflow = false
-    setRows((prev) => {
-      const key = rowKey(data.barcode, v.variant_id)
-      const existing = prev.find((r) => r.key === key)
-      if (existing) {
-        if (existing.quantity >= v.available) {
-          overflow = true
-          return prev
-        }
-        return prev.map((r) => (r.key === key ? { ...r, quantity: r.quantity + 1 } : r))
-      }
-      return [
-        {
-          key,
-          barcode: data.barcode,
-          product_name: data.product_name,
-          variant_id: v.variant_id,
-          size_label: v.size_label,
-          available: v.available,
-          quantity: 1,
-        },
-        ...prev,
-      ]
-    })
-    if (overflow) {
-      notify('warning')
-      setError(`${data.barcode}: faqat ${v.available} ta bor`)
-    } else {
-      setError('')
-      notify('success')
-    }
-  }, [notify])
-
-  // Navbatni ketma-ket qayta ishlaydi: bittadan barkodni server'ga yuboradi.
-  // Bir variantli yuk avtomatik qo'shiladi; ko'p o'lchamli yuk navbatni pauza
-  // qiladi (foydalanuvchi o'lcham tanlaguncha).
-  const processQueue = useCallback(async () => {
-    if (runningRef.current) return
-    runningRef.current = true
+  // Bir barkod uchun fonда tekshiruv: server'dan nom/o'lcham/available oladi.
+  const verify = useCallback(async (bc: string) => {
+    bump(1)
     try {
-      while (queueRef.current.length > 0 && !pausedRef.current) {
-        const bc = queueRef.current[0]
-        try {
-          const { data } = await client.post<ScanData>(scanUrl, { barcode: bc, ...scanBody })
-          const variants = data.available_by_variant ?? []
+      const { data } = await client.post<ScanData>(scanUrl, { barcode: bc, ...scanBody })
+      const variants = data.available_by_variant ?? []
+      setRowsSync((prev) =>
+        prev.map((r) => {
+          if (r.barcode !== bc || r.status !== 'pending') return r
           if (variants.length === 0) {
-            setError(`${bc}: bu yukdan qolmagan`)
-            notify('error')
-          } else if (variants.length === 1) {
-            addVariant(data, variants[0])
-          } else {
-            // Ko'p o'lcham — navbatni pauza qilib, tanlashni so'raymiz.
-            // Bu barkod navbatда qoladi (shift qilmaymiz) — tanlangach davom etadi.
-            pausedRef.current = true
-            setPending(data)
-            setScanning(queueRef.current.length)
-            return
+            return { ...r, status: 'error', error: 'qolmagan', product_name: data.product_name || bc }
           }
-        } catch (err) {
-          setError(extractErrorMessage(err))
-          notify('error')
-        }
-        queueRef.current.shift() // bu barkod ishlandi — navbatdan olib tashlaymiz
-        setScanning(queueRef.current.length)
-      }
+          if (variants.length === 1) {
+            const v = variants[0]
+            // Optimistik qo'shilgan miqdor available'dan oshmasin
+            return {
+              ...r,
+              status: 'ok',
+              product_name: data.product_name,
+              variant_id: v.variant_id,
+              size_label: v.size_label,
+              available: v.available,
+              quantity: Math.min(r.quantity, v.available),
+            }
+          }
+          // Ko'p o'lcham — foydalanuvchi tanlaydi
+          return { ...r, status: 'choose', product_name: data.product_name, variants }
+        }),
+      )
+      if (variants.length === 0) notify('error')
+      else notify('success')
+    } catch (err) {
+      const msg = extractErrorMessage(err)
+      setRowsSync((prev) =>
+        prev.map((r) =>
+          r.barcode === bc && r.status === 'pending' ? { ...r, status: 'error', error: msg } : r,
+        ),
+      )
+      notify('error')
     } finally {
-      runningRef.current = false
-      setScanning(queueRef.current.length)
+      bump(-1)
     }
-  }, [scanUrl, scanBody, addVariant, notify])
+  }, [scanUrl, scanBody, notify, setRowsSync])
+
+  // Pistolet/qo'lda skan — DARHOL ro'yxatga qo'shamiz (kutishsiz), tekshiruv fonда.
+  // Qaror rowsRef bo'yicha SINXRON qabul qilinadi (setRows updater keyin ishlaydi).
+  const handleScan = (raw: string) => {
+    const bc = raw.trim()
+    if (!bc) return
+    setError('')
+    const existing = rowsRef.current.find((r) => r.barcode === bc)
+    let needVerify = false
+
+    if (!existing) {
+      // Yangi barkod — optimistik pending qator (tepaga)
+      needVerify = true
+      setRowsSync((prev) => [
+        { barcode: bc, product_name: bc, variant_id: null, size_label: '', available: 0, quantity: 1, status: 'pending' },
+        ...prev,
+      ])
+    } else if (existing.status === 'error') {
+      // Xato bo'lgan — qayta urinish
+      needVerify = true
+      setRowsSync((prev) =>
+        prev.map((r) => (r.barcode === bc ? { ...r, status: 'pending', quantity: 1, error: undefined } : r)),
+      )
+    } else if (existing.status === 'choose') {
+      // O'lcham tanlanishi kerak — +1 qo'shmaymiz
+    } else {
+      // ok yoki pending — miqdor +1 (ok bo'lsa available cheklovida)
+      const cap = existing.status === 'ok' ? existing.available : Infinity
+      if (existing.quantity >= cap) {
+        notify('warning')
+      } else {
+        setRowsSync((prev) => prev.map((r) => (r.barcode === bc ? { ...r, quantity: r.quantity + 1 } : r)))
+      }
+    }
+
+    if (needVerify) void verify(bc)
+  }
+
+  // Ko'p o'lchamli yukda o'lcham tanlash
+  const pickVariant = (bc: string, v: VariantAvailability) => {
+    setRowsSync((prev) =>
+      prev.map((r) =>
+        r.barcode === bc
+          ? {
+              ...r,
+              status: 'ok',
+              variant_id: v.variant_id,
+              size_label: v.size_label,
+              available: v.available,
+              quantity: Math.min(r.quantity, v.available),
+              variants: undefined,
+            }
+          : r,
+      ),
+    )
+    notify('success')
+  }
 
   const confirm = useMutation({
     mutationFn: () =>
       client.post(confirmUrl, {
-        items: rows.map((r) => ({
+        items: validRows.map((r) => ({
           barcode: r.barcode,
           variant_id: r.variant_id,
           quantity: r.quantity,
@@ -156,43 +197,17 @@ export function ScanSession({
     onError: (err) => { setError(extractErrorMessage(err)); notify('error') },
   })
 
-  // Pistolet yoki qo'lda skan — barkodni navbatga qo'shamiz va qayta ishlovni
-  // ishga tushiramiz. Tez 10 marta ursa ham 10 tasi navbatga tushadi.
-  const handleScan = (bc: string) => {
-    const code = bc.trim()
-    if (!code) return
-    setError('')
-    queueRef.current.push(code)
-    setScanning(queueRef.current.length)
-    void processQueue()
-  }
-
-  // Ko'p o'lchamli yukda foydalanuvchi o'lcham tanlagach — navbatni davom ettiramiz
-  const pickVariant = (data: ScanData, v: VariantAvailability) => {
-    addVariant(data, v)
-    setPending(null)
-    queueRef.current.shift() // tanlangan barkod navbatdan chiqadi
-    pausedRef.current = false
-    void processQueue()
-  }
-
-  // O'lcham tanlashni bekor qilish — bu barkodni o'tkazib yuboramiz, navbat davom etadi
-  const skipPending = () => {
-    setPending(null)
-    queueRef.current.shift()
-    pausedRef.current = false
-    void processQueue()
-  }
-
-  const setQty = (key: string, qty: number) => {
-    setRows((prev) =>
-      prev.map((r) =>
-        r.key === key ? { ...r, quantity: Math.max(1, Math.min(qty, r.available)) } : r,
-      ),
+  const setQty = (bc: string, qty: number) => {
+    setRowsSync((prev) =>
+      prev.map((r) => {
+        if (r.barcode !== bc) return r
+        const cap = r.status === 'ok' ? r.available : qty
+        return { ...r, quantity: Math.max(1, Math.min(qty, cap)) }
+      }),
     )
   }
 
-  const removeRow = (key: string) => setRows((prev) => prev.filter((r) => r.key !== key))
+  const removeRow = (bc: string) => setRowsSync((prev) => prev.filter((r) => r.barcode !== bc))
 
   if (done) {
     return <SuccessScreen title={successTitle}
@@ -203,39 +218,18 @@ export function ScanSession({
     <div className="min-h-screen flex flex-col animate-fade-in">
       <Header title={title} subtitle={subtitle} showBack={showBack} onBack={onBack} />
 
-      <ScanInput value={barcode} onChange={setBarcode}
-        onScan={handleScan} loading={scanning > 0} />
+      <ScanInput value={barcode} onChange={setBarcode} onScan={handleScan} loading={false} />
 
-      {/* Navbatda kutayotgan skanlar (pistolet tez urilganda) */}
-      {scanning > 0 && (
-        <div className="mx-4 -mt-1 mb-2 flex items-center gap-2 text-xs text-slate-500">
-          <span className="inline-block w-3 h-3 border-2 border-slate-300 border-t-red-400 rounded-full animate-spin" />
-          {scanning} ta skan qayta ishlanmoqda…
+      {/* Fonда tekshirilayotgan skanlar (skan to'xtatmaydi — faqat ko'rsatkich) */}
+      {checking > 0 && (
+        <div className="mx-4 -mt-1 mb-2 flex items-center gap-2 text-xs text-slate-400">
+          <span className="inline-block w-3 h-3 border-2 border-slate-200 border-t-red-400 rounded-full animate-spin" />
+          {checking} ta tekshirilmoqda…
         </div>
       )}
 
       {error && (
         <div className="mx-4 -mt-1 mb-2 bg-red-50 text-red-600 text-sm px-4 py-2.5 rounded-xl animate-fade-in">{error}</div>
-      )}
-
-      {/* O'lcham tanlash (ko'p variantli mahsulot skanlanganda) */}
-      {pending && (
-        <div className="mx-4 mb-3 bg-white rounded-2xl border border-slate-200 p-4 animate-scale-in">
-          <p className="text-sm font-bold text-slate-900 mb-1">{pending.product_name}</p>
-          <p className="text-xs text-slate-400 mb-3">O'lchamni tanlang</p>
-          <div className="flex flex-wrap gap-2">
-            {(pending.available_by_variant ?? []).map((v) => (
-              <button
-                key={v.variant_id}
-                onClick={() => pickVariant(pending, v)}
-                className="press px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:border-red-300"
-              >
-                {v.size_label || 'O\'lcham'} · {v.available} ta
-              </button>
-            ))}
-          </div>
-          <button onClick={skipPending} className="mt-3 text-xs text-slate-400">Bekor qilish</button>
-        </div>
       )}
 
       {/* Sanagich */}
@@ -248,41 +242,78 @@ export function ScanSession({
         </div>
       )}
 
-      {/* Ro'yxat — har qatorда miqdor boshqaruvi */}
+      {/* Ro'yxat — har qatorда holat + miqdor boshqaruvi */}
       <div className="flex-1 overflow-y-auto px-4 space-y-2 pb-32">
-        {rows.map((r) => (
-          <div key={r.key} className="bg-white rounded-2xl p-3.5 border border-emerald-200 flex items-center gap-3 animate-scale-in">
-            <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-              <IconCheck size={18} />
+        {rows.map((r) => {
+          const border =
+            r.status === 'error' ? 'border-red-200 bg-red-50/40'
+            : r.status === 'choose' ? 'border-amber-200 bg-amber-50/40'
+            : r.status === 'pending' ? 'border-slate-200'
+            : 'border-emerald-200 bg-white'
+          return (
+            <div key={r.barcode} className={`rounded-2xl p-3.5 border flex items-center gap-3 animate-scale-in ${border}`}>
+              {/* Holat ikonkasi */}
+              <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-sm font-bold">
+                {r.status === 'ok' && <span className="bg-emerald-100 text-emerald-600 w-full h-full rounded-full flex items-center justify-center"><IconCheck size={18} /></span>}
+                {r.status === 'pending' && <span className="w-4 h-4 border-2 border-slate-300 border-t-red-400 rounded-full animate-spin" />}
+                {r.status === 'error' && <span className="bg-red-100 text-red-500 w-full h-full rounded-full flex items-center justify-center">✕</span>}
+                {r.status === 'choose' && <span className="bg-amber-100 text-amber-600 w-full h-full rounded-full flex items-center justify-center">?</span>}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm text-slate-900 truncate">
+                  {r.product_name}{r.size_label ? ` · ${r.size_label}` : ''}
+                </p>
+                <p className="text-xs font-mono text-slate-400">
+                  {r.barcode}
+                  {r.status === 'ok' && ` · max ${r.available}`}
+                  {r.status === 'error' && <span className="text-red-500"> · {r.error}</span>}
+                </p>
+
+                {/* Ko'p o'lcham tanlash — qator ichida */}
+                {r.status === 'choose' && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {(r.variants ?? []).map((v) => (
+                      <button key={v.variant_id} onClick={() => pickVariant(r.barcode, v)}
+                        className="press px-2.5 py-1 rounded-lg border border-amber-300 text-xs font-semibold text-amber-700 bg-white">
+                        {v.size_label || 'O\'lcham'} · {v.available}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Miqdor — faqat ok holatда */}
+              {r.status === 'ok' ? (
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button onClick={() => setQty(r.barcode, r.quantity - 1)}
+                    className="press w-7 h-7 rounded-lg bg-slate-100 text-slate-600 font-bold flex items-center justify-center">−</button>
+                  <input type="number" value={r.quantity}
+                    onChange={(e) => setQty(r.barcode, parseInt(e.target.value) || 1)}
+                    className="w-12 text-center font-bold text-slate-900 border border-slate-200 rounded-lg py-1 text-sm" />
+                  <button onClick={() => setQty(r.barcode, r.quantity + 1)}
+                    className="press w-7 h-7 rounded-lg bg-slate-100 text-slate-600 font-bold flex items-center justify-center">+</button>
+                  <button onClick={() => removeRow(r.barcode)}
+                    className="press w-7 h-7 rounded-lg text-red-400 flex items-center justify-center">🗑️</button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-sm font-bold text-slate-400">{r.quantity}</span>
+                  <button onClick={() => removeRow(r.barcode)}
+                    className="press w-7 h-7 rounded-lg text-red-400 flex items-center justify-center">🗑️</button>
+                </div>
+              )}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm text-slate-900 truncate">
-                {r.product_name}{r.size_label ? ` · ${r.size_label}` : ''}
-              </p>
-              <p className="text-xs font-mono text-slate-400">{r.barcode} · max {r.available}</p>
-            </div>
-            {/* Miqdor: − [son] + */}
-            <div className="flex items-center gap-1.5 shrink-0">
-              <button onClick={() => setQty(r.key, r.quantity - 1)}
-                className="press w-7 h-7 rounded-lg bg-slate-100 text-slate-600 font-bold flex items-center justify-center">−</button>
-              <input
-                type="number"
-                value={r.quantity}
-                onChange={(e) => setQty(r.key, parseInt(e.target.value) || 1)}
-                className="w-12 text-center font-bold text-slate-900 border border-slate-200 rounded-lg py-1 text-sm"
-              />
-              <button onClick={() => setQty(r.key, r.quantity + 1)}
-                className="press w-7 h-7 rounded-lg bg-slate-100 text-slate-600 font-bold flex items-center justify-center">+</button>
-              <button onClick={() => removeRow(r.key)}
-                className="press w-7 h-7 rounded-lg text-red-400 flex items-center justify-center">🗑️</button>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Tasdiqlash */}
-      {rows.length > 0 && (
+      {validRows.length > 0 && (
         <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100">
+          {hasErrors && (
+            <p className="text-xs text-red-500 text-center mb-2">Xatoli qatorlar tasdiqlashga kirmaydi</p>
+          )}
           <button onClick={() => confirm.mutate()} disabled={confirm.isPending}
             style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' }}
             className="press w-full text-white rounded-2xl py-4 font-bold shadow-[0_8px_24px_rgba(34,197,94,0.35)] disabled:opacity-50">

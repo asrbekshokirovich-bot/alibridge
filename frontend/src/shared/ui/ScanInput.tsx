@@ -4,7 +4,8 @@ import { IconScan } from './icons'
 interface Props {
   value: string
   onChange: (v: string) => void
-  onScan: () => void
+  // Skanlangan barkodni uzatadi (Enter yoki "Skan" tugmasi). Input darhol tozalanadi.
+  onScan: (barcode: string) => void
   loading?: boolean
   placeholder?: string
 }
@@ -12,18 +13,34 @@ interface Props {
 export function ScanInput({ value, onChange, onScan, loading, placeholder = 'Barkodni skanlang' }: Props) {
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Pistoletcha skaner odatda Enter yuboradi — avtofokus muhim
+  // Pistoletcha skaner Enter yuboradi — avtofokus muhim.
+  // Fokus YO'QOLSA (tap, blur) qayta tiklaymiz — tez ketma-ket skan uchun.
   useEffect(() => {
-    inputRef.current?.focus()
+    const el = inputRef.current
+    if (!el) return
+    el.focus()
+    // Fokus ketsa darhol qaytaramiz (qator/tugma bosilsa ham pistolet ishlayveradi)
+    const refocus = () => {
+      // Boshqa input/textarea fokusda bo'lsa tegmaymiz (miqdor tahriri)
+      const active = document.activeElement
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') && active !== el) return
+      el.focus()
+    }
+    el.addEventListener('blur', refocus)
+    return () => el.removeEventListener('blur', refocus)
   }, [])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (value.trim()) onScan()
+    const bc = value.trim()
+    if (!bc) return
+    onScan(bc)
+    onChange('')          // darhol tozalaymiz — keyingi skan uchun tayyor
+    inputRef.current?.focus()
   }
 
   return (
-    <form onSubmit={handleSubmit} className="p-4">
+    <form onSubmit={submit} className="p-4">
       <div className="relative">
         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-red-400 pointer-events-none">
           <IconScan size={22} />
@@ -40,7 +57,7 @@ export function ScanInput({ value, onChange, onScan, loading, placeholder = 'Bar
         />
         <button
           type="submit"
-          disabled={loading || !value.trim()}
+          disabled={!value.trim()}
           style={{ background: 'var(--brand-gradient)' }}
           className="press absolute right-2 top-1/2 -translate-y-1/2 text-white text-sm font-semibold px-4 py-2.5 rounded-xl disabled:opacity-40"
         >

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
@@ -58,18 +58,26 @@ export function ScanSession({
   const [done, setDone] = useState(false)
   // O'lcham tanlash kerak bo'lganda (ko'p variant): skan natijasi shu yerda kutadi
   const [pending, setPending] = useState<ScanData | null>(null)
+  // Qayta ishlanayotgan skanlar soni (pistolet tez ursa navbatda kutayotganlar)
+  const [scanning, setScanning] = useState(0)
+
+  // Pistolet tez ketma-ket ursa — barkodlar navbatga yig'iladi va bittadan
+  // server'ga yuboriladi (hech biri yo'qolmaydi). useRef — render'siz boshqaramiz.
+  const queueRef = useRef<string[]>([])
+  const runningRef = useRef(false)
+  const pausedRef = useRef(false) // o'lcham tanlash kutilganda navbat to'xtaydi
 
   const totalQty = rows.reduce((s, r) => s + r.quantity, 0)
 
   // Skanlangan variantni ro'yxatga qo'shadi yoki mavjud bo'lsa +1
-  const addVariant = (data: ScanData, v: VariantAvailability) => {
+  const addVariant = useCallback((data: ScanData, v: VariantAvailability) => {
+    let overflow = false
     setRows((prev) => {
       const key = rowKey(data.barcode, v.variant_id)
       const existing = prev.find((r) => r.key === key)
       if (existing) {
         if (existing.quantity >= v.available) {
-          notify('warning')
-          setError(`Omborda faqat ${v.available} ta bor`)
+          overflow = true
           return prev
         }
         return prev.map((r) => (r.key === key ? { ...r, quantity: r.quantity + 1 } : r))
@@ -87,30 +95,52 @@ export function ScanSession({
         ...prev,
       ]
     })
-    setError('')
-    notify('success')
-  }
+    if (overflow) {
+      notify('warning')
+      setError(`${data.barcode}: faqat ${v.available} ta bor`)
+    } else {
+      setError('')
+      notify('success')
+    }
+  }, [notify])
 
-  const scan = useMutation({
-    mutationFn: (bc: string) =>
-      client.post<ScanData>(scanUrl, { barcode: bc, ...scanBody }).then((r) => r.data),
-    onSuccess: (data) => {
-      setBarcode('')
-      const variants = data.available_by_variant ?? []
-      if (variants.length === 0) {
-        setError('Bu yukdan qolmagan')
-        notify('error')
-        return
+  // Navbatni ketma-ket qayta ishlaydi: bittadan barkodni server'ga yuboradi.
+  // Bir variantli yuk avtomatik qo'shiladi; ko'p o'lchamli yuk navbatni pauza
+  // qiladi (foydalanuvchi o'lcham tanlaguncha).
+  const processQueue = useCallback(async () => {
+    if (runningRef.current) return
+    runningRef.current = true
+    try {
+      while (queueRef.current.length > 0 && !pausedRef.current) {
+        const bc = queueRef.current[0]
+        try {
+          const { data } = await client.post<ScanData>(scanUrl, { barcode: bc, ...scanBody })
+          const variants = data.available_by_variant ?? []
+          if (variants.length === 0) {
+            setError(`${bc}: bu yukdan qolmagan`)
+            notify('error')
+          } else if (variants.length === 1) {
+            addVariant(data, variants[0])
+          } else {
+            // Ko'p o'lcham — navbatni pauza qilib, tanlashni so'raymiz.
+            // Bu barkod navbatда qoladi (shift qilmaymiz) — tanlangach davom etadi.
+            pausedRef.current = true
+            setPending(data)
+            setScanning(queueRef.current.length)
+            return
+          }
+        } catch (err) {
+          setError(extractErrorMessage(err))
+          notify('error')
+        }
+        queueRef.current.shift() // bu barkod ishlandi — navbatdan olib tashlaymiz
+        setScanning(queueRef.current.length)
       }
-      if (variants.length === 1) {
-        addVariant(data, variants[0])
-      } else {
-        // Ko'p o'lcham — qaysi birini tanlashni so'raymiz
-        setPending(data)
-      }
-    },
-    onError: (err) => { setError(extractErrorMessage(err)); notify('error') },
-  })
+    } finally {
+      runningRef.current = false
+      setScanning(queueRef.current.length)
+    }
+  }, [scanUrl, scanBody, addVariant, notify])
 
   const confirm = useMutation({
     mutationFn: () =>
@@ -126,11 +156,32 @@ export function ScanSession({
     onError: (err) => { setError(extractErrorMessage(err)); notify('error') },
   })
 
-  const handleScan = () => {
-    const bc = barcode.trim()
-    if (!bc) return
+  // Pistolet yoki qo'lda skan — barkodni navbatga qo'shamiz va qayta ishlovni
+  // ishga tushiramiz. Tez 10 marta ursa ham 10 tasi navbatga tushadi.
+  const handleScan = (bc: string) => {
+    const code = bc.trim()
+    if (!code) return
     setError('')
-    scan.mutate(bc)
+    queueRef.current.push(code)
+    setScanning(queueRef.current.length)
+    void processQueue()
+  }
+
+  // Ko'p o'lchamli yukda foydalanuvchi o'lcham tanlagach — navbatni davom ettiramiz
+  const pickVariant = (data: ScanData, v: VariantAvailability) => {
+    addVariant(data, v)
+    setPending(null)
+    queueRef.current.shift() // tanlangan barkod navbatdan chiqadi
+    pausedRef.current = false
+    void processQueue()
+  }
+
+  // O'lcham tanlashni bekor qilish — bu barkodni o'tkazib yuboramiz, navbat davom etadi
+  const skipPending = () => {
+    setPending(null)
+    queueRef.current.shift()
+    pausedRef.current = false
+    void processQueue()
   }
 
   const setQty = (key: string, qty: number) => {
@@ -153,7 +204,15 @@ export function ScanSession({
       <Header title={title} subtitle={subtitle} showBack={showBack} onBack={onBack} />
 
       <ScanInput value={barcode} onChange={setBarcode}
-        onScan={handleScan} loading={scan.isPending} />
+        onScan={handleScan} loading={scanning > 0} />
+
+      {/* Navbatda kutayotgan skanlar (pistolet tez urilganda) */}
+      {scanning > 0 && (
+        <div className="mx-4 -mt-1 mb-2 flex items-center gap-2 text-xs text-slate-500">
+          <span className="inline-block w-3 h-3 border-2 border-slate-300 border-t-red-400 rounded-full animate-spin" />
+          {scanning} ta skan qayta ishlanmoqda…
+        </div>
+      )}
 
       {error && (
         <div className="mx-4 -mt-1 mb-2 bg-red-50 text-red-600 text-sm px-4 py-2.5 rounded-xl animate-fade-in">{error}</div>
@@ -168,14 +227,14 @@ export function ScanSession({
             {(pending.available_by_variant ?? []).map((v) => (
               <button
                 key={v.variant_id}
-                onClick={() => { addVariant(pending, v); setPending(null) }}
+                onClick={() => pickVariant(pending, v)}
                 className="press px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:border-red-300"
               >
                 {v.size_label || 'O\'lcham'} · {v.available} ta
               </button>
             ))}
           </div>
-          <button onClick={() => setPending(null)} className="mt-3 text-xs text-slate-400">Bekor qilish</button>
+          <button onClick={skipPending} className="mt-3 text-xs text-slate-400">Bekor qilish</button>
         </div>
       )}
 

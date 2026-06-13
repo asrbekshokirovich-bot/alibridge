@@ -8,6 +8,7 @@ export default function AirportHandover() {
   const { haptic } = useTelegram()
   const [carrierNumber, setCarrierNumber] = useState('')
   const [confirmed, setConfirmed] = useState(false)
+  const valid = !!carrierNumber && !isNaN(parseInt(carrierNumber, 10)) && parseInt(carrierNumber, 10) > 0
 
   // 2-bosqich: skanlash
   if (confirmed) {
@@ -32,7 +33,7 @@ export default function AirportHandover() {
     <div className="min-h-screen animate-fade-in">
       <Header title="Aeroportda topshirish" showBack onBack={() => navigate('/courier-uz')} />
 
-      <div className="px-5 pt-8">
+      <form className="px-5 pt-8" onSubmit={(e) => { e.preventDefault(); if (valid) { haptic('medium'); setConfirmed(true) } }}>
         <div className="flex flex-col items-center mb-8">
           <div className="w-16 h-16 rounded-3xl flex items-center justify-center text-white mb-3" style={{ background: 'var(--brand-gradient)' }}>
             <IconPlane size={30} />
@@ -41,15 +42,13 @@ export default function AirportHandover() {
           <p className="text-sm text-slate-500 text-center mt-1">Yo'lovchining tartib raqamini kiriting</p>
         </div>
 
-        <Input type="number" placeholder="Masalan: 47" className="text-center text-lg font-bold"
+        <Input type="number" inputMode="numeric" autoFocus placeholder="Masalan: 47" className="text-center text-lg font-bold"
           value={carrierNumber} onChange={(e) => setCarrierNumber(e.target.value)} />
 
-        <Button fullWidth className="mt-4"
-          disabled={!carrierNumber || isNaN(parseInt(carrierNumber, 10)) || parseInt(carrierNumber, 10) <= 0}
-          onClick={() => { haptic('medium'); setConfirmed(true) }}>
+        <Button type="submit" fullWidth className="mt-4" disabled={!valid}>
           Davom etish
         </Button>
-      </div>
+      </form>
     </div>
   )
 }

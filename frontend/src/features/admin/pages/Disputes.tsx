@@ -5,7 +5,7 @@ import { Header, ListSkeleton, EmptyState, StatusBadge, Button, IconCheck } from
 
 interface Dispute {
   id: number; product_name: string; barcode: string
-  carrier_name: string; carrier_number: number
+  carrier_name: string | null; carrier_number: number | null
   note: string; status: 'open' | 'resolved' | 'rejected'; created_at: string
 }
 
@@ -50,7 +50,10 @@ export default function Disputes() {
                 <StatusBadge tone={map[d.status].tone} dot>{map[d.status].text}</StatusBadge>
               </div>
               <div className="p-4 space-y-1.5">
-                <p className="text-sm text-slate-600">Yo'lovchi #{d.carrier_number} — {d.carrier_name}</p>
+                <p className="text-sm text-slate-600">
+                  {d.carrier_number ? `Yo'lovchi #${d.carrier_number}` : 'Yo\'lovchi —'}
+                  {d.carrier_name ? ` — ${d.carrier_name}` : ''}
+                </p>
                 <p className="text-xs font-mono text-slate-400">{d.barcode}</p>
                 {d.note && <p className="text-sm text-slate-700 bg-slate-50 rounded-xl p-2.5 mt-1">{d.note}</p>}
 

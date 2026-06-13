@@ -118,6 +118,9 @@ async def queue(
                 product_name=it.product.name,
                 size_label=it.variant.size_label if it.variant else "",
                 picked_up=it.product.status in PICKED_STATES,
+                variant_id=it.variant_id,
+                # Ombor tasdiqlagan haqiqiy miqdor (yo'q bo'lsa so'ralgan amount)
+                quantity=it.actual_quantity or int(it.amount) or 1,
             )
             for it in order.items
         ]

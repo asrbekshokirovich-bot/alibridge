@@ -19,6 +19,16 @@ HOLDER_RANK: dict[HolderType, int] = {
     HolderType.ORDERER: 5,
 }
 
+# Bosqich nomlari (hisobot/taqsimotda ko'rsatish uchun)
+STAGE_LABELS: dict[HolderType, str] = {
+    HolderType.WAREHOUSE_UZ: "Toshkent omborida",
+    HolderType.COURIER_UZ: "Toshkent kuryerida",
+    HolderType.CARRIER: "Yo'lovchida",
+    HolderType.COURIER_TR: "Turkiya kuryerida",
+    HolderType.WAREHOUSE_TR: "Turkiya omborida",
+    HolderType.ORDERER: "Buyurtmachida",
+}
+
 # rank -> Product.status (eng orqada qolgan bosqichga mos)
 _RANK_TO_STATUS: dict[int, ProductStatus] = {
     0: ProductStatus.IN_WAREHOUSE_UZ,
@@ -310,3 +320,64 @@ async def transfer_custody(
     await _recompute_product_status(db, product)
     await db.flush()
     return event
+
+
+async def drain_from_type(
+    db: AsyncSession,
+    product: Product,
+    *,
+    variant_id: int,
+    quantity: int,
+    from_holder_type: HolderType,
+    to_holder_type: HolderType,
+    to_holder_id: int,
+    event_type: CustodyEventType,
+    scanned_by: int | None,
+) -> int:
+    """So'ralgan miqdorni shu TURDAGI (holder_id farqsiz) barcha egalardan
+    KETMA-KET ayiradi (split custody — yuk bir nechta egaga bo'lingan bo'lishi mumkin).
+
+    TR qabul oqimlari uchun: bir barkod+o'lcham bir nechta yo'lovchi/kuryerda
+    turgan bo'lsa, jami yetarli bo'lsa hammasidan yig'ib ko'chiradi.
+    Qaytaradi: aslida ko'chirilgan miqdor (yetarli bo'lmasa AppError).
+    """
+    if quantity <= 0:
+        raise AppError("INVALID_QUANTITY", "Miqdor noto'g'ri", status_code=400)
+
+    holdings = await db.execute(
+        select(CustodyHolding)
+        .where(
+            CustodyHolding.variant_id == variant_id,
+            CustodyHolding.holder_type == from_holder_type,
+            CustodyHolding.quantity > 0,
+        )
+        .order_by(CustodyHolding.quantity.desc())
+    )
+    sources = list(holdings.scalars().all())
+    total_available = sum(h.quantity for h in sources)
+    if total_available < quantity:
+        raise AppError(
+            "INSUFFICIENT_QUANTITY",
+            f"Yetarli miqdor yo'q (bor: {total_available}, so'ralgan: {quantity})",
+            status_code=400,
+        )
+
+    remaining = quantity
+    for h in sources:
+        if remaining <= 0:
+            break
+        take = min(h.quantity, remaining)
+        await transfer_custody(
+            db,
+            product,
+            variant_id=variant_id,
+            quantity=take,
+            from_holder_type=from_holder_type,
+            from_holder_id=h.holder_id,
+            to_holder_type=to_holder_type,
+            to_holder_id=to_holder_id,
+            event_type=event_type,
+            scanned_by=scanned_by,
+        )
+        remaining -= take
+    return quantity

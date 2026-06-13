@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import client from '@/shared/api/client'
+import client, { extractErrorMessage } from '@/shared/api/client'
 import { Header, ListSkeleton, EmptyState, IconBox } from '@/shared/ui'
 
 interface DailyOutItem {
@@ -21,9 +21,12 @@ interface DailyOutReport {
 }
 
 interface Props {
-  apiUrl: string       // '/warehouse-uz/daily-out' yoki '/admin/daily-out'
-  queryKey: string     // keshlash uchun noyob kalit
-  subtitle: string     // 'Toshkent ombori' / 'Barcha omborlar'
+  apiUrl: string         // '/warehouse-uz/daily-out' yoki '/warehouse-tr/daily-in'
+  queryKey: string       // keshlash uchun noyob kalit
+  subtitle: string       // 'Toshkent ombori' / 'Barcha omborlar'
+  metricLabel?: string   // 'Chiqdi' (default) / 'Keldi'
+  emptyTitle?: string    // 'Chiqim yo'q' (default)
+  emptyDesc?: string     // 'Bu kuni ombordan yuk chiqmagan' (default)
 }
 
 // Bugungi sana — YYYY-MM-DD (mahalliy)
@@ -34,10 +37,15 @@ function todayStr(): string {
   return `${d.getFullYear()}-${m}-${day}`
 }
 
-export function DailyReport({ apiUrl, queryKey, subtitle }: Props) {
+export function DailyReport({
+  apiUrl, queryKey, subtitle,
+  metricLabel = 'Chiqdi',
+  emptyTitle = 'Chiqim yo\'q',
+  emptyDesc = 'Bu kuni ombordan yuk chiqmagan',
+}: Props) {
   const [date, setDate] = useState(todayStr())
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: [queryKey, date],
     queryFn: () => client.get<DailyOutReport>(`${apiUrl}?date_str=${date}`).then((r) => r.data),
   })
@@ -60,7 +68,7 @@ export function DailyReport({ apiUrl, queryKey, subtitle }: Props) {
             />
           </div>
           <div className="text-right shrink-0">
-            <p className="text-xs text-slate-400">Chiqdi</p>
+            <p className="text-xs text-slate-400">{metricLabel}</p>
             <p className="text-2xl font-extrabold" style={{ color: 'var(--brand)' }}>
               {data?.total ?? 0}
             </p>
@@ -71,8 +79,12 @@ export function DailyReport({ apiUrl, queryKey, subtitle }: Props) {
 
       {isLoading ? (
         <ListSkeleton />
+      ) : isError ? (
+        <div className="px-4 pt-4">
+          <p className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{extractErrorMessage(error)}</p>
+        </div>
       ) : !data?.items.length ? (
-        <EmptyState icon={<IconBox size={30} />} title="Chiqim yo'q" description="Bu kuni ombordan yuk chiqmagan" />
+        <EmptyState icon={<IconBox size={30} />} title={emptyTitle} description={emptyDesc} />
       ) : (
         <div className="px-4 pt-4 space-y-2 web-grid">
           {data.items.map((it, i) => (

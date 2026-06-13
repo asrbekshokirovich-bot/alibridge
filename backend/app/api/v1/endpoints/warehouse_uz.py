@@ -59,6 +59,7 @@ from app.services.barcode_service import (
     recompute_product_totals,
 )
 from app.services.custody_service import (
+    STAGE_LABELS,
     availability_for_holder,
     resolve_variant_id,
     sync_warehouse_holding,
@@ -612,16 +613,6 @@ async def all_products(
     return [product_to_out(p, expose_box_weight=True) for p in rows.scalars().all()]
 
 
-_STAGE_LABELS: dict[HolderType, str] = {
-    HolderType.WAREHOUSE_UZ: "Toshkent omborida",
-    HolderType.COURIER_UZ: "Toshkent kuryerida",
-    HolderType.CARRIER: "Yo'lovchida",
-    HolderType.COURIER_TR: "Turkiya kuryerida",
-    HolderType.WAREHOUSE_TR: "Turkiya omborida",
-    HolderType.ORDERER: "Buyurtmachida",
-}
-
-
 @router.get("/products/{product_id}/distribution", response_model=ProductDistribution)
 async def product_distribution(
     product_id: int,
@@ -640,7 +631,7 @@ async def product_distribution(
     by_stage: dict[str, int] = {ht: int(q or 0) for ht, q in rows.all()}
     stages = [
         StageQuantity(holder_type=ht.value, label=label, quantity=by_stage.get(ht.value, 0))
-        for ht, label in _STAGE_LABELS.items()
+        for ht, label in STAGE_LABELS.items()
         if by_stage.get(ht.value, 0) > 0
     ]
     return ProductDistribution(
@@ -653,29 +644,40 @@ async def product_distribution(
 
 
 async def build_daily_out(
-    db: AsyncSession, *, day: date, from_types: list[HolderType]
+    db: AsyncSession,
+    *,
+    day: date,
+    from_types: list[HolderType] | None = None,
+    to_types: list[HolderType] | None = None,
 ) -> DailyOutReport:
-    """Berilgan kunda ombor(lar)dan chiqqan custody eventlar hisoboti.
-    from_holder_type ombor bo'lgan eventlar = ombordan chiqish."""
+    """Berilgan kunda ombor(lar)ga oid kunlik custody eventlar hisoboti.
+
+    from_types berilsa — ombor(lar)dan CHIQQAN yuklar (from_holder_type mos).
+    to_types berilsa — ombor(lar)ga KELGAN yuklar (to_holder_type mos).
+    """
     start = datetime.combine(day, datetime.min.time())
     end = datetime.combine(day, datetime.max.time())
-    rows = await db.execute(
+    stmt = (
         select(CustodyEvent, Product, ProductVariant, User)
         .join(Product, Product.id == CustodyEvent.product_id)
         .outerjoin(ProductVariant, ProductVariant.id == CustodyEvent.variant_id)
         .outerjoin(User, User.id == CustodyEvent.scanned_by)
         .where(
-            CustodyEvent.from_holder_type.in_(from_types),
             CustodyEvent.created_at >= start,
             CustodyEvent.created_at <= end,
             CustodyEvent.quantity > 0,
         )
         .order_by(CustodyEvent.created_at.desc())
     )
+    if from_types is not None:
+        stmt = stmt.where(CustodyEvent.from_holder_type.in_(from_types))
+    if to_types is not None:
+        stmt = stmt.where(CustodyEvent.to_holder_type.in_(to_types))
+    rows = await db.execute(stmt)
     items: list[DailyOutItem] = []
     for ev, p, v, u in rows.all():
-        from_label = _STAGE_LABELS.get(ev.from_holder_type, ev.from_holder_type or "")
-        to_label = _STAGE_LABELS.get(ev.to_holder_type, ev.to_holder_type or "")
+        from_label = STAGE_LABELS.get(ev.from_holder_type, ev.from_holder_type or "")
+        to_label = STAGE_LABELS.get(ev.to_holder_type, ev.to_holder_type or "")
         items.append(
             DailyOutItem(
                 barcode=p.barcode,

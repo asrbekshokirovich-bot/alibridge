@@ -164,6 +164,7 @@ class HeldCargoItem(BaseModel):
     type: ProductType
     size_label: str
     quantity: int
+    stage_label: str = ""  # yo'ldagi yuk qaysi bosqichda (jarayondagi ro'yxat uchun)
 
 
 class StageQuantity(BaseModel):

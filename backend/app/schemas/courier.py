@@ -10,6 +10,8 @@ class CourierUzQueueProduct(BaseModel):
     product_name: str
     size_label: str = ""
     picked_up: bool = False  # custody kuryerda — olib ketilgan
+    variant_id: int | None = None  # qaysi o'lcham (olishda kerak)
+    quantity: int = 1  # nechta olinishi kerak (ombor tasdiqlagan miqdor)
 
 
 class CourierUzQueueItem(BaseModel):

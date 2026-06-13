@@ -5,7 +5,7 @@ import { money } from '@/shared/lib/format'
 import { Header, ListSkeleton, EmptyState, StatusBadge, Button, IconMoney } from '@/shared/ui'
 
 interface Payment {
-  id: number; carrier_name: string; carrier_number: number
+  id: number; carrier_name: string; carrier_number: number | null
   products_count: number; total_amount: number; status: 'unpaid' | 'paid'
 }
 
@@ -49,7 +49,7 @@ export default function Payments() {
             <div key={p.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="font-bold text-slate-900">Yo'lovchi #{p.carrier_number}</p>
+                  <p className="font-bold text-slate-900">{p.carrier_number ? `Yo'lovchi #${p.carrier_number}` : p.carrier_name}</p>
                   <p className="text-xs text-slate-400">{p.carrier_name}</p>
                   <p className="text-xs text-slate-400 mt-0.5">{p.products_count} ta mahsulot</p>
                 </div>

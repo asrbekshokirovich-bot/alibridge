@@ -1,9 +1,12 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import require_role
+from app.api.v1.endpoints.warehouse_uz import build_daily_out
 from app.bot import notify
 from app.core.enums import (
     CustodyEventType,
@@ -13,24 +16,36 @@ from app.core.enums import (
 )
 from app.core.errors import AppError
 from app.db.base import get_db
-from app.db.models import Order, OrderItem, Product, User, WalkInCustomer
+from app.db.models import (
+    CustodyHolding,
+    Order,
+    OrderItem,
+    Product,
+    ProductVariant,
+    User,
+    WalkInCustomer,
+)
 from app.schemas.common import OkResponse
 from app.schemas.product import ProductOut
 from app.schemas.serializers import product_to_out
 from app.schemas.warehouse import (
     ConfirmRequest,
+    DailyOutReport,
+    HeldCargoItem,
     ScanRequest,
     ScanResponse,
     VariantAvailability,
     WalkInRequest,
 )
 from app.services.custody_service import (
+    STAGE_LABELS,
     availability_by_type,
-    find_source_holder_id,
+    drain_from_type,
     is_fully_arrived,
     resolve_variant_id,
     transfer_custody,
 )
+from app.services.payment_service import recompute_carrier_payment
 
 router = APIRouter(prefix="/warehouse-tr", tags=["warehouse_tr"])
 
@@ -88,6 +103,7 @@ async def confirm_receive(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*ROLE)),
 ) -> OkResponse:
+    affected_carriers: set[int] = set()
     for item in body.items:
         product = await db.scalar(
             select(Product)
@@ -97,37 +113,33 @@ async def confirm_receive(
         if product is None:
             raise AppError("BARCODE_NOT_FOUND", f"Barkod topilmadi: {item.barcode}")
         variant_id = await resolve_variant_id(db, product=product, variant_id=item.variant_id)
-        # Manba: yuk qaysi yo'lovchida turibdi (scan'da noma'lum, holdingsdan topamiz)
-        src_id = await find_source_holder_id(
-            db, variant_id=variant_id, holder_type=HolderType.CARRIER
-        )
-        if src_id is None:
-            raise AppError(
-                "INVALID_PRODUCT_STATE",
-                f"Yuk ({item.barcode}) yo'lovchida emas",
-                status_code=400,
-            )
-        await transfer_custody(
+        # Yuk bir nechta yo'lovchiga bo'lingan bo'lishi mumkin — hammasidan yig'ib olamiz
+        await drain_from_type(
             db,
             product,
             variant_id=variant_id,
             quantity=item.quantity,
             from_holder_type=HolderType.CARRIER,
-            from_holder_id=src_id,
             to_holder_type=HolderType.WAREHOUSE_TR,
             to_holder_id=0,
             event_type=CustodyEventType.WAREHOUSE_TR_RECEIVED,
             scanned_by=user.id,
         )
+        carrier = await _carrier_for_product(db, product.id)
+        if carrier:
+            affected_carriers.add(carrier.id)
         # Bu mahsulotning hammasi TR omborga yetdimi?
         if await is_fully_arrived(db, product.id):
-            carrier = await _carrier_for_product(db, product.id)
             await notify.on_all_arrived(
                 db,
                 barcode=product.barcode,
                 product_name=product.name,
                 carrier_id=carrier.id if carrier else None,
             )
+
+    # Yo'lovchi to'g'ridan TR omborga topshirgan bo'lsa ham to'lov hisoblanadi
+    for carrier_id in affected_carriers:
+        await recompute_carrier_payment(db, carrier_id)
     return OkResponse(ok=True)
 
 
@@ -227,3 +239,87 @@ async def uz_products(
     )
     # warehouse_tr box_weight_kg ni KO'RA OLADI (firewall yo'q)
     return [product_to_out(p, expose_box_weight=True) for p in rows.scalars().all()]
+
+
+# ─── Kunlik kelgan yuklar hisoboti ──────────────────────────────────────────────
+
+
+@router.get("/daily-in", response_model=DailyOutReport)
+async def daily_in(
+    date_str: str | None = None,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*ROLE)),
+) -> DailyOutReport:
+    """Turkiya omboriga kunlik KELGAN yuklar (default bugun)."""
+    day = date.fromisoformat(date_str) if date_str else date.today()
+    return await build_daily_out(db, day=day, to_types=[HolderType.WAREHOUSE_TR])
+
+
+# ─── Skladda turgan yuklar ──────────────────────────────────────────────────────
+
+
+@router.get("/held", response_model=list[HeldCargoItem])
+async def held(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*ROLE)),
+) -> list[HeldCargoItem]:
+    """Turkiya omborida hozir turgan yuklar — har o'lcham alohida (custody WAREHOUSE_TR)."""
+    rows = await db.execute(
+        select(CustodyHolding, Product, ProductVariant)
+        .join(Product, Product.id == CustodyHolding.product_id)
+        .join(ProductVariant, ProductVariant.id == CustodyHolding.variant_id)
+        .where(
+            CustodyHolding.holder_type == HolderType.WAREHOUSE_TR,
+            CustodyHolding.quantity > 0,
+        )
+        .order_by(Product.created_at.desc())
+    )
+    return [
+        HeldCargoItem(
+            product_id=p.id,
+            barcode=p.barcode,
+            product_name=p.name,
+            type=p.type,
+            size_label=v.size_label,
+            quantity=h.quantity,
+        )
+        for h, p, v in rows.all()
+    ]
+
+
+# ─── Jarayondagi (yo'ldagi) yuklar — hali TR omborga yetmagan ───────────────────
+
+
+@router.get("/incoming", response_model=list[HeldCargoItem])
+async def incoming(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*ROLE)),
+) -> list[HeldCargoItem]:
+    """Hozir yo'lda turgan, hali Turkiya omboriga yetmagan yuklar.
+
+    Yo'lovchida (CARRIER) yoki Turkiya kuryerida (COURIER_TR) turgan custody —
+    har o'lcham alohida, qaysi bosqichda ekani (stage_label) bilan.
+    """
+    in_transit = (HolderType.CARRIER, HolderType.COURIER_TR)
+    rows = await db.execute(
+        select(CustodyHolding, Product, ProductVariant)
+        .join(Product, Product.id == CustodyHolding.product_id)
+        .join(ProductVariant, ProductVariant.id == CustodyHolding.variant_id)
+        .where(
+            CustodyHolding.holder_type.in_(in_transit),
+            CustodyHolding.quantity > 0,
+        )
+        .order_by(CustodyHolding.holder_type, Product.created_at.desc())
+    )
+    return [
+        HeldCargoItem(
+            product_id=p.id,
+            barcode=p.barcode,
+            product_name=p.name,
+            type=p.type,
+            size_label=v.size_label,
+            quantity=h.quantity,
+            stage_label=STAGE_LABELS.get(h.holder_type, ""),
+        )
+        for h, p, v in rows.all()
+    ]

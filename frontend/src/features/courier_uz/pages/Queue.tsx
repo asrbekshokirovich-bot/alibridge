@@ -9,6 +9,8 @@ interface QueueProduct {
   product_name: string
   size_label: string
   picked_up: boolean
+  variant_id: number | null
+  quantity: number
 }
 
 interface QueueItem {
@@ -34,8 +36,8 @@ export default function CourierUzQueue() {
   })
 
   const pickup = useMutation({
-    mutationFn: (vars: { orderId: number; barcodes: string[] }) =>
-      client.post('/courier-uz/confirm-pickup', { barcodes: vars.barcodes }),
+    mutationFn: (vars: { orderId: number; items: { barcode: string; variant_id: number | null; quantity: number }[] }) =>
+      client.post('/courier-uz/confirm-pickup', { items: vars.items }),
     onSuccess: () => {
       notify('success')
       setError('')
@@ -47,9 +49,11 @@ export default function CourierUzQueue() {
   const takeOrder = (item: QueueItem) => {
     haptic('medium')
     setError('')
-    const left = item.products.filter((p) => !p.picked_up).map((p) => p.barcode)
+    const left = item.products
+      .filter((p) => !p.picked_up)
+      .map((p) => ({ barcode: p.barcode, variant_id: p.variant_id, quantity: p.quantity }))
     if (left.length) {
-      pickup.mutate({ orderId: item.id, barcodes: left })
+      pickup.mutate({ orderId: item.id, items: left })
     } else {
       // Hech narsa qolmagan — yangilaymiz (boshqa kuryer olgan bo'lishi mumkin)
       setError('Bu buyurtmada olinadigan mahsulot qolmagan')

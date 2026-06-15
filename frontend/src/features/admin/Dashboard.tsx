@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import client from '@/shared/api/client'
-import { ActionGrid, IconUsers, IconPlane, IconAlert, IconMoney, IconUser, IconList } from '@/shared/ui'
+import { ActionGrid, LangSwitcher, IconUsers, IconPlane, IconAlert, IconMoney, IconUser, IconList } from '@/shared/ui'
 import type { Action } from '@/shared/ui'
 
 interface AdminStats {
@@ -34,8 +34,13 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen animate-fade-in">
       <div className="px-5 pt-12 pb-8 text-white" style={{ background: DARK }}>
-        <p className="text-sm text-white/60">{t('Administrator')}</p>
-        <h1 className="text-2xl font-extrabold">{t('Boshqaruv paneli')}</h1>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm text-white/60">{t('Administrator')}</p>
+            <h1 className="text-2xl font-extrabold">{t('Boshqaruv paneli')}</h1>
+          </div>
+          <LangSwitcher />
+        </div>
       </div>
 
       {/* Stats — bosiladigan */}

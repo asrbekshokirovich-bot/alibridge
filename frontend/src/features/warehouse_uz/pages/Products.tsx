@@ -115,6 +115,19 @@ export default function Products() {
                     </div>
                     <p className="text-xs text-slate-400 truncate">{p.category || '—'}</p>
 
+                    {/* Omborda hozir qolgan miqdor (split custody — bir qism kuryerda) */}
+                    {p.in_warehouse_qty != null && (
+                      p.in_warehouse_qty > 0 ? (
+                        <span className="inline-block mt-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg">
+                          {t('Omborda: {{n}} dona', { n: p.in_warehouse_qty })}
+                        </span>
+                      ) : (
+                        <span className="inline-block mt-1.5 text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-lg">
+                          {t('Omborda qolmadi')}
+                        </span>
+                      )
+                    )}
+
                     {incomplete ? (
                       <p className="text-xs text-amber-600 font-medium mt-1.5">⚠️ {t("O'lcham qo'shilmagan — tahrirlang")}</p>
                     ) : (

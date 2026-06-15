@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import client from '@/shared/api/client'
-import { ActionGrid, IconPackagePlus, IconBag, IconTruck, IconBox, IconAlert, IconPlane, IconList } from '@/shared/ui'
+import { ActionGrid, LangSwitcher, IconPackagePlus, IconBag, IconTruck, IconBox, IconAlert, IconPlane, IconList } from '@/shared/ui'
 import type { Action } from '@/shared/ui'
 
 interface Stats { pending_receive: number; in_warehouse: number; pending_orders: number }
@@ -26,6 +26,9 @@ export default function WarehouseUzDashboard() {
 
   return (
     <div className="min-h-screen animate-fade-in pt-4">
+      <div className="px-4 flex justify-end">
+        <LangSwitcher dark={false} />
+      </div>
       <ActionGrid actions={actions} />
     </div>
   )

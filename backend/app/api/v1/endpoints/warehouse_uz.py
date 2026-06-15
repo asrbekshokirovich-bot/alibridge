@@ -411,11 +411,33 @@ async def products(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*WH_UZ)),
 ) -> list[ProductOut]:
-    """Ombordagi barcha mahsulotlar katalogi (har qanday holatdagi)."""
+    """Ombordagi barcha mahsulotlar katalogi (har qanday holatdagi).
+
+    Har mahsulot uchun Toshkent omborida (WAREHOUSE_UZ) hozir qolgan jami
+    miqdor (in_warehouse_qty) ham qaytadi — split custody'da yuk bir qism
+    kuryerga o'tib, omborda qolmagan holatni ko'rsatish uchun."""
     rows = await db.execute(
         select(Product).options(selectinload(Product.variants)).order_by(Product.created_at.desc())
     )
-    return [product_to_out(p, expose_box_weight=True) for p in rows.scalars().all()]
+    products = rows.scalars().all()
+
+    # Bir so'rovda hamma mahsulotning omborda qolgan jami miqdori (N+1 emas)
+    qty_rows = await db.execute(
+        select(CustodyHolding.product_id, func.sum(CustodyHolding.quantity))
+        .where(
+            CustodyHolding.holder_type == HolderType.WAREHOUSE_UZ,
+            CustodyHolding.quantity > 0,
+        )
+        .group_by(CustodyHolding.product_id)
+    )
+    in_wh: dict[int, int] = {pid: int(total or 0) for pid, total in qty_rows.all()}
+
+    result: list[ProductOut] = []
+    for p in products:
+        out = product_to_out(p, expose_box_weight=True)
+        out.in_warehouse_qty = in_wh.get(p.id, 0)
+        result.append(out)
+    return result
 
 
 # ─── Scan / Confirm: kuryerga topshirish ────────────────────────────────────────

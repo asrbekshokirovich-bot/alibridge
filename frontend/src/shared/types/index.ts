@@ -89,6 +89,7 @@ export interface Product {
   image_url?: string
   actual_quantity?: number  // ombor tortgandan keyingi haqiqiy dona
   actual_kg?: number        // ombor tortgandan keyingi haqiqiy kg
+  in_warehouse_qty?: number // Toshkent omborida hozir qolgan jami (0 = qolmadi)
   variants: ProductVariant[]
 }
 

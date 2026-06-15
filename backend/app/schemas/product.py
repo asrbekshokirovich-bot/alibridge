@@ -39,3 +39,6 @@ class ProductOut(BaseModel):
     status: ProductStatus
     image_url: str | None = None
     variants: list[ProductVariantOut] = []
+    # Toshkent omborida (WAREHOUSE_UZ) hozir qolgan jami miqdor.
+    # None — hisoblanmagan (boshqa endpoint'lar). 0 — omborda qolmadi.
+    in_warehouse_qty: int | None = None

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
@@ -11,19 +12,18 @@ interface StaffMember {
   role: Role; is_active: boolean; username?: string | null
 }
 
-const ROLES: { key: Role; label: string }[] = [
-  { key: 'warehouse_uz', label: 'Toshkent ombori' },
-  { key: 'warehouse_tr', label: 'Turkiya ombori' },
-  { key: 'courier_uz', label: 'Toshkent kuryeri' },
-  { key: 'courier_tr', label: 'Turkiya kuryeri' },
-  { key: 'china_worker', label: 'Xitoy ishchisi' },
-]
-
-const ROLE_LABELS: Record<string, string> = Object.fromEntries(
-  ROLES.map((r) => [r.key, r.label]),
-)
-
 export default function Staff() {
+  const { t } = useTranslation()
+  const ROLES: { key: Role; label: string }[] = [
+    { key: 'warehouse_uz', label: t('Toshkent ombori') },
+    { key: 'warehouse_tr', label: t('Turkiya ombori') },
+    { key: 'courier_uz', label: t('Toshkent kuryeri') },
+    { key: 'courier_tr', label: t('Turkiya kuryeri') },
+    { key: 'china_worker', label: t('Xitoy ishchisi') },
+  ]
+  const ROLE_LABELS: Record<string, string> = Object.fromEntries(
+    ROLES.map((r) => [r.key, r.label]),
+  )
   const { notify } = useTelegram()
   const qc = useQueryClient()
   const [expanded, setExpanded] = useState<number | null>(null)
@@ -69,12 +69,12 @@ export default function Staff() {
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title="Xodimlar" subtitle="Barcha xodimlar" showBack />
+      <Header title={t('Xodimlar')} subtitle={t('Barcha xodimlar')} showBack />
 
       {isLoading ? (
         <ListSkeleton />
       ) : !data?.length ? (
-        <EmptyState icon={<IconUsers size={30} />} title="Xodim yo'q" description="Tasdiqlangan xodim mavjud emas" />
+        <EmptyState icon={<IconUsers size={30} />} title={t('Xodim yo\'q')} description={t('Tasdiqlangan xodim mavjud emas')} />
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((s) => {
@@ -97,13 +97,13 @@ export default function Staff() {
                     </p>
                   </div>
                   <StatusBadge tone={s.is_active ? 'green' : 'gray'} dot>
-                    {s.is_active ? 'Faol' : 'Nofaol'}
+                    {s.is_active ? t('Faol') : t('Nofaol')}
                   </StatusBadge>
                 </button>
 
                 {open && (
                   <div className="px-4 pb-4 animate-fade-in">
-                    <p className="text-xs font-medium text-slate-500 mb-2">Rolni almashtirish:</p>
+                    <p className="text-xs font-medium text-slate-500 mb-2">{t('Rolni almashtirish:')}</p>
                     <div className="grid grid-cols-2 gap-2">
                       {ROLES.map((r) => {
                         const current = r.key === s.role
@@ -126,19 +126,19 @@ export default function Staff() {
                     {/* Sayt (brauzer) orqali kirish — login + parol */}
                     <div className="mt-3 pt-3 border-t border-slate-100">
                       <p className="text-xs font-medium text-slate-500 mb-2">
-                        Sayt logini {s.username && <span className="text-emerald-600">(joriy: {s.username})</span>}
+                        {t('Sayt logini')} {s.username && <span className="text-emerald-600">{t('(joriy: {{username}})', { username: s.username })}</span>}
                       </p>
                       <div className="flex flex-col gap-2">
                         <input
                           type="text"
-                          placeholder="Login"
+                          placeholder={t('Login')}
                           value={creds[s.id]?.username ?? ''}
                           onChange={(e) => setCreds((c) => ({ ...c, [s.id]: { username: e.target.value, password: c[s.id]?.password ?? '' } }))}
                           className="bg-slate-50 rounded-xl px-3 py-2.5 text-sm border border-slate-200 outline-none focus:border-slate-400"
                         />
                         <input
                           type="text"
-                          placeholder="Parol"
+                          placeholder={t('Parol')}
                           value={creds[s.id]?.password ?? ''}
                           onChange={(e) => setCreds((c) => ({ ...c, [s.id]: { username: c[s.id]?.username ?? '', password: e.target.value } }))}
                           className="bg-slate-50 rounded-xl px-3 py-2.5 text-sm border border-slate-200 outline-none focus:border-slate-400"
@@ -147,7 +147,7 @@ export default function Staff() {
                           onClick={() => {
                             const v = creds[s.id]
                             if (!v || v.username.trim().length < 3 || v.password.length < 4) {
-                              alert('Login kamida 3, parol kamida 4 belgi bo\'lsin'); return
+                              alert(t('Login kamida 3, parol kamida 4 belgi bo\'lsin')); return
                             }
                             setLogin.mutate({ id: s.id, username: v.username.trim(), password: v.password })
                           }}
@@ -157,17 +157,17 @@ export default function Staff() {
                           {setLogin.isPending && setLogin.variables?.id === s.id && (
                             <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                           )}
-                          {s.username ? 'Loginni yangilash' : 'Login o\'rnatish'}
+                          {s.username ? t('Loginni yangilash') : t('Login o\'rnatish')}
                         </button>
                       </div>
                     </div>
 
                     <button onClick={() => {
-                        if (confirm(`${s.first_name} xodimlikdan olib tashlanadimi?`)) remove.mutate(s.id)
+                        if (confirm(t('{{name}} xodimlikdan olib tashlanadimi?', { name: s.first_name }))) remove.mutate(s.id)
                       }}
                       disabled={busy}
                       className="press w-full mt-2 py-2.5 bg-red-50 text-red-600 rounded-xl text-xs font-semibold disabled:opacity-50">
-                      Roldan olib tashlash
+                      {t('Roldan olib tashlash')}
                     </button>
                   </div>
                 )}

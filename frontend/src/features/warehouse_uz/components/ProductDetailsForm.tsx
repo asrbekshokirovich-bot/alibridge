@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import type { Product, ProductType, ProductVariant } from '@/shared/types'
@@ -6,12 +7,6 @@ import { productGroup } from '@/shared/lib/product'
 import { Button, Input } from '@/shared/ui'
 
 type WeightMode = 'unit' | 'total'
-
-const TYPES: { key: ProductType; label: string; emoji: string }[] = [
-  { key: 'piece', label: 'Donali', emoji: '📦' },
-  { key: 'boxed', label: 'Kiloli', emoji: '🗳️' },
-  { key: 'textile', label: 'Tekstil', emoji: '🧵' },
-]
 
 interface Props {
   productId: number
@@ -21,7 +16,14 @@ interface Props {
 }
 
 export default function ProductDetailsForm({ productId, initial, submitLabel, onSaved }: Props) {
+  const { t } = useTranslation()
   const { notify, haptic } = useTelegram()
+
+  const TYPES: { key: ProductType; label: string; emoji: string }[] = [
+    { key: 'piece', label: t('Donali'), emoji: '📦' },
+    { key: 'boxed', label: t('Kiloli'), emoji: '🗳️' },
+    { key: 'textile', label: t('Tekstil'), emoji: '🧵' },
+  ]
 
   const initType: ProductType = initial ? (productGroup(initial.type) as ProductType) : 'piece'
 
@@ -152,7 +154,7 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
       if (!last) return // xato bo'ldi
     }
     if (variants.length === 0 && !last) {
-      setError("Kamida bitta o'lcham qo'shing")
+      setError(t("Kamida bitta o'lcham qo'shing"))
       return
     }
     setLoading(true)
@@ -170,9 +172,9 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
 
   const variantSummary = (v: ProductVariant) => {
     const parts: string[] = []
-    if (v.quantity) parts.push(`${v.quantity} dona`)
-    if (v.weight_kg) parts.push(`${v.weight_kg} kg`)
-    if (v.cargo_price) parts.push(`$${v.cargo_price}/${productGroup(type) === 'piece' ? 'dona' : 'kg'}`)
+    if (v.quantity) parts.push(t('{{n}} dona', { n: v.quantity }))
+    if (v.weight_kg) parts.push(t('{{n}} kg', { n: v.weight_kg }))
+    if (v.cargo_price) parts.push(`$${v.cargo_price}/${productGroup(type) === 'piece' ? t('dona') : t('kg')}`)
     return parts.join(' · ') || '—'
   }
 
@@ -182,7 +184,7 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
         {/* Rasm (ixtiyoriy) */}
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1.5">
-            Mahsulot rasmi <span className="text-slate-400 font-normal">(ixtiyoriy)</span>
+            {t('Mahsulot rasmi')} <span className="text-slate-400 font-normal">{t('(ixtiyoriy)')}</span>
           </label>
           <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={onPickImage} />
           {imageUrl || imagePreview ? (
@@ -191,23 +193,23 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
               <img src={imagePreview || imageUrl} alt="" className="w-full h-full object-cover" />
               {uploading && (
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                  <span className="text-white text-sm font-semibold">Yuklanmoqda…</span>
+                  <span className="text-white text-sm font-semibold">{t('Yuklanmoqda…')}</span>
                 </div>
               )}
-              <span className="absolute bottom-2 right-2 bg-white/90 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-lg">📷 O'zgartirish</span>
+              <span className="absolute bottom-2 right-2 bg-white/90 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-lg">📷 {t("O'zgartirish")}</span>
             </button>
           ) : (
             <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
               className="press w-full aspect-square max-h-64 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center gap-2 text-slate-400">
               <span className="text-4xl">📷</span>
-              <span className="text-sm font-semibold">{uploading ? 'Yuklanmoqda…' : 'Suratga olish'}</span>
+              <span className="text-sm font-semibold">{uploading ? t('Yuklanmoqda…') : t('Suratga olish')}</span>
             </button>
           )}
         </div>
 
         {/* Yuk turi */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Yuk turi</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('Yuk turi')}</label>
           <div className="bg-slate-100 rounded-2xl p-1 grid grid-cols-3 gap-1">
             {TYPES.map((opt) => {
               const active = type === opt.key
@@ -225,17 +227,17 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
         {/* Qo'shilgan o'lchamlar ro'yxati */}
         {variants.length > 0 && (
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-700">Qo'shilgan o'lchamlar ({variants.length})</label>
+            <label className="block text-sm font-medium text-slate-700">{t("Qo'shilgan o'lchamlar ({{count}})", { count: variants.length })}</label>
             {variants.map((v) => (
               <div key={v.id} className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2.5">
                 <span className="w-10 h-10 rounded-lg bg-white flex items-center justify-center font-bold text-slate-700 shrink-0 text-sm">
                   {v.size_label || '—'}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-slate-500">O'lcham: <b className="text-slate-800">{v.size_label || 'yo\'q'}</b></p>
+                  <p className="text-xs text-slate-500">{t("O'lcham:")} <b className="text-slate-800">{v.size_label || t("yo'q")}</b></p>
                   <p className="text-[11px] text-slate-400">{variantSummary(v)}</p>
                 </div>
-                <button type="button" onClick={() => removeVariant(v.id)} className="press text-red-500 text-xs font-semibold shrink-0">O'chirish</button>
+                <button type="button" onClick={() => removeVariant(v.id)} className="press text-red-500 text-xs font-semibold shrink-0">{t("O'chirish")}</button>
               </div>
             ))}
           </div>
@@ -243,15 +245,15 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
 
         {/* Joriy o'lcham kiritish */}
         <div className="rounded-2xl border-2 border-slate-100 p-3.5 space-y-4">
-          <Input label="O'lcham (39, M, L...)" placeholder="O'lchamni yozing" value={size} onChange={(e) => setSize(e.target.value)} />
+          <Input label={t("O'lcham (39, M, L...)")} placeholder={t("O'lchamni yozing")} value={size} onChange={(e) => setSize(e.target.value)} />
 
           {/* DONALI */}
           {isPiece && (
             <>
-              <Input type="number" inputMode="numeric" label="Soni (dona)" placeholder="600" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+              <Input type="number" inputMode="numeric" label={t('Soni (dona)')} placeholder="600" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
               <div>
                 <div className="bg-slate-100 rounded-2xl p-1 grid grid-cols-2 gap-1 mb-2">
-                  {([{ key: 'total' as const, label: 'Umumiy vazn' }, { key: 'unit' as const, label: '1 dona vazni' }]).map((opt) => (
+                  {([{ key: 'total' as const, label: t('Umumiy vazn') }, { key: 'unit' as const, label: t('1 dona vazni') }]).map((opt) => (
                     <button key={opt.key} type="button" onClick={() => { haptic('light'); setWeightMode(opt.key) }}
                       className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${weightMode === opt.key ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>
                       {opt.label}
@@ -259,9 +261,9 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
                   ))}
                 </div>
                 {weightMode === 'total' ? (
-                  <Input type="number" inputMode="decimal" label="Umumiy vazn (kg)" placeholder="480" value={weightKg} onChange={(e) => setWeightKg(e.target.value)} />
+                  <Input type="number" inputMode="decimal" label={t('Umumiy vazn (kg)')} placeholder="480" value={weightKg} onChange={(e) => setWeightKg(e.target.value)} />
                 ) : (
-                  <Input type="number" inputMode="decimal" label="1 dona vazni (kg)" placeholder="0.8" value={unitWeight} onChange={(e) => setUnitWeight(e.target.value)} />
+                  <Input type="number" inputMode="decimal" label={t('1 dona vazni (kg)')} placeholder="0.8" value={unitWeight} onChange={(e) => setUnitWeight(e.target.value)} />
                 )}
               </div>
             </>
@@ -270,30 +272,30 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
           {/* KILOLI */}
           {isBoxed && (
             <>
-              <Input type="number" inputMode="numeric" label="Soni (dona)" placeholder="1000" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+              <Input type="number" inputMode="numeric" label={t('Soni (dona)')} placeholder="1000" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
               <div className="flex gap-3">
-                <Input type="number" inputMode="numeric" label="Quti soni" placeholder="50" value={boxCount} onChange={(e) => setBoxCount(e.target.value)} />
-                <Input type="number" inputMode="numeric" label="1 qutidagilar" placeholder="20" value={unitsPerBox} onChange={(e) => setUnitsPerBox(e.target.value)} />
+                <Input type="number" inputMode="numeric" label={t('Quti soni')} placeholder="50" value={boxCount} onChange={(e) => setBoxCount(e.target.value)} />
+                <Input type="number" inputMode="numeric" label={t('1 qutidagilar')} placeholder="20" value={unitsPerBox} onChange={(e) => setUnitsPerBox(e.target.value)} />
               </div>
-              <Input type="number" inputMode="decimal" label="1 quti vazni (kg)" placeholder="2" value={boxWeight} onChange={(e) => setBoxWeight(e.target.value)} />
+              <Input type="number" inputMode="decimal" label={t('1 quti vazni (kg)')} placeholder="2" value={boxWeight} onChange={(e) => setBoxWeight(e.target.value)} />
             </>
           )}
 
           {/* TEKSTIL */}
           {isTextile && (
             <div className="flex gap-3">
-              <Input type="number" inputMode="numeric" label="Soni (dona)" placeholder="100" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
-              <Input type="number" inputMode="decimal" label="Umumiy vazn (kg)" placeholder="100" value={weightKg} onChange={(e) => setWeightKg(e.target.value)} />
+              <Input type="number" inputMode="numeric" label={t('Soni (dona)')} placeholder="100" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
+              <Input type="number" inputMode="decimal" label={t('Umumiy vazn (kg)')} placeholder="100" value={weightKg} onChange={(e) => setWeightKg(e.target.value)} />
             </div>
           )}
 
-          <Input type="number" inputMode="decimal" label="Tara — qadoq vazni (kg)" placeholder="0" value={tare} onChange={(e) => setTare(e.target.value)} />
-          <Input type="number" inputMode="decimal" label={pricePerKg ? 'Olib ketish narxi ($ / 1 kg)' : 'Olib ketish narxi ($ / 1 dona)'}
-            placeholder="Dollarda ($)" value={cargoPrice} onChange={(e) => setCargoPrice(e.target.value)} />
+          <Input type="number" inputMode="decimal" label={t('Tara — qadoq vazni (kg)')} placeholder="0" value={tare} onChange={(e) => setTare(e.target.value)} />
+          <Input type="number" inputMode="decimal" label={pricePerKg ? t('Olib ketish narxi ($ / 1 kg)') : t('Olib ketish narxi ($ / 1 dona)')}
+            placeholder={t('Dollarda ($)')} value={cargoPrice} onChange={(e) => setCargoPrice(e.target.value)} />
 
           {/* + O'lcham qo'shish */}
           <Button variant="ghost" fullWidth loading={adding} disabled={!currentFilled} onClick={addVariant}>
-            + O'lcham qo'shish
+            + {t("O'lcham qo'shish")}
           </Button>
         </div>
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
@@ -9,6 +10,7 @@ import { Header, ListSkeleton, EmptyState, StatusBadge, Sheet, Input, Button, Ic
 type SheetState = { orderId: number; item: OrderItemDetail }
 
 export default function Orders() {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const { notify, haptic } = useTelegram()
   const [sheet, setSheet] = useState<SheetState | null>(null)
@@ -64,19 +66,19 @@ export default function Orders() {
 
   const orderBadge = (o: WarehouseOrder) => {
     const done = o.items.filter((i) => i.confirmed).length
-    if (o.all_confirmed || done === o.items.length) return { tone: 'green' as const, text: 'Tasdiqlandi' }
-    if (done > 0) return { tone: 'yellow' as const, text: 'Jarayonda' }
-    return { tone: 'gray' as const, text: 'Yangi' }
+    if (o.all_confirmed || done === o.items.length) return { tone: 'green' as const, text: t('Tasdiqlandi') }
+    if (done > 0) return { tone: 'yellow' as const, text: t('Jarayonda') }
+    return { tone: 'gray' as const, text: t('Yangi') }
   }
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title="Yo'lovchilar buyurtmalari" subtitle="Tortish va tasdiqlash" showBack />
+      <Header title={t("Yo'lovchilar buyurtmalari")} subtitle={t('Tortish va tasdiqlash')} showBack />
 
       {isLoading ? (
         <ListSkeleton />
       ) : !orders?.length ? (
-        <EmptyState icon={<IconBag size={30} />} title="Buyurtma yo'q" description="Hozircha tasdiqlash kerak emas" />
+        <EmptyState icon={<IconBag size={30} />} title={t("Buyurtma yo'q")} description={t('Hozircha tasdiqlash kerak emas')} />
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {orders.map((o) => {
@@ -88,11 +90,11 @@ export default function Orders() {
                 {/* Header */}
                 <div className="px-4 py-3 border-b border-slate-50">
                   <div className="flex items-center justify-between mb-0.5">
-                    <span className="text-sm font-bold text-slate-900">Buyurtma #{o.order_id}</span>
+                    <span className="text-sm font-bold text-slate-900">{t('Buyurtma #{{id}}', { id: o.order_id })}</span>
                     <StatusBadge tone={badge.tone} dot>{badge.text}</StatusBadge>
                   </div>
                   <p className="text-xs text-slate-400">
-                    Yo'lovchi {o.carrier_number ? `#${o.carrier_number} — ` : ''}{o.carrier_name}
+                    {t('Yo\'lovchi')} {o.carrier_number ? `#${o.carrier_number} — ` : ''}{o.carrier_name}
                   </p>
                 </div>
 
@@ -121,12 +123,12 @@ export default function Orders() {
                         {it.confirmed ? (
                           <p className="text-xs text-emerald-600 font-medium">
                             {!isPiece(it.type)
-                              ? `${it.actual_kg} kg · ${it.actual_quantity} dona`
-                              : `${it.actual_quantity} dona`}
+                              ? t('{{kg}} kg · {{qty}} dona', { kg: it.actual_kg, qty: it.actual_quantity })
+                              : t('{{qty}} dona', { qty: it.actual_quantity })}
                           </p>
                         ) : (
                           <p className="text-xs text-slate-400">
-                            So'ralgan: {it.requested_amount} {unitWord(it.type)}
+                            {t("So'ralgan:")} {it.requested_amount} {unitWord(it.type)}
                           </p>
                         )}
                       </div>
@@ -141,7 +143,7 @@ export default function Orders() {
 
                 {/* Footer: progress */}
                 <div className={`px-4 py-2.5 text-xs font-medium ${allDone ? 'bg-emerald-100/50 text-emerald-700' : 'bg-slate-50/60 text-slate-500'}`}>
-                  {allDone ? '✓ Tasdiqlandi' : `${done}/${o.items.length} tasdiqlandi`}
+                  {allDone ? t('✓ Tasdiqlandi') : t('{{done}}/{{total}} tasdiqlandi', { done, total: o.items.length })}
                 </div>
               </div>
             )
@@ -162,22 +164,22 @@ export default function Orders() {
                   {sheet.item.product_name}{sheet.item.size_label ? ` · ${sheet.item.size_label}` : ''}
                 </h3>
                 <p className="text-xs text-slate-400">
-                  So'ralgan: {sheet.item.requested_amount} {unitWord(sheet.item.type)}
+                  {t("So'ralgan:")} {sheet.item.requested_amount} {unitWord(sheet.item.type)}
                 </p>
               </div>
             </div>
 
             {!isPiece(sheet.item.type) && (
-              <Input type="number" label="Necha kg chiqdi?" placeholder="Tarozida tortilgan kg"
+              <Input type="number" label={t('Necha kg chiqdi?')} placeholder={t('Tarozida tortilgan kg')}
                 value={kg} onChange={(e) => setKg(e.target.value)} autoFocus />
             )}
-            <Input type="number" label="Necha dona?" placeholder="Mahsulot soni"
+            <Input type="number" label={t('Necha dona?')} placeholder={t('Mahsulot soni')}
               value={qty} onChange={(e) => setQty(e.target.value)} autoFocus={isPiece(sheet.item.type)} />
 
             {error && <p className="text-red-500 text-sm">{error}</p>}
 
             <Button variant="success" fullWidth loading={confirm.isPending} onClick={submit}>
-              Tasdiqlash
+              {t('Tasdiqlash')}
             </Button>
           </div>
         )}

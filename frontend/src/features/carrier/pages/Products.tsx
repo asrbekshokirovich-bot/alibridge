@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
@@ -25,6 +26,7 @@ function realVariants(p: Product): ProductVariant[] {
 }
 
 export default function Products() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { haptic } = useTelegram()
   const [cart, setCart] = useState<CartItem[]>([])
@@ -67,12 +69,12 @@ export default function Products() {
 
   return (
     <div className="min-h-screen pb-28 animate-fade-in">
-      <Header title="Mahsulotlar" subtitle="O'zingizga mos yukni tanlang" />
+      <Header title={t('Mahsulotlar')} subtitle={t("O'zingizga mos yukni tanlang")} />
 
       {isLoading ? (
         <ListSkeleton />
       ) : !products?.length ? (
-        <EmptyState title="Mahsulot topilmadi" description="Hozircha mahsulot yo'q" />
+        <EmptyState title={t('Mahsulot topilmadi')} description={t("Hozircha mahsulot yo'q")} />
       ) : (
         <div className="px-3 pt-3 grid grid-cols-2 gap-3 web-grid web-grid-catalog">
           {products.map((p) => {
@@ -90,7 +92,7 @@ export default function Products() {
                     ? <img src={p.image_url} alt="" className="w-full h-full object-cover" />
                     : <span className="text-5xl">{typeEmoji(p.type)}</span>}
                   {selectedCount > 0 && (
-                    <span className="absolute top-2 right-2 bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">{selectedCount} o'lcham</span>
+                    <span className="absolute top-2 right-2 bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">{t("{{count}} o'lcham", { count: selectedCount })}</span>
                   )}
                 </div>
 
@@ -104,7 +106,7 @@ export default function Products() {
                       {pr}<span className="text-xs font-medium text-slate-400">/{unit}</span>
                     </div>
                   )}
-                  <p className="text-[11px] text-slate-400 mt-auto pt-1">{vs.length} o'lcham mavjud →</p>
+                  <p className="text-[11px] text-slate-400 mt-auto pt-1">{t("{{count}} o'lcham mavjud →", { count: vs.length })}</p>
                 </div>
               </button>
             )
@@ -124,7 +126,7 @@ export default function Products() {
               </div>
               <div className="min-w-0">
                 <h3 className="font-bold text-slate-900 truncate">{open.category || open.name}</h3>
-                <p className="text-xs text-slate-400">O'lchamni tanlang</p>
+                <p className="text-xs text-slate-400">{t("O'lchamni tanlang")}</p>
               </div>
             </div>
             <div className="space-y-2.5">
@@ -143,7 +145,7 @@ export default function Products() {
                       <p className="text-sm font-bold" style={{ color: 'var(--brand)' }}>
                         {money(v.cargo_price)}<span className="text-xs font-medium text-slate-400">/{unit}</span>
                       </p>
-                      <p className="text-[11px] text-slate-400">{max} {unit} mavjud</p>
+                      <p className="text-[11px] text-slate-400">{t('{{count}} {{unit}} mavjud', { count: max, unit })}</p>
                     </div>
                     <div className="shrink-0 w-[120px]">
                       {selected ? (
@@ -156,7 +158,7 @@ export default function Products() {
                       ) : (
                         <button onClick={() => select(open, v)} disabled={max <= 0}
                           className="press w-full h-9 rounded-xl text-sm font-bold text-white disabled:opacity-40" style={{ background: 'var(--brand-gradient)' }}>
-                          Tanlash
+                          {t('Tanlash')}
                         </button>
                       )}
                     </div>
@@ -174,7 +176,7 @@ export default function Products() {
           <button onClick={() => { haptic('medium'); navigate('/carrier/ticket', { state: { cart } }) }}
             style={{ background: 'var(--brand-gradient)' }}
             className="press w-full text-white rounded-2xl py-4 font-bold shadow-[var(--shadow-brand)] flex items-center justify-center gap-2">
-            Tasdiqlash
+            {t('Tasdiqlash')}
             <span className="bg-white/25 px-2.5 py-0.5 rounded-full text-sm">{cartCount}</span>
           </button>
         </div>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
@@ -26,6 +27,7 @@ interface QueueItem {
 }
 
 export default function CourierUzQueue() {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const { notify, haptic } = useTelegram()
   const [error, setError] = useState('')
@@ -56,19 +58,19 @@ export default function CourierUzQueue() {
       pickup.mutate({ orderId: item.id, items: left })
     } else {
       // Hech narsa qolmagan — yangilaymiz (boshqa kuryer olgan bo'lishi mumkin)
-      setError('Bu buyurtmada olinadigan mahsulot qolmagan')
+      setError(t('Bu buyurtmada olinadigan mahsulot qolmagan'))
       qc.invalidateQueries({ queryKey: ['courier-uz-queue'] })
     }
   }
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title="Yetkazish navbati" subtitle="Yo'lovchilardan olish kerak" showBack />
+      <Header title={t('Yetkazish navbati')} subtitle={t("Yo'lovchilardan olish kerak")} showBack />
 
       {isLoading ? (
         <ListSkeleton />
       ) : !data?.length ? (
-        <EmptyState icon={<IconList size={30} />} title="Navbat bo'sh" description="Hozircha olish kerak bo'lgan yuk yo'q" />
+        <EmptyState icon={<IconList size={30} />} title={t("Navbat bo'sh")} description={t("Hozircha olish kerak bo'lgan yuk yo'q")} />
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((item) => {
@@ -80,9 +82,9 @@ export default function CourierUzQueue() {
                 <div className="px-4 py-3 border-b border-slate-50">
                   <div className="flex items-center justify-between mb-0.5">
                     <span className="text-sm font-bold text-slate-900">
-                      Yo'lovchi {item.carrier_number ? `#${item.carrier_number}` : ''}
+                      {t("Yo'lovchi")} {item.carrier_number ? `#${item.carrier_number}` : ''}
                     </span>
-                    <StatusBadge tone={done ? 'green' : 'yellow'} dot>{done ? 'Olib ketildi' : 'Kutilmoqda'}</StatusBadge>
+                    <StatusBadge tone={done ? 'green' : 'yellow'} dot>{done ? t('Olib ketildi') : t('Kutilmoqda')}</StatusBadge>
                   </div>
                   <p className="text-xs text-slate-400">{item.carrier_name}</p>
                   {item.address && (
@@ -121,7 +123,7 @@ export default function CourierUzQueue() {
                 {/* Footer: tugma yoki tasdiqlangan */}
                 {done ? (
                   <div className="px-4 py-2.5 bg-emerald-100/50 text-xs font-medium text-emerald-700">
-                    ✓ {item.confirmed_by_name ? `${item.confirmed_by_name} tasdiqladi` : 'Olib ketildi'}
+                    ✓ {item.confirmed_by_name ? t('{{name}} tasdiqladi', { name: item.confirmed_by_name }) : t('Olib ketildi')}
                   </div>
                 ) : (
                   <div className="px-4 py-3">
@@ -131,7 +133,7 @@ export default function CourierUzQueue() {
                       className="press w-full py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
                       style={{ background: 'var(--brand-gradient)' }}
                     >
-                      {busy ? 'Olinmoqda…' : 'Olib ketdim'}
+                      {busy ? t('Olinmoqda…') : t('Olib ketdim')}
                     </button>
                   </div>
                 )}

@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import client from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import { money } from '@/shared/lib/format'
@@ -10,6 +11,7 @@ interface Payment {
 }
 
 export default function Payments() {
+  const { t } = useTranslation()
   const { notify } = useTelegram()
   const qc = useQueryClient()
 
@@ -27,13 +29,13 @@ export default function Payments() {
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title="To'lovlar" subtitle="Yo'lovchilarga to'lov" showBack />
+      <Header title={t("To'lovlar")} subtitle={t("Yo'lovchilarga to'lov")} showBack />
 
       {/* Jami to'lanmagan */}
       {data && data.length > 0 && (
         <div className="px-4 pt-4">
           <div className="rounded-3xl p-5 text-white" style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)' }}>
-            <p className="text-sm text-white/60">Jami to'lanmagan</p>
+            <p className="text-sm text-white/60">{t("Jami to'lanmagan")}</p>
             <p className="text-3xl font-extrabold mt-1">{money(totalUnpaid)}</p>
           </div>
         </div>
@@ -42,16 +44,16 @@ export default function Payments() {
       {isLoading ? (
         <ListSkeleton />
       ) : !data?.length ? (
-        <EmptyState icon={<IconMoney size={30} />} title="To'lov yo'q" />
+        <EmptyState icon={<IconMoney size={30} />} title={t("To'lov yo'q")} />
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((p) => (
             <div key={p.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="font-bold text-slate-900">{p.carrier_number ? `Yo'lovchi #${p.carrier_number}` : p.carrier_name}</p>
+                  <p className="font-bold text-slate-900">{p.carrier_number ? t("Yo'lovchi #{{number}}", { number: p.carrier_number }) : p.carrier_name}</p>
                   <p className="text-xs text-slate-400">{p.carrier_name}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{p.products_count} ta mahsulot</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{t('{{count}} ta mahsulot', { count: p.products_count })}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-extrabold text-lg text-slate-900">{money(p.total_amount)}</p>
@@ -59,11 +61,11 @@ export default function Payments() {
               </div>
               <div className="flex items-center justify-between mt-3">
                 <StatusBadge tone={p.status === 'unpaid' ? 'yellow' : 'green'} dot>
-                  {p.status === 'unpaid' ? "To'lanmagan" : "To'langan"}
+                  {p.status === 'unpaid' ? t("To'lanmagan") : t("To'langan")}
                 </StatusBadge>
                 {p.status === 'unpaid' && (
                   <Button variant="success" onClick={() => markPaid.mutate(p.id)} className="!py-2 !px-4 text-sm">
-                    To'landi
+                    {t("To'landi")}
                   </Button>
                 )}
               </div>

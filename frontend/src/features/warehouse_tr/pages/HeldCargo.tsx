@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import type { ProductType } from '@/shared/types'
 import { typeEmoji } from '@/shared/lib/product'
@@ -14,6 +15,7 @@ interface HeldCargo {
 }
 
 export default function HeldCargo() {
+  const { t } = useTranslation()
   const { data: items, isLoading, isError, error } = useQuery({
     queryKey: ['warehouse-tr-held'],
     queryFn: () => client.get<HeldCargo[]>('/warehouse-tr/held').then((r) => r.data),
@@ -23,7 +25,7 @@ export default function HeldCargo() {
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title="Skladdagi yuklar" subtitle="Hozir omborda turgan yuklar" showBack />
+      <Header title={t('Skladdagi yuklar')} subtitle={t('Hozir omborda turgan yuklar')} showBack />
 
       {isLoading ? (
         <ListSkeleton />
@@ -32,14 +34,14 @@ export default function HeldCargo() {
           <p className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{extractErrorMessage(error)}</p>
         </div>
       ) : !items?.length ? (
-        <EmptyState icon={<IconBox size={30} />} title="Sklad bo'sh"
-          description="Omborda hozir yuk yo'q" />
+        <EmptyState icon={<IconBox size={30} />} title={t("Sklad bo'sh")}
+          description={t("Omborda hozir yuk yo'q")} />
       ) : (
         <>
           <div className="px-4 pt-4 flex items-center justify-between">
-            <span className="text-sm font-bold text-slate-700">Jami</span>
+            <span className="text-sm font-bold text-slate-700">{t('Jami')}</span>
             <span className="text-sm font-bold px-2.5 py-0.5 rounded-full text-white" style={{ background: 'var(--brand-gradient)' }}>
-              {total} ta
+              {t('{{n}} ta', { n: total })}
             </span>
           </div>
           <div className="px-4 pt-3 space-y-2 web-grid">
@@ -55,7 +57,7 @@ export default function HeldCargo() {
                   <p className="text-[11px] font-mono text-slate-400">{p.barcode}</p>
                 </div>
                 <span className="text-sm font-bold text-white px-2 py-0.5 rounded-lg shrink-0" style={{ background: 'var(--brand)' }}>
-                  {p.quantity} ta
+                  {t('{{n}} ta', { n: p.quantity })}
                 </span>
               </div>
             ))}

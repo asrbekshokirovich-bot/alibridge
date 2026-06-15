@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import client from '@/shared/api/client'
 import { Header, ListSkeleton, EmptyState, IconBox } from '@/shared/ui'
@@ -17,21 +18,23 @@ interface MyProduct {
   quantity: number
 }
 
-export default function CourierUzMyProducts() {
+export default function CourierTrMyProducts() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { data, isLoading } = useQuery({
-    queryKey: ['courier-uz-my-products'],
-    queryFn: () => client.get<MyProduct[]>('/courier-uz/my-products').then((r) => r.data),
+    queryKey: ['courier-tr-my-products'],
+    queryFn: () => client.get<MyProduct[]>('/courier-tr/my-products').then((r) => r.data),
   })
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title={t('Mening yuklarim')} subtitle={t('Hozir sizda turgan yuklar')} showBack />
+      <Header title={t('Mendagi yuklar')} subtitle={t('Hozir sizda turgan yuklar')} showBack
+        onBack={() => navigate('/courier-tr')} />
 
       {data && data.length > 0 && (
         <div className="px-4 pt-3">
           <div className="rounded-2xl px-4 py-3 flex items-center justify-between" style={{ background: 'var(--brand-gradient-soft)' }}>
-            <span className="text-sm font-semibold text-red-900/80">{t('Aeroportда topshirilishi kerak')}</span>
+            <span className="text-sm font-semibold text-red-900/80">{t('Omborga topshirilishi kerak')}</span>
             <span className="text-lg font-extrabold" style={{ color: 'var(--brand)' }}>
               {t('{{n}} ta', { n: data.reduce((s, p) => s + (p.quantity || 0), 0) })}
             </span>
@@ -44,8 +47,8 @@ export default function CourierUzMyProducts() {
       ) : !data?.length ? (
         <EmptyState
           icon={<IconBox size={30} />}
-          title={t("Yuk yo'q")}
-          description={t("Hozircha sizda olib yurgan yuk yo'q. Ombordan yuk oling.")}
+          title={t('Yuk yo\'q')}
+          description={t('Hozircha sizda olib yurgan yuk yo\'q. Yo\'lovchidan yuk qabul qiling.')}
         />
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
@@ -65,7 +68,7 @@ export default function CourierUzMyProducts() {
                   </span>
                   {p.carrier_number ? (
                     <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg">
-                      {t("Yo'lovchi #{{number}}", { number: p.carrier_number })}
+                      {t('Yo\'lovchi #{{number}}', { number: p.carrier_number })}
                     </span>
                   ) : (
                     <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg">

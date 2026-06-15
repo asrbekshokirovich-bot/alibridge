@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useMutation } from '@tanstack/react-query'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
@@ -62,6 +63,7 @@ export function ScanSession({
   title, subtitle, scanUrl, confirmUrl, scanBody = {}, confirmBody = {},
   successTitle, successDesc, showBack, onBack,
 }: Props) {
+  const { t } = useTranslation()
   const { notify } = useTelegram()
   const [barcode, setBarcode] = useState('')
   const [rows, setRows] = useState<ScannedRow[]>([])
@@ -105,7 +107,7 @@ export function ScanSession({
         if (variants.length === 0) {
           return prev.map((r) =>
             r.key === bc && r.status === 'pending'
-              ? { ...r, status: 'error', error: 'qolmagan', product_name: data.product_name || bc }
+              ? { ...r, status: 'error', error: t('qolmagan'), product_name: data.product_name || bc }
               : r,
           )
         }
@@ -135,7 +137,7 @@ export function ScanSession({
         )
       })
       if (variants.length === 0) notify('error')
-      else if (clipped) { notify('warning'); setError(`${bc}: omborda kamroq qoldi, miqdor moslandi`) }
+      else if (clipped) { notify('warning'); setError(t('{{bc}}: omborda kamroq qoldi, miqdor moslandi', { bc })) }
       else notify('success')
     } catch (err) {
       const msg = extractErrorMessage(err)
@@ -191,7 +193,7 @@ export function ScanSession({
       const ok = okRows[0]
       if (ok.quantity >= ok.available) {
         notify('warning')
-        setError(`${bc}: omborda faqat ${ok.available} ta bor`)
+        setError(t('{{bc}}: omborda faqat {{available}} ta bor', { bc, available: ok.available }))
       } else {
         setRowsSync((prev) => prev.map((r) => (r.key === ok.key ? { ...r, quantity: r.quantity + 1 } : r)))
       }
@@ -263,7 +265,7 @@ export function ScanSession({
 
   if (done) {
     return <SuccessScreen title={successTitle}
-      description={successDesc?.(totalQty) ?? `${totalQty} ta mahsulot qayta ishlandi`} />
+      description={successDesc?.(totalQty) ?? t('{{totalQty}} ta mahsulot qayta ishlandi', { totalQty })} />
   }
 
   return (
@@ -276,7 +278,7 @@ export function ScanSession({
       {checking > 0 && (
         <div className="mx-4 -mt-1 mb-2 flex items-center gap-2 text-xs text-slate-400">
           <span className="inline-block w-3 h-3 border-2 border-slate-200 border-t-red-400 rounded-full animate-spin" />
-          {checking} ta tekshirilmoqda…
+          {t('{{checking}} ta tekshirilmoqda…', { checking })}
         </div>
       )}
 
@@ -287,9 +289,9 @@ export function ScanSession({
       {/* Sanagich */}
       {rows.length > 0 && (
         <div className="px-4 pb-2 flex items-center justify-between">
-          <span className="text-sm font-bold text-slate-700">Jami</span>
+          <span className="text-sm font-bold text-slate-700">{t('Jami')}</span>
           <span className="text-sm font-bold px-2.5 py-0.5 rounded-full text-white" style={{ background: 'var(--brand-gradient)' }}>
-            {totalQty} ta
+            {t('{{totalQty}} ta', { totalQty })}
           </span>
         </div>
       )}
@@ -328,7 +330,7 @@ export function ScanSession({
                     {(r.variants ?? []).map((v) => (
                       <button key={v.variant_id} onClick={() => pickVariant(r.key, v)}
                         className="press px-2.5 py-1 rounded-lg border border-amber-300 text-xs font-semibold text-amber-700 bg-white">
-                        {v.size_label || 'O\'lcham'} · {v.available}
+                        {v.size_label || t('O\'lcham')} · {v.available}
                       </button>
                     ))}
                   </div>
@@ -364,18 +366,18 @@ export function ScanSession({
       {validRows.length > 0 && (
         <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100">
           {hasChoose && (
-            <p className="text-xs text-amber-600 text-center mb-2">⚠️ O'lcham tanlanmagan yuklar tasdiqlanmaydi</p>
+            <p className="text-xs text-amber-600 text-center mb-2">{t('⚠️ O\'lcham tanlanmagan yuklar tasdiqlanmaydi')}</p>
           )}
           {hasPending && (
-            <p className="text-xs text-slate-500 text-center mb-2">Ba'zi yuklar hali tekshirilmoqda…</p>
+            <p className="text-xs text-slate-500 text-center mb-2">{t('Ba\'zi yuklar hali tekshirilmoqda…')}</p>
           )}
           {hasErrors && (
-            <p className="text-xs text-red-500 text-center mb-2">Xatoli qatorlar tasdiqlashga kirmaydi</p>
+            <p className="text-xs text-red-500 text-center mb-2">{t('Xatoli qatorlar tasdiqlashga kirmaydi')}</p>
           )}
           <button onClick={() => confirm.mutate()} disabled={confirm.isPending}
             style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' }}
             className="press w-full text-white rounded-2xl py-4 font-bold shadow-[0_8px_24px_rgba(34,197,94,0.35)] disabled:opacity-50">
-            {confirm.isPending ? 'Yuklanmoqda...' : `Tasdiqlash (${totalQty} ta)`}
+            {confirm.isPending ? t('Yuklanmoqda...') : t('Tasdiqlash ({{totalQty}} ta)', { totalQty })}
           </button>
         </div>
       )}

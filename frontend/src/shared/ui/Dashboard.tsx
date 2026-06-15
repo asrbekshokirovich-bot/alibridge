@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useTelegram } from '@/shared/hooks/useTelegram'
+import { LangSwitcher } from './LangSwitcher'
 
 // Dashboard yuqori header (gradient + salom)
 interface HeaderProps {
@@ -10,12 +12,18 @@ interface HeaderProps {
 }
 
 export function DashboardHeader({ role, name, gradient, children }: HeaderProps) {
+  const { t } = useTranslation()
   return (
     <div className="px-5 pt-12 pb-6 text-white" style={{ background: gradient ?? 'var(--brand-gradient)' }}>
-      <p className="text-sm text-white/70">{role}</p>
-      <h1 className="text-2xl font-extrabold">
-        {name ? <>Salom, {name} 👋</> : 'Panel'}
-      </h1>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm text-white/70">{role}</p>
+          <h1 className="text-2xl font-extrabold">
+            {name ? <>{t('Salom')}, {name} 👋</> : t('Panel')}
+          </h1>
+        </div>
+        <LangSwitcher />
+      </div>
       {children}
     </div>
   )

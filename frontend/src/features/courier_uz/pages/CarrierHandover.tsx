@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
@@ -49,6 +50,7 @@ function groupByCarrier(products: MyProduct[]): CarrierGroup[] {
 }
 
 export default function CourierUzCarrierHandover() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const qc = useQueryClient()
   const { notify, haptic } = useTelegram()
@@ -77,14 +79,14 @@ export default function CourierUzCarrierHandover() {
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title="Yo'lovchiga topshirish" subtitle="Buyurtma yuklarini egasiga bering"
+      <Header title={t("Yo'lovchiga topshirish")} subtitle={t('Buyurtma yuklarini egasiga bering')}
         showBack onBack={() => navigate('/courier-uz')} />
 
       {isLoading ? (
         <ListSkeleton />
       ) : !groups.length ? (
-        <EmptyState icon={<IconBox size={30} />} title="Topshiriladigan yuk yo'q"
-          description="Buyurtma bo'yicha olingan yuklaringiz yo'q. Buyurtmadan tashqari yuklarni 'Aeroportда topshirish' orqali bering." />
+        <EmptyState icon={<IconBox size={30} />} title={t("Topshiriladigan yuk yo'q")}
+          description={t("Buyurtma bo'yicha olingan yuklaringiz yo'q. Buyurtmadan tashqari yuklarni 'Aeroportда topshirish' orqali bering.")} />
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {groups.map((g) => {
@@ -94,11 +96,11 @@ export default function CourierUzCarrierHandover() {
                 {/* Yo'lovchi sarlavhasi */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-slate-50">
                   <div>
-                    <span className="text-sm font-bold text-slate-900">Yo'lovchi #{g.carrier_number}</span>
+                    <span className="text-sm font-bold text-slate-900">{t("Yo'lovchi #{{n}}", { n: g.carrier_number })}</span>
                     {g.carrier_name && <p className="text-xs text-slate-400 mt-0.5">{g.carrier_name}</p>}
                   </div>
                   <span className="text-xs font-bold text-white px-2.5 py-0.5 rounded-full" style={{ background: 'var(--brand)' }}>
-                    {g.total} ta
+                    {t('{{n}} ta', { n: g.total })}
                   </span>
                 </div>
 
@@ -112,7 +114,7 @@ export default function CourierUzCarrierHandover() {
                       <span className="flex-1 text-sm text-slate-700 truncate">
                         {p.product_name}{p.size_label ? ` · ${p.size_label}` : ''}
                       </span>
-                      <span className="text-xs text-slate-400 shrink-0">{p.quantity} ta</span>
+                      <span className="text-xs text-slate-400 shrink-0">{t('{{n}} ta', { n: p.quantity })}</span>
                     </div>
                   ))}
                 </div>
@@ -123,7 +125,7 @@ export default function CourierUzCarrierHandover() {
                     disabled={busy}
                     className="press w-full py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
                     style={{ background: 'var(--brand-gradient)' }}>
-                    {busy ? 'Topshirilmoqda…' : 'Topshirdim'}
+                    {busy ? t('Topshirilmoqda…') : t('Topshirdim')}
                   </button>
                 </div>
               </div>

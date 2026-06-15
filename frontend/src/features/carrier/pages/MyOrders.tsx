@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import client from '@/shared/api/client'
 import type { CarrierOrder, OrderStatus, CarrierMyProduct } from '@/shared/types'
 import { ORDER_STATUS } from '@/shared/lib/status'
@@ -6,6 +7,7 @@ import { isPiece, typeEmoji } from '@/shared/lib/product'
 import { Header, ListSkeleton, EmptyState, StatusBadge, IconBag, IconBox } from '@/shared/ui'
 
 export default function MyOrders() {
+  const { t } = useTranslation()
   const { data: orders, isLoading } = useQuery({
     queryKey: ['carrier-orders'],
     queryFn: () => client.get<CarrierOrder[]>('/carrier/orders').then((r) => r.data),
@@ -23,15 +25,15 @@ export default function MyOrders() {
 
   return (
     <div className="min-h-screen pb-28 animate-fade-in">
-      <Header title="Mening yuklarim" subtitle="Buyurtmalaringiz holati" />
+      <Header title={t('Mening yuklarim')} subtitle={t('Buyurtmalaringiz holati')} />
 
       {/* Qo'limdagi yuklar — kuryer aeroportда topshirgan, hozir yo'lovchida */}
       {(received?.length ?? 0) > 0 && (
         <div className="px-4 pt-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold text-slate-900 text-[15px]">Qo'limdagi yuklar</h3>
+            <h3 className="font-bold text-slate-900 text-[15px]">{t('Qo\'limdagi yuklar')}</h3>
             <span className="text-xs font-bold text-white px-2.5 py-0.5 rounded-full" style={{ background: 'var(--brand)' }}>
-              {receivedTotal} dona
+              {t('{{count}} dona', { count: receivedTotal })}
             </span>
           </div>
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm divide-y divide-slate-50">
@@ -51,7 +53,7 @@ export default function MyOrders() {
                     {p.barcode}{p.received_at && ` · ${p.received_at}`}
                   </p>
                 </div>
-                <span className="text-sm font-bold text-slate-700 shrink-0">{p.quantity} dona</span>
+                <span className="text-sm font-bold text-slate-700 shrink-0">{t('{{count}} dona', { count: p.quantity })}</span>
               </div>
             ))}
           </div>
@@ -61,8 +63,8 @@ export default function MyOrders() {
       {isLoading ? (
         <ListSkeleton />
       ) : !hasContent ? (
-        <EmptyState icon={<IconBag size={30} />} title="Hali yuk yo'q"
-          description="Mahsulotlar bo'limidan yuk tanlang" />
+        <EmptyState icon={<IconBag size={30} />} title={t('Hali yuk yo\'q')}
+          description={t('Mahsulotlar bo\'limidan yuk tanlang')} />
       ) : (
         <div className="px-4 pt-4 space-y-3">
           {(orders ?? []).map((order) => {
@@ -74,7 +76,7 @@ export default function MyOrders() {
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-slate-50">
                   <div>
-                    <span className="text-sm font-bold text-slate-900">Buyurtma #{order.id}</span>
+                    <span className="text-sm font-bold text-slate-900">{t('Buyurtma #{{id}}', { id: order.id })}</span>
                     {order.flight_date && (
                       <p className="text-xs text-slate-400 mt-0.5">✈️ {order.flight_date}</p>
                     )}
@@ -95,10 +97,10 @@ export default function MyOrders() {
                         </span>
                         <span className="text-xs text-slate-400">
                           {isPiece(it.type)
-                            ? `${it.actual_quantity ?? it.amount} dona`
+                            ? t('{{count}} dona', { count: it.actual_quantity ?? it.amount })
                             : (it.confirmed && it.actual_kg != null
-                                ? `${it.actual_kg} kg, ${it.actual_quantity} dona`
-                                : `${it.amount} kg`)}
+                                ? t('{{kg}} kg, {{count}} dona', { kg: it.actual_kg, count: it.actual_quantity })
+                                : t('{{kg}} kg', { kg: it.amount }))}
                         </span>
                       </div>
                     ))
@@ -110,7 +112,7 @@ export default function MyOrders() {
                         </div>
                         <span className="flex-1 text-sm text-slate-700 truncate">{p.name}</span>
                         <span className="text-xs text-slate-400">
-                          {isPiece(p.type) ? `${p.quantity} dona` : `${p.weight_kg} kg`}
+                          {isPiece(p.type) ? t('{{count}} dona', { count: p.quantity }) : t('{{kg}} kg', { kg: p.weight_kg })}
                         </span>
                       </div>
                     ))
@@ -120,7 +122,7 @@ export default function MyOrders() {
                 {damaged && (
                   <div className="bg-red-50 px-4 py-2.5 flex items-center gap-2">
                     <span className="text-base">⚠️</span>
-                    <span className="text-xs font-medium text-red-600">Zarar yetgan mahsulot mavjud</span>
+                    <span className="text-xs font-medium text-red-600">{t('Zarar yetgan mahsulot mavjud')}</span>
                   </div>
                 )}
               </div>

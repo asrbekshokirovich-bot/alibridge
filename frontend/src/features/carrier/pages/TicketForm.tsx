@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import { useCarrierStore } from '../store'
@@ -8,6 +9,7 @@ import { Header, Button, Input, IconPlane } from '@/shared/ui'
 interface LocationState { cart: CartItem[] }
 
 export default function TicketForm() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { state } = useLocation() as { state: LocationState }
   const { haptic } = useTelegram()
@@ -31,27 +33,27 @@ export default function TicketForm() {
 
   return (
     <div className="min-h-screen animate-fade-in">
-      <Header title="Uchish sanasi" showBack onBack={() => navigate('/carrier/products')} />
+      <Header title={t('Uchish sanasi')} showBack onBack={() => navigate('/carrier/products')} />
 
       <div className="px-5 pt-8">
         <div className="flex flex-col items-center mb-8">
           <div className="w-16 h-16 rounded-3xl flex items-center justify-center text-white mb-3 shadow-[var(--shadow-brand)]" style={{ background: 'var(--brand-gradient)' }}>
             <IconPlane size={30} />
           </div>
-          <h2 className="text-lg font-bold text-slate-900">Qachon uchasiz?</h2>
-          <p className="text-sm text-slate-500 text-center mt-1">Uchish sanangizni kiriting</p>
+          <h2 className="text-lg font-bold text-slate-900">{t('Qachon uchasiz?')}</h2>
+          <p className="text-sm text-slate-500 text-center mt-1">{t('Uchish sanangizni kiriting')}</p>
         </div>
 
         <div>
-          <Input type="date" label="Uchish sanasi" min={today}
+          <Input type="date" label={t('Uchish sanasi')} min={today}
             value={flightDate} onChange={(e) => setFlightDate(e.target.value)} />
           {flightDate && !dateValid && (
-            <p className="text-xs text-red-500 mt-1.5">Sana o'tmishda bo'lishi mumkin emas</p>
+            <p className="text-xs text-red-500 mt-1.5">{t("Sana o'tmishda bo'lishi mumkin emas")}</p>
           )}
         </div>
 
         <Button fullWidth className="mt-6" disabled={!valid} onClick={handleSubmit}>
-          Davom etish
+          {t('Davom etish')}
         </Button>
       </div>
     </div>

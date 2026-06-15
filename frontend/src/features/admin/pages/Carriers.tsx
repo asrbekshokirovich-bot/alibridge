@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import { useAuthStore } from '@/shared/store/auth'
@@ -11,6 +12,7 @@ interface Carrier {
 }
 
 export default function Carriers() {
+  const { t } = useTranslation()
   const { notify } = useTelegram()
   const qc = useQueryClient()
   const isAdmin = useAuthStore((s) => s.user?.role) === 'admin'
@@ -31,12 +33,12 @@ export default function Carriers() {
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title="Yo'lovchilar" subtitle="Barcha yo'lovchilar" showBack />
+      <Header title={t("Yo'lovchilar")} subtitle={t('Barcha yo\'lovchilar')} showBack />
 
       {isLoading ? (
         <ListSkeleton />
       ) : !data?.length ? (
-        <EmptyState icon={<IconPlane size={30} />} title="Yo'lovchi yo'q" />
+        <EmptyState icon={<IconPlane size={30} />} title={t("Yo'lovchi yo'q")} />
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((c) => {
@@ -54,19 +56,19 @@ export default function Carriers() {
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-slate-900 truncate">{c.first_name} {c.last_name}</p>
                   <p className="text-xs text-slate-400">{c.phone}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">Jami reys: {c.total_trips}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{t('Jami reys: {{count}}', { count: c.total_trips })}</p>
                 </div>
                 <div className="flex flex-col items-end gap-2 shrink-0">
                   <StatusBadge tone={c.has_cargo ? 'green' : 'red'} dot>
-                    {c.has_cargo ? 'Yuk bor' : 'Yuk yo\'q'}
+                    {c.has_cargo ? t('Yuk bor') : t('Yuk yo\'q')}
                   </StatusBadge>
                   {isAdmin && (
                     <button
                       onClick={() => {
-                        if (confirm(`${c.first_name} yo'lovchi rolidan olib tashlansinmi?`)) remove.mutate(c.id)
+                        if (confirm(t("{{name}} yo'lovchi rolidan olib tashlansinmi?", { name: c.first_name }))) remove.mutate(c.id)
                       }}
                       disabled={busy || c.has_cargo}
-                      title={c.has_cargo ? "Yuk bor — avval topshirilishi kerak" : "Roldan olib tashlash"}
+                      title={c.has_cargo ? t('Yuk bor — avval topshirilishi kerak') : t('Roldan olib tashlash')}
                       className="press flex items-center gap-1 text-xs font-semibold text-red-600 disabled:opacity-40"
                     >
                       {busy ? (
@@ -74,7 +76,7 @@ export default function Carriers() {
                       ) : (
                         <IconTrash size={14} />
                       )}
-                      O'chirish
+                      {t("O'chirish")}
                     </button>
                   )}
                 </div>

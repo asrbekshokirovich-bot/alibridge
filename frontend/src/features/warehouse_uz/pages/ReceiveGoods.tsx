@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
@@ -17,7 +18,16 @@ interface ReceiveResult {
 
 type Step = 'name' | 'details' | 'done'
 
+// Tez tanlash uchun ko'p uchraydigan mahsulot turlari (chip)
+const CATEGORY_PRESETS = [
+  'Krasovka', 'Poyabzal', "O'yinchoq", 'Kiyim', 'Ichki kiyim',
+  'Tekstil', 'Chexol', 'Telefon aksessuar', 'Elektronika', 'Aksessuar',
+  'Kosmetika', 'Atir', 'Sumka', 'Soat', 'Zargarlik',
+  'Sport anjomlari', 'Bolalar buyumlari', 'Idish-tovoq',
+]
+
 export default function ReceiveGoods() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { notify, openLink } = useTelegram()
 
@@ -61,21 +71,38 @@ export default function ReceiveGoods() {
   if (step === 'name') {
     return (
       <div className="min-h-screen pb-32 animate-fade-in">
-        <Header title="Yuk qabul qilish" subtitle="1-qadam: mahsulot nomi" showBack />
+        <Header title={t('Yuk qabul qilish')} subtitle={t('1-qadam: mahsulot nomi')} showBack />
         <div className="px-4 pt-5 space-y-4">
-          <Input label="Mahsulot nomi" placeholder="Masalan: Krasovka Nike" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
-          <Input label="Kategoriya (ixtiyoriy)" placeholder="Poyabzal, tekstil, elektronika..." value={category} onChange={(e) => setCategory(e.target.value)} />
+          <Input label={t('Mahsulot nomi')} placeholder={t('Masalan: Krasovka Nike')} value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+          <Input label={t('Kategoriya (ixtiyoriy)')} placeholder={t('Poyabzal, tekstil, elektronika...')} value={category} onChange={(e) => setCategory(e.target.value)} />
+          <div className="flex flex-wrap gap-2 -mt-1">
+            {CATEGORY_PRESETS.map((c) => {
+              const active = category.trim() === c
+              return (
+                <button key={c} type="button"
+                  onClick={() => setCategory(active ? '' : c)}
+                  className={`press text-sm font-medium px-3 py-1.5 rounded-full border transition-colors ${
+                    active
+                      ? 'text-white border-transparent'
+                      : 'bg-white text-slate-600 border-slate-200'
+                  }`}
+                  style={active ? { background: 'var(--brand-gradient)' } : undefined}>
+                  {t(c)}
+                </button>
+              )
+            })}
+          </div>
           <div className="rounded-2xl p-3 flex gap-2.5" style={{ background: 'var(--brand-gradient-soft)' }}>
             <span className="text-base">ℹ️</span>
             <p className="text-[12px] text-red-900/70 leading-snug">
-              Avval barkod yaratiladi va chop etiladi. Keyingi oynada yuk turi, soni va narxini kiritasiz.
+              {t('Avval barkod yaratiladi va chop etiladi. Keyingi oynada yuk turi, soni va narxini kiritasiz.')}
             </p>
           </div>
           {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{error}</div>}
         </div>
         <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100">
           <Button fullWidth loading={loading} disabled={!name.trim()} onClick={createBarcode}>
-            Barkod yaratish
+            {t('Barkod yaratish')}
           </Button>
         </div>
       </div>
@@ -86,7 +113,7 @@ export default function ReceiveGoods() {
   if (step === 'details' && created) {
     return (
       <div className="min-h-screen pb-32 animate-fade-in">
-        <Header title="Yuk qabul qilish" subtitle="2-qadam: ma'lumotlar" showBack />
+        <Header title={t('Yuk qabul qilish')} subtitle={t("2-qadam: ma'lumotlar")} showBack />
 
         {/* Yaratilgan barkod */}
         <div className="px-4 pt-4">
@@ -102,7 +129,7 @@ export default function ReceiveGoods() {
             <button
               onClick={() => openLink(labelUrl(created.barcode, new Date().toISOString().slice(0, 10)))}
               className="press inline-block mt-2.5 text-sm font-semibold px-4 py-2 rounded-xl text-white" style={{ background: 'var(--brand-gradient)' }}>
-              🖨️ Barkod chiqarish
+              🖨️ {t('Barkod chiqarish')}
             </button>
           </div>
         </div>
@@ -110,7 +137,7 @@ export default function ReceiveGoods() {
         {/* Ma'lumotlar formasi (PATCH) */}
         <ProductDetailsForm
           productId={created.id}
-          submitLabel="Qabul qilish"
+          submitLabel={t('Qabul qilish')}
           onSaved={() => setStep('done')}
         />
       </div>
@@ -126,14 +153,14 @@ export default function ReceiveGoods() {
           <path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
-      <h2 className="text-xl font-bold text-slate-900 mb-1">Yuk qabul qilindi!</h2>
+      <h2 className="text-xl font-bold text-slate-900 mb-1">{t('Yuk qabul qilindi!')}</h2>
       <p className="text-sm text-slate-500 mb-6">{created?.name} — {created?.barcode}</p>
 
       <button onClick={reset} className="press w-full text-white rounded-2xl py-4 font-bold" style={{ background: 'var(--brand-gradient)' }}>
-        Yangi yuk qabul qilish
+        {t('Yangi yuk qabul qilish')}
       </button>
       <button onClick={() => navigate('/warehouse-uz')} className="press text-slate-400 text-sm font-medium mt-4">
-        Bosh sahifaga
+        {t('Bosh sahifaga')}
       </button>
     </div>
   )

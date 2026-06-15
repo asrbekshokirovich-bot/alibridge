@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useAuthStore } from '@/shared/store/auth'
@@ -9,6 +10,7 @@ import { ROLE_HOME } from '@/app/router'
 // Sayt (brauzer) orqali xodim/admin kirishi — login + parol.
 // Telegram ichida bu sahifa ko'rsatilmaydi (u yerda avtomatik login bor).
 export default function WebLogin() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const setAuth = useAuthStore((s) => s.setAuth)
   const [username, setUsername] = useState('')
@@ -44,7 +46,7 @@ export default function WebLogin() {
             <IconPlane size={38} className="text-white" />
           </div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Ali Bridge</h1>
-          <p className="text-sm text-slate-500 mt-1.5">Xodim kirishi</p>
+          <p className="text-sm text-slate-500 mt-1.5">{t('Xodim kirishi')}</p>
         </div>
 
         <form onSubmit={submit} className="flex flex-col gap-3.5">
@@ -52,7 +54,7 @@ export default function WebLogin() {
             type="text"
             autoComplete="username"
             inputMode="text"
-            placeholder="Login"
+            placeholder={t('Login')}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className="bg-white rounded-2xl px-4 py-3.5 border border-slate-200 outline-none focus:border-slate-400 text-slate-900"
@@ -60,7 +62,7 @@ export default function WebLogin() {
           <input
             type="password"
             autoComplete="current-password"
-            placeholder="Parol"
+            placeholder={t('Parol')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="bg-white rounded-2xl px-4 py-3.5 border border-slate-200 outline-none focus:border-slate-400 text-slate-900"
@@ -76,7 +78,7 @@ export default function WebLogin() {
           >
             {loading
               ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              : 'Kirish'}
+              : t('Kirish')}
           </button>
         </form>
 

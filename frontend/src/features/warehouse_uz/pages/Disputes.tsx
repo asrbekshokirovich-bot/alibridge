@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import client from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import { Header, ListSkeleton, EmptyState, StatusBadge, Button, IconCheck } from '@/shared/ui'
@@ -9,15 +10,16 @@ interface Dispute {
   note: string; status: 'open' | 'resolved' | 'rejected'; created_at: string
 }
 
-const map = {
-  open: { text: 'Ochiq', tone: 'yellow' as const },
-  resolved: { text: 'Hal qilindi', tone: 'green' as const },
-  rejected: { text: 'Rad etildi', tone: 'gray' as const },
-}
-
 export default function Disputes() {
+  const { t } = useTranslation()
   const { notify } = useTelegram()
   const qc = useQueryClient()
+
+  const map = {
+    open: { text: t('Ochiq'), tone: 'yellow' as const },
+    resolved: { text: t('Hal qilindi'), tone: 'green' as const },
+    rejected: { text: t('Rad etildi'), tone: 'gray' as const },
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ['warehouse-uz-disputes'],
@@ -32,12 +34,12 @@ export default function Disputes() {
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title="Nizolar" subtitle="Shikast holatlari" showBack />
+      <Header title={t('Nizolar')} subtitle={t('Shikast holatlari')} showBack />
 
       {isLoading ? (
         <ListSkeleton />
       ) : !data?.length ? (
-        <EmptyState icon={<IconCheck size={30} />} title="Nizo yo'q" description="Hamma narsa joyida" />
+        <EmptyState icon={<IconCheck size={30} />} title={t("Nizo yo'q")} description={t('Hamma narsa joyida')} />
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((d) => (
@@ -50,17 +52,17 @@ export default function Disputes() {
                 <StatusBadge tone={map[d.status].tone} dot>{map[d.status].text}</StatusBadge>
               </div>
               <div className="p-4 space-y-1.5">
-                <p className="text-sm text-slate-600">Yo'lovchi #{d.carrier_number} — {d.carrier_name}</p>
+                <p className="text-sm text-slate-600">{t("Yo'lovchi #{{number}} — {{name}}", { number: d.carrier_number, name: d.carrier_name })}</p>
                 <p className="text-xs font-mono text-slate-400">{d.barcode}</p>
                 {d.note && <p className="text-sm text-slate-700 bg-slate-50 rounded-xl p-2.5 mt-1">{d.note}</p>}
 
                 {d.status === 'open' && (
                   <div className="flex gap-2 pt-2">
                     <Button variant="success" fullWidth onClick={() => update.mutate({ id: d.id, status: 'resolved' })}>
-                      Hal qilindi
+                      {t('Hal qilindi')}
                     </Button>
                     <Button variant="ghost" fullWidth onClick={() => update.mutate({ id: d.id, status: 'rejected' })}>
-                      Rad etish
+                      {t('Rad etish')}
                     </Button>
                   </div>
                 )}

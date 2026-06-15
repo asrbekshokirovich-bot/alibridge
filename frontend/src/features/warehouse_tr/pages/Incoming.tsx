@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import type { ProductType } from '@/shared/types'
 import { typeEmoji } from '@/shared/lib/product'
@@ -36,6 +37,7 @@ function groupByStage(items: InTransitItem[]): StageGroup[] {
 }
 
 export default function Incoming() {
+  const { t } = useTranslation()
   const { data: items, isLoading, isError, error } = useQuery({
     queryKey: ['warehouse-tr-incoming'],
     queryFn: () => client.get<InTransitItem[]>('/warehouse-tr/incoming').then((r) => r.data),
@@ -47,7 +49,7 @@ export default function Incoming() {
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title="Jarayondagi yuklar" subtitle="Yo'lda — hali omborga yetmagan" showBack />
+      <Header title={t('Jarayondagi yuklar')} subtitle={t("Yo'lda — hali omborga yetmagan")} showBack />
 
       {isLoading ? (
         <ListSkeleton />
@@ -56,14 +58,14 @@ export default function Incoming() {
           <p className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{extractErrorMessage(error)}</p>
         </div>
       ) : !items?.length ? (
-        <EmptyState icon={<IconTruck size={30} />} title="Yo'lda yuk yo'q"
-          description="Hozir yo'lovchida yoki kuryerda turgan yuk yo'q" />
+        <EmptyState icon={<IconTruck size={30} />} title={t("Yo'lda yuk yo'q")}
+          description={t("Hozir yo'lovchida yoki kuryerda turgan yuk yo'q")} />
       ) : (
         <>
           <div className="px-4 pt-4 flex items-center justify-between">
-            <span className="text-sm font-bold text-slate-700">Jami</span>
+            <span className="text-sm font-bold text-slate-700">{t('Jami')}</span>
             <span className="text-sm font-bold px-2.5 py-0.5 rounded-full text-white" style={{ background: 'var(--brand-gradient)' }}>
-              {total} ta
+              {t('{{n}} ta', { n: total })}
             </span>
           </div>
 
@@ -71,7 +73,7 @@ export default function Incoming() {
             <div key={g.stage} className="px-4 pt-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-bold text-slate-900">{g.stage}</h3>
-                <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{g.total} ta</span>
+                <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{t('{{n}} ta', { n: g.total })}</span>
               </div>
               <div className="bg-white rounded-2xl border border-slate-100 shadow-sm divide-y divide-slate-50 web-grid">
                 {g.items.map((p) => (
@@ -86,7 +88,7 @@ export default function Incoming() {
                       <p className="text-[11px] font-mono text-slate-400">{p.barcode}</p>
                     </div>
                     <span className="text-sm font-bold text-white px-2 py-0.5 rounded-lg shrink-0" style={{ background: 'var(--brand)' }}>
-                      {p.quantity} ta
+                      {t('{{n}} ta', { n: p.quantity })}
                     </span>
                   </div>
                 ))}

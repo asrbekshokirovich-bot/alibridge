@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useLocation, Navigate } from 'react-router-dom'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
@@ -11,6 +12,7 @@ import { Header, Button, Input, Textarea, IconBox, IconTruck } from '@/shared/ui
 interface LocationState { cart: CartItem[] }
 
 export default function Checkout() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { state } = useLocation() as { state: LocationState }
   const { notify, haptic } = useTelegram()
@@ -31,8 +33,8 @@ export default function Checkout() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (pickupType === 'courier' && !pickupAddress) { setError('Manzilni kiriting'); return }
-    if (!deliveryAddress) { setError('Turkiyadagi manzilni kiriting'); return }
+    if (pickupType === 'courier' && !pickupAddress) { setError(t('Manzilni kiriting')); return }
+    if (!deliveryAddress) { setError(t('Turkiyadagi manzilni kiriting')); return }
     setLoading(true); setError('')
     try {
       await client.post('/carrier/orders', {
@@ -51,7 +53,7 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen pb-32 animate-fade-in">
-      <Header title="Tasdiqlash" subtitle={`${cart.length} ta · ${totalWeight.toFixed(1)} kg`} showBack />
+      <Header title={t('Tasdiqlash')} subtitle={t('{{count}} ta · {{weight}} kg', { count: cart.length, weight: totalWeight.toFixed(1) })} showBack />
 
       <form onSubmit={handleSubmit} className="px-4 pt-5 space-y-6">
         {/* Yuk ro'yxati */}
@@ -76,18 +78,18 @@ export default function Checkout() {
           ))}
           {/* Jami */}
           <div className="flex items-center justify-between p-3.5 bg-slate-50/50">
-            <span className="text-sm font-bold text-slate-700">Jami</span>
+            <span className="text-sm font-bold text-slate-700">{t('Jami')}</span>
             <span className="text-sm font-extrabold" style={{ color: 'var(--brand)' }}>{money(totalPrice)}</span>
           </div>
         </div>
 
         {/* Yuk olish joyi */}
         <div>
-          <p className="font-bold text-slate-900 text-[15px] mb-3">Yukni qabul qilish joyi</p>
+          <p className="font-bold text-slate-900 text-[15px] mb-3">{t('Yukni qabul qilish joyi')}</p>
           <div className="grid grid-cols-2 gap-3">
             {([
-              { key: 'self' as const, icon: <IconBox size={22} />, title: 'Ombordan', desc: 'O\'zim olaman' },
-              { key: 'courier' as const, icon: <IconTruck size={22} />, title: 'Kuryer', desc: 'Olib kelsin' },
+              { key: 'self' as const, icon: <IconBox size={22} />, title: t('Ombordan'), desc: t('O\'zim olaman') },
+              { key: 'courier' as const, icon: <IconTruck size={22} />, title: t('Kuryer'), desc: t('Olib kelsin') },
             ]).map((opt) => {
               const active = pickupType === opt.key
               return (
@@ -105,23 +107,23 @@ export default function Checkout() {
 
         {pickupType === 'courier' && (
           <div className="animate-fade-in">
-            <Input label="Toshkentdagi manzilingiz" placeholder="Tuman, ko'cha, uy"
+            <Input label={t('Toshkentdagi manzilingiz')} placeholder={t('Tuman, ko\'cha, uy')}
               value={pickupAddress} onChange={(e) => setPickupAddress(e.target.value)} />
           </div>
         )}
 
-        <Textarea label="Turkiyada yukni qoldirish manzili"
-          placeholder="Kuryer kelib oladigan joy (mehmonxona, manzil...)"
+        <Textarea label={t('Turkiyada yukni qoldirish manzili')}
+          placeholder={t('Kuryer kelib oladigan joy (mehmonxona, manzil...)')}
           value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} rows={3} />
         <p className="text-xs text-slate-400 -mt-3">
-          Yukni shu manzilga qoldirasiz — Turkiyadagi kuryer o'sha yerdan olib ketadi.
+          {t('Yukni shu manzilga qoldirasiz — Turkiyadagi kuryer o\'sha yerdan olib ketadi.')}
         </p>
 
         {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{error}</div>}
       </form>
 
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100">
-        <Button fullWidth loading={loading} onClick={handleSubmit}>Yuborish</Button>
+        <Button fullWidth loading={loading} onClick={handleSubmit}>{t('Yuborish')}</Button>
       </div>
     </div>
   )

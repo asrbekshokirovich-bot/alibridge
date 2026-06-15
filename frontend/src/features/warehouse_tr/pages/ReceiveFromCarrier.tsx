@@ -1,15 +1,17 @@
+import { useTranslation } from 'react-i18next'
 import { ScanSession } from '@/shared/ui'
 
 export default function ReceiveFromCarrier() {
+  const { t } = useTranslation()
   return (
     <ScanSession
-      title="Yo'lovchidan qabul"
-      subtitle="Barkodlarni skanlang"
+      title={t("Yo'lovchidan qabul")}
+      subtitle={t('Barkodlarni skanlang')}
       showBack
       scanUrl="/warehouse-tr/scan-receive"
       confirmUrl="/warehouse-tr/confirm-receive"
-      successTitle="Qabul qilindi!"
-      successDesc={(n) => `${n} ta mahsulot omborga olindi.`}
+      successTitle={t('Qabul qilindi!')}
+      successDesc={(n) => t('{{n}} ta mahsulot omborga olindi.', { n })}
     />
   )
 }

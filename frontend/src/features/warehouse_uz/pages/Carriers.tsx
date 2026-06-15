@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
 import type { ProductType } from '@/shared/types'
@@ -17,6 +18,7 @@ interface HeldCargo {
 }
 
 export default function Carriers() {
+  const { t } = useTranslation()
   const [open, setOpen] = useState<Carrier | null>(null)
 
   const { data, isLoading } = useQuery({
@@ -33,12 +35,12 @@ export default function Carriers() {
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title="Yo'lovchilar" subtitle="Yuk holati va tafsiloti" showBack />
+      <Header title={t("Yo'lovchilar")} subtitle={t('Yuk holati va tafsiloti')} showBack />
 
       {isLoading ? (
         <ListSkeleton />
       ) : !data?.length ? (
-        <EmptyState icon={<IconPlane size={30} />} title="Yo'lovchi yo'q" />
+        <EmptyState icon={<IconPlane size={30} />} title={t("Yo'lovchi yo'q")} />
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((c) => (
@@ -59,14 +61,14 @@ export default function Carriers() {
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-slate-900 truncate">{c.first_name} {c.last_name}</p>
                 <p className="text-xs text-slate-400">{c.phone}</p>
-                <p className="text-xs text-slate-400 mt-0.5">Jami reys: {c.total_trips}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{t('Jami reys: {{count}}', { count: c.total_trips })}</p>
               </div>
               <div className="flex flex-col items-end gap-2 shrink-0">
                 <StatusBadge tone={c.has_cargo ? 'green' : 'gray'} dot>
-                  {c.has_cargo ? 'Yuk bor' : 'Yuk yo\'q'}
+                  {c.has_cargo ? t('Yuk bor') : t("Yuk yo'q")}
                 </StatusBadge>
                 {c.has_cargo && (
-                  <span className="text-[11px] text-slate-400">Yuklarni ko'rish →</span>
+                  <span className="text-[11px] text-slate-400">{t("Yuklarni ko'rish →")}</span>
                 )}
               </div>
             </button>
@@ -79,12 +81,12 @@ export default function Carriers() {
         {open && (
           <div className="px-5 pt-2">
             <h3 className="font-bold text-slate-900 mb-1">{open.first_name} {open.last_name}</h3>
-            <p className="text-xs text-slate-400 mb-4">Yo'lovchi #{open.carrier_number} olib ketayotgan yuklar</p>
+            <p className="text-xs text-slate-400 mb-4">{t("Yo'lovchi #{{number}} olib ketayotgan yuklar", { number: open.carrier_number })}</p>
 
             {cargoLoading ? (
               <ListSkeleton />
             ) : !cargo?.length ? (
-              <p className="text-sm text-slate-400 py-6 text-center">Yuk topilmadi</p>
+              <p className="text-sm text-slate-400 py-6 text-center">{t('Yuk topilmadi')}</p>
             ) : (
               <div className="space-y-2.5 pb-2">
                 {cargo.map((p) => (
@@ -99,7 +101,7 @@ export default function Carriers() {
                       <p className="text-xs text-slate-400 font-mono">{p.barcode}</p>
                     </div>
                     <span className="text-xs font-bold text-white px-2 py-0.5 rounded-lg shrink-0" style={{ background: 'var(--brand)' }}>
-                      {p.quantity} {isPiece(p.type) ? 'dona' : 'ta'}
+                      {p.quantity} {isPiece(p.type) ? t('dona') : t('ta')}
                     </span>
                   </div>
                 ))}

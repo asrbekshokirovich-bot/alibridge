@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
@@ -9,15 +10,15 @@ interface StaffRequest {
   id: number; first_name: string; last_name: string; phone: string; created_at: string
 }
 
-const ROLES: { key: Role; label: string }[] = [
-  { key: 'warehouse_uz', label: 'Toshkent ombori' },
-  { key: 'warehouse_tr', label: 'Turkiya ombori' },
-  { key: 'courier_uz', label: 'Toshkent kuryeri' },
-  { key: 'courier_tr', label: 'Turkiya kuryeri' },
-  { key: 'china_worker', label: 'Xitoy ishchisi' },
-]
-
 export default function StaffApproval() {
+  const { t } = useTranslation()
+  const ROLES: { key: Role; label: string }[] = [
+    { key: 'warehouse_uz', label: t('Toshkent ombori') },
+    { key: 'warehouse_tr', label: t('Turkiya ombori') },
+    { key: 'courier_uz', label: t('Toshkent kuryeri') },
+    { key: 'courier_tr', label: t('Turkiya kuryeri') },
+    { key: 'china_worker', label: t('Xitoy ishchisi') },
+  ]
   const { notify } = useTelegram()
   const qc = useQueryClient()
   const [expanded, setExpanded] = useState<number | null>(null)
@@ -56,12 +57,12 @@ export default function StaffApproval() {
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title="Xodim so'rovlari" subtitle="Rol tayinlang" showBack />
+      <Header title={t("Xodim so'rovlari")} subtitle={t('Rol tayinlang')} showBack />
 
       {isLoading ? (
         <ListSkeleton />
       ) : !requests?.length ? (
-        <EmptyState icon={<IconUsers size={30} />} title="So'rov yo'q" description="Yangi xodim so'rovi mavjud emas" />
+        <EmptyState icon={<IconUsers size={30} />} title={t("So'rov yo'q")} description={t('Yangi xodim so\'rovi mavjud emas')} />
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {requests.map((req) => {
@@ -93,11 +94,11 @@ export default function StaffApproval() {
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                           <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
-                        {ROLES.find((r) => r.key === approvedRole[req.id])?.label} — tayinlandi
+                        {t('{{role}} — tayinlandi', { role: ROLES.find((r) => r.key === approvedRole[req.id])?.label })}
                       </div>
                     ) : (
                       <>
-                        <p className="text-xs font-medium text-slate-500 mb-2">Vazifa tanlang:</p>
+                        <p className="text-xs font-medium text-slate-500 mb-2">{t('Vazifa tanlang:')}</p>
                         <div className="grid grid-cols-2 gap-2">
                           {ROLES.map((r) => {
                             const isPicking =
@@ -118,7 +119,7 @@ export default function StaffApproval() {
                         </div>
                         <button onClick={() => reject.mutate(req.id)}
                           className="press w-full mt-2 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold">
-                          Rad etish
+                          {t('Rad etish')}
                         </button>
                       </>
                     )}

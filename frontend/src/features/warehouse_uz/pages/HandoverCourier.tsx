@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
 import { ScanSession, Header, ListSkeleton, EmptyState, IconTruck } from '@/shared/ui'
@@ -11,6 +12,7 @@ interface Courier {
 }
 
 export default function HandoverCourier() {
+  const { t } = useTranslation()
   const [courier, setCourier] = useState<Courier | null>(null)
 
   const { data, isLoading } = useQuery({
@@ -23,27 +25,27 @@ export default function HandoverCourier() {
   if (courier) {
     return (
       <ScanSession
-        title="Kuryerga topshirish"
+        title={t('Kuryerga topshirish')}
         subtitle={`${courier.first_name} ${courier.last_name}`.trim()}
         showBack
         onBack={() => setCourier(null)}
         scanUrl="/warehouse-uz/scan-for-courier"
         confirmUrl="/warehouse-uz/confirm-courier-handover"
         confirmBody={{ courier_id: courier.id }}
-        successTitle="Topshirildi!"
-        successDesc={(n) => `${n} ta mahsulot kuryerga o'tdi.`}
+        successTitle={t('Topshirildi!')}
+        successDesc={(n) => t("{{n}} ta mahsulot kuryerga o'tdi.", { n })}
       />
     )
   }
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title="Kuryerga topshirish" subtitle="Avval kuryerni tanlang" showBack />
+      <Header title={t('Kuryerga topshirish')} subtitle={t('Avval kuryerni tanlang')} showBack />
 
       {isLoading ? (
         <ListSkeleton />
       ) : !data?.length ? (
-        <EmptyState icon={<IconTruck size={30} />} title="Kuryer yo'q" description="Faol Toshkent kuryeri topilmadi" />
+        <EmptyState icon={<IconTruck size={30} />} title={t("Kuryer yo'q")} description={t('Faol Toshkent kuryeri topilmadi')} />
       ) : (
         <div className="px-4 pt-4 space-y-2 web-grid">
           {data.map((c) => (

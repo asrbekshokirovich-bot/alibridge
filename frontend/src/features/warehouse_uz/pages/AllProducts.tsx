@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
 import { money } from '@/shared/lib/format'
@@ -12,28 +13,29 @@ interface Distribution {
   total: number; stages: StageQuantity[]
 }
 
-const STATUS_LABEL: Record<string, { label: string; tone: 'green' | 'yellow' | 'red' | 'gray' | 'blue' }> = {
-  in_warehouse_uz: { label: 'Toshkent omborida', tone: 'blue' },
-  pending_admin: { label: 'Tasdiq kutilmoqda', tone: 'yellow' },
-  confirmed: { label: 'Tasdiqlangan', tone: 'green' },
-  with_courier_uz: { label: 'Kuryerda', tone: 'yellow' },
-  with_carrier: { label: 'Yo\'lovchida', tone: 'yellow' },
-  delivered_tr: { label: 'Turkiyada', tone: 'green' },
-  damaged: { label: 'Shikastlangan', tone: 'red' },
-}
-
-// Filtr: status guruhlari
-const FILTERS: { key: string; label: string; match: (s: string) => boolean }[] = [
-  { key: 'all', label: 'Barchasi', match: () => true },
-  { key: 'warehouse', label: 'Omborda', match: (s) => s === 'in_warehouse_uz' },
-  { key: 'moving', label: 'Yo\'lda', match: (s) => ['with_courier_uz', 'with_carrier', 'pending_admin', 'confirmed'].includes(s) },
-  { key: 'delivered', label: 'Yetkazilgan', match: (s) => s === 'delivered_tr' },
-  { key: 'damaged', label: 'Shikast', match: (s) => s === 'damaged' },
-]
-
 export default function AllProducts() {
+  const { t } = useTranslation()
   const [filter, setFilter] = useState('all')
   const [openId, setOpenId] = useState<number | null>(null)
+
+  const STATUS_LABEL: Record<string, { label: string; tone: 'green' | 'yellow' | 'red' | 'gray' | 'blue' }> = {
+    in_warehouse_uz: { label: t('Toshkent omborida'), tone: 'blue' },
+    pending_admin: { label: t('Tasdiq kutilmoqda'), tone: 'yellow' },
+    confirmed: { label: t('Tasdiqlangan'), tone: 'green' },
+    with_courier_uz: { label: t('Kuryerda'), tone: 'yellow' },
+    with_carrier: { label: t('Yo\'lovchida'), tone: 'yellow' },
+    delivered_tr: { label: t('Turkiyada'), tone: 'green' },
+    damaged: { label: t('Shikastlangan'), tone: 'red' },
+  }
+
+  // Filtr: status guruhlari
+  const FILTERS: { key: string; label: string; match: (s: string) => boolean }[] = [
+    { key: 'all', label: t('Barchasi'), match: () => true },
+    { key: 'warehouse', label: t('Omborda'), match: (s) => s === 'in_warehouse_uz' },
+    { key: 'moving', label: t('Yo\'lda'), match: (s) => ['with_courier_uz', 'with_carrier', 'pending_admin', 'confirmed'].includes(s) },
+    { key: 'delivered', label: t('Yetkazilgan'), match: (s) => s === 'delivered_tr' },
+    { key: 'damaged', label: t('Shikast'), match: (s) => s === 'damaged' },
+  ]
 
   const { data, isLoading } = useQuery({
     queryKey: ['warehouse-uz-all-products'],
@@ -53,7 +55,7 @@ export default function AllProducts() {
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title="Barcha yuklar" subtitle="Yuk harakatini kuzatish" showBack />
+      <Header title={t('Barcha yuklar')} subtitle={t('Yuk harakatini kuzatish')} showBack />
 
       {/* Status filtri */}
       <div className="px-4 pt-3">
@@ -80,7 +82,7 @@ export default function AllProducts() {
       {isLoading ? (
         <ListSkeleton />
       ) : !filtered?.length ? (
-        <EmptyState icon={<IconBox size={30} />} title="Yuk yo'q" description="Bu holatda yuk topilmadi" />
+        <EmptyState icon={<IconBox size={30} />} title={t('Yuk yo\'q')} description={t('Bu holatda yuk topilmadi')} />
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {filtered.map((p) => {
@@ -98,7 +100,7 @@ export default function AllProducts() {
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                       <StatusBadge tone={st.tone} dot>{st.label}</StatusBadge>
                       <span className="text-xs text-slate-400">
-                        {isPiece(p.type) ? `${p.quantity} dona` : `${p.weight_kg} kg · ${p.quantity} dona`}
+                        {isPiece(p.type) ? t('{{quantity}} dona', { quantity: p.quantity }) : t('{{weight}} kg · {{quantity}} dona', { weight: p.weight_kg, quantity: p.quantity })}
                       </span>
                     </div>
                   </div>
@@ -118,16 +120,16 @@ export default function AllProducts() {
         {dist && (
           <div className="px-5 pt-2">
             <h3 className="font-bold text-slate-900 mb-1">{dist.product_name}</h3>
-            <p className="text-xs text-slate-400 font-mono mb-4">{dist.barcode} · jami {dist.total} ta</p>
+            <p className="text-xs text-slate-400 font-mono mb-4">{dist.barcode} · {t('jami {{total}} ta', { total: dist.total })}</p>
             {dist.stages.length === 0 ? (
-              <p className="text-sm text-slate-400 py-6 text-center">Hali taqsimlanmagan</p>
+              <p className="text-sm text-slate-400 py-6 text-center">{t('Hali taqsimlanmagan')}</p>
             ) : (
               <div className="space-y-2 pb-2">
                 {dist.stages.map((s) => (
                   <div key={s.holder_type} className="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3">
                     <span className="text-sm font-semibold text-slate-700">{s.label}</span>
                     <span className="text-sm font-bold text-white px-2.5 py-0.5 rounded-lg" style={{ background: 'var(--brand)' }}>
-                      {s.quantity} ta
+                      {t('{{quantity}} ta', { quantity: s.quantity })}
                     </span>
                   </div>
                 ))}

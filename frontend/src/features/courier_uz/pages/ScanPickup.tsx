@@ -1,15 +1,17 @@
+import { useTranslation } from 'react-i18next'
 import { ScanSession } from '@/shared/ui'
 
 export default function ScanPickup() {
+  const { t } = useTranslation()
   return (
     <ScanSession
-      title="Buyurtmadan tashqari qabul"
-      subtitle="Istalgan yukni skanlang"
+      title={t('Buyurtmadan tashqari qabul')}
+      subtitle={t('Istalgan yukni skanlang')}
       showBack
       scanUrl="/courier-uz/scan-pickup"
       confirmUrl="/courier-uz/confirm-pickup"
-      successTitle="Mahsulotlar sizda!"
-      successDesc={(n) => `${n} ta mahsulot qabul qilindi.`}
+      successTitle={t('Mahsulotlar sizda!')}
+      successDesc={(n) => t('{{n}} ta mahsulot qabul qilindi.', { n })}
     />
   )
 }

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import client from '@/shared/api/client'
 import type { Product } from '@/shared/types'
 import { PRODUCT_STATUS } from '@/shared/lib/status'
@@ -6,6 +7,7 @@ import { isPiece, typeEmoji } from '@/shared/lib/product'
 import { Header, ListSkeleton, EmptyState, StatusBadge, IconBox } from '@/shared/ui'
 
 export default function UzProducts() {
+  const { t } = useTranslation()
   const { data: products, isLoading } = useQuery({
     queryKey: ['uz-products-tr-view'],
     queryFn: () => client.get<Product[]>('/warehouse-tr/uz-products').then((r) => r.data),
@@ -13,12 +15,12 @@ export default function UzProducts() {
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title="Toshkent mahsulotlari" subtitle="Omborlardagi holat" showBack />
+      <Header title={t('Toshkent mahsulotlari')} subtitle={t('Omborlardagi holat')} showBack />
 
       {isLoading ? (
         <ListSkeleton />
       ) : !products?.length ? (
-        <EmptyState icon={<IconBox size={30} />} title="Mahsulot yo'q" />
+        <EmptyState icon={<IconBox size={30} />} title={t("Mahsulot yo'q")} />
       ) : (
         <div className="px-4 pt-4 space-y-3">
           {products.map((p) => (
@@ -35,11 +37,11 @@ export default function UzProducts() {
                   <p className="text-xs text-slate-400">{p.category}</p>
                   <div className="flex items-center gap-2 mt-1.5">
                     <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg">
-                      {isPiece(p.type) ? `${p.quantity} dona` : `${p.weight_kg} kg`}
+                      {isPiece(p.type) ? t('{{count}} dona', { count: p.quantity }) : t('{{weight}} kg', { weight: p.weight_kg })}
                     </span>
                     {p.box_weight_kg ? (
                       <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg">
-                        Kartonka: {p.box_weight_kg} kg
+                        {t('Kartonka: {{weight}} kg', { weight: p.box_weight_kg })}
                       </span>
                     ) : null}
                   </div>

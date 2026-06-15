@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { Header, ListSkeleton, EmptyState, IconBox } from '@/shared/ui'
@@ -39,11 +40,16 @@ function todayStr(): string {
 
 export function DailyReport({
   apiUrl, queryKey, subtitle,
-  metricLabel = 'Chiqdi',
-  emptyTitle = 'Chiqim yo\'q',
-  emptyDesc = 'Bu kuni ombordan yuk chiqmagan',
+  metricLabel,
+  emptyTitle,
+  emptyDesc,
 }: Props) {
+  const { t } = useTranslation()
   const [date, setDate] = useState(todayStr())
+
+  const metricLabelText = metricLabel ?? t('Chiqdi')
+  const emptyTitleText = emptyTitle ?? t('Chiqim yo\'q')
+  const emptyDescText = emptyDesc ?? t('Bu kuni ombordan yuk chiqmagan')
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: [queryKey, date],
@@ -52,13 +58,13 @@ export function DailyReport({
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title="Kunlik hisobot" subtitle={subtitle} showBack />
+      <Header title={t('Kunlik hisobot')} subtitle={subtitle} showBack />
 
       {/* Sana tanlash + jami */}
       <div className="px-4 pt-4">
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center justify-between gap-3">
           <div className="flex-1">
-            <label className="text-xs text-slate-400 block mb-1">Sana</label>
+            <label className="text-xs text-slate-400 block mb-1">{t('Sana')}</label>
             <input
               type="date"
               value={date}
@@ -68,11 +74,11 @@ export function DailyReport({
             />
           </div>
           <div className="text-right shrink-0">
-            <p className="text-xs text-slate-400">{metricLabel}</p>
+            <p className="text-xs text-slate-400">{metricLabelText}</p>
             <p className="text-2xl font-extrabold" style={{ color: 'var(--brand)' }}>
               {data?.total ?? 0}
             </p>
-            <p className="text-[11px] text-slate-400">ta</p>
+            <p className="text-[11px] text-slate-400">{t('ta')}</p>
           </div>
         </div>
       </div>
@@ -84,7 +90,7 @@ export function DailyReport({
           <p className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{extractErrorMessage(error)}</p>
         </div>
       ) : !data?.items.length ? (
-        <EmptyState icon={<IconBox size={30} />} title={emptyTitle} description={emptyDesc} />
+        <EmptyState icon={<IconBox size={30} />} title={emptyTitleText} description={emptyDescText} />
       ) : (
         <div className="px-4 pt-4 space-y-2 web-grid">
           {data.items.map((it, i) => (
@@ -103,7 +109,7 @@ export function DailyReport({
               </div>
               <div className="text-right shrink-0">
                 <span className="text-base font-extrabold text-white px-2.5 py-1 rounded-lg" style={{ background: 'var(--brand)' }}>
-                  {it.quantity} ta
+                  {t('{{n}} ta', { n: it.quantity })}
                 </span>
               </div>
             </div>

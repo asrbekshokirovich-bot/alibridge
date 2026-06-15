@@ -15,10 +15,20 @@ from app.core.enums import (
 )
 from app.core.errors import AppError
 from app.db.base import get_db
-from app.db.models import CustodyHolding, Dispute, Order, OrderItem, Product, User
+from app.db.models import (
+    CustodyEvent,
+    CustodyHolding,
+    Dispute,
+    Order,
+    OrderItem,
+    Product,
+    ProductVariant,
+    User,
+)
 from app.schemas.common import OkResponse
 from app.schemas.courier import (
     ConfirmDeliveryRequest,
+    CourierUzMyProduct,
     DeliveryItem,
     ReportDamagedRequest,
     ScanDeliveryRequest,
@@ -227,6 +237,79 @@ async def report_damaged(
         note=body.note,
     )
     return OkResponse(ok=True)
+
+
+# ─── Mening yuklarim (TR kuryeri hozir olib yurgan) ─────────────────────────────
+
+
+@router.get("/my-products", response_model=list[CourierUzMyProduct])
+async def my_products(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*ROLE)),
+) -> list[CourierUzMyProduct]:
+    """TR kuryeri hozir o'zida olib yurgan yuklar — har o'lcham (variant) alohida,
+    custody_holdings dan (COURIER_TR, holder_id=shu kuryer, quantity>0)."""
+    rows = await db.execute(
+        select(CustodyHolding, Product, ProductVariant)
+        .join(Product, Product.id == CustodyHolding.product_id)
+        .join(ProductVariant, ProductVariant.id == CustodyHolding.variant_id)
+        .where(
+            CustodyHolding.holder_type == HolderType.COURIER_TR,
+            CustodyHolding.holder_id == user.id,
+            CustodyHolding.quantity > 0,
+        )
+    )
+    holdings = rows.all()
+    if not holdings:
+        return []
+
+    product_ids = list({p.id for _, p, _ in holdings})
+
+    # Har yuk qaysi yo'lovchining buyurtmasiga tegishli (buyurtmasiz bo'lsa null)
+    carrier_rows = await db.execute(
+        select(OrderItem.product_id, User)
+        .join(Order, Order.id == OrderItem.order_id)
+        .join(User, User.id == Order.carrier_id)
+        .where(OrderItem.product_id.in_(product_ids))
+    )
+    carrier_by_product: dict[int, User] = {}
+    for pid, carrier in carrier_rows.all():
+        carrier_by_product.setdefault(pid, carrier)
+
+    # Qachon qabul qilingani (COURIER_TR_RECEIVED eventi sanasi)
+    ev_rows = await db.execute(
+        select(CustodyEvent.product_id, CustodyEvent.created_at)
+        .where(
+            CustodyEvent.product_id.in_(product_ids),
+            CustodyEvent.event_type == CustodyEventType.COURIER_TR_RECEIVED,
+        )
+        .order_by(CustodyEvent.id.desc())
+    )
+    received_at: dict[int, str] = {}
+    for pid, created in ev_rows.all():
+        received_at.setdefault(pid, created.date().isoformat())
+
+    result: list[CourierUzMyProduct] = []
+    for h, p, v in holdings:
+        carrier = carrier_by_product.get(p.id)
+        result.append(
+            CourierUzMyProduct(
+                product_id=p.id,
+                variant_id=v.id,
+                barcode=p.barcode,
+                product_name=p.name,
+                category=p.category,
+                image_url=p.image_url,
+                carrier_name=(
+                    f"{carrier.first_name} {carrier.last_name}".strip() if carrier else None
+                ),
+                carrier_number=carrier.carrier_number if carrier else None,
+                picked_up_at=received_at.get(p.id, ""),
+                size_label=v.size_label,
+                quantity=h.quantity,
+            )
+        )
+    return result
 
 
 # ─── Yetkazish (buyurtmachiga) ──────────────────────────────────────────────────

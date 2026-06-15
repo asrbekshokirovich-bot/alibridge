@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import client, { extractErrorMessage } from '@/shared/api/client'
@@ -13,6 +14,7 @@ interface Delivery {
 }
 
 export default function Deliveries() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { haptic } = useTelegram()
   const [active, setActive] = useState<Delivery | null>(null)
@@ -26,7 +28,7 @@ export default function Deliveries() {
   if (active) {
     return (
       <ScanSession
-        title="Yetkazish"
+        title={t('Yetkazish')}
         subtitle={active.recipient_name}
         showBack
         onBack={() => setActive(null)}
@@ -34,15 +36,15 @@ export default function Deliveries() {
         confirmUrl="/courier-tr/confirm-delivery"
         scanBody={{ delivery_id: active.id }}
         confirmBody={{ delivery_id: active.id }}
-        successTitle="Yetkazildi!"
-        successDesc={(n) => `${n} ta mahsulot buyurtmachiga topshirildi.`}
+        successTitle={t('Yetkazildi!')}
+        successDesc={(n) => t('{{n}} ta mahsulot buyurtmachiga topshirildi.', { n })}
       />
     )
   }
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title="Yetkazish" subtitle="Buyurtmachiga topshirish" showBack
+      <Header title={t('Yetkazish')} subtitle={t('Buyurtmachiga topshirish')} showBack
         onBack={() => navigate('/courier-tr')} />
 
       {isLoading ? (
@@ -52,8 +54,8 @@ export default function Deliveries() {
           <p className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{extractErrorMessage(error)}</p>
         </div>
       ) : !data?.length ? (
-        <EmptyState icon={<IconTruck size={30} />} title="Yetkazish yo'q"
-          description="Omborda yetkazishga tayyor yuk yo'q" />
+        <EmptyState icon={<IconTruck size={30} />} title={t('Yetkazish yo\'q')}
+          description={t('Omborda yetkazishga tayyor yuk yo\'q')} />
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((d) => (
@@ -65,10 +67,10 @@ export default function Deliveries() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-slate-900 truncate">{d.recipient_name}</p>
-                <p className="text-xs text-slate-400 truncate">{d.address || 'Manzil ko\'rsatilmagan'}</p>
+                <p className="text-xs text-slate-400 truncate">{d.address || t('Manzil ko\'rsatilmagan')}</p>
               </div>
               <span className="text-xs font-bold text-white px-2.5 py-0.5 rounded-full shrink-0" style={{ background: 'var(--brand)' }}>
-                {d.products_count} ta
+                {t('{{count}} ta', { count: d.products_count })}
               </span>
             </button>
           ))}

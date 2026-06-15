@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import client, { extractErrorMessage } from '@/shared/api/client'
@@ -10,21 +11,22 @@ import { Header, ListSkeleton, EmptyState, StatusBadge, IconBox } from '@/shared
 
 type Filter = 'all' | ProductGroup
 
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: 'all', label: 'Umumiy' },
-  { key: 'piece', label: 'Donali' },
-  { key: 'boxed', label: 'Kiloli' },
-  { key: 'textile', label: 'Tekstil' },
-]
-
 const CHIP = 'text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg'
 const CHIP_MUTED = 'text-xs font-medium text-slate-400 bg-slate-50 px-2 py-0.5 rounded-lg'
 
 export default function Products() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { openLink, notify } = useTelegram()
   const qc = useQueryClient()
   const [filter, setFilter] = useState<Filter>('all')
+
+  const FILTERS: { key: Filter; label: string }[] = [
+    { key: 'all', label: t('Umumiy') },
+    { key: 'piece', label: t('Donali') },
+    { key: 'boxed', label: t('Kiloli') },
+    { key: 'textile', label: t('Tekstil') },
+  ]
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['warehouse-uz-products'],
@@ -48,7 +50,7 @@ export default function Products() {
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title="Ombordagi mahsulotlar" subtitle="Toshkent ombori holati" showBack />
+      <Header title={t('Ombordagi mahsulotlar')} subtitle={t('Toshkent ombori holati')} showBack />
 
       {/* Filtr tugmalari */}
       <div className="px-4 pt-3">
@@ -75,7 +77,7 @@ export default function Products() {
       {isLoading ? (
         <ListSkeleton />
       ) : !filtered?.length ? (
-        <EmptyState icon={<IconBox size={30} />} title="Mahsulot yo'q" description="Bu turdagi mahsulot omborda yo'q" />
+        <EmptyState icon={<IconBox size={30} />} title={t("Mahsulot yo'q")} description={t("Bu turdagi mahsulot omborda yo'q")} />
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {filtered.map((p) => {
@@ -92,8 +94,8 @@ export default function Products() {
             const unit = g === 'piece' ? 'dona' : 'kg'
             // Jami qatori: donada hamma turda, kg faqat kiloli/tekstilda. Bo'sh segmentlar tushiriladi.
             const jamiParts = [
-              totalQty > 0 ? `${totalQty} dona` : '',
-              g !== 'piece' && totalKg >= 0.1 ? `${totalKg.toFixed(1)} kg` : '',
+              totalQty > 0 ? t('{{n}} dona', { n: totalQty }) : '',
+              g !== 'piece' && totalKg >= 0.1 ? t('{{n}} kg', { n: totalKg.toFixed(1) }) : '',
             ].filter(Boolean)
             return (
               <div key={p.id} className={`bg-white rounded-2xl p-3.5 border shadow-sm ${incomplete ? 'border-amber-300' : 'border-slate-100'}`}>
@@ -114,7 +116,7 @@ export default function Products() {
                     <p className="text-xs text-slate-400 truncate">{p.category || '—'}</p>
 
                     {incomplete ? (
-                      <p className="text-xs text-amber-600 font-medium mt-1.5">⚠️ O'lcham qo'shilmagan — tahrirlang</p>
+                      <p className="text-xs text-amber-600 font-medium mt-1.5">⚠️ {t("O'lcham qo'shilmagan — tahrirlang")}</p>
                     ) : (
                       <>
                         <div className="mt-2 space-y-1">
@@ -123,13 +125,13 @@ export default function Products() {
                               {v.size_label && (
                                 <span className="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg">{v.size_label}</span>
                               )}
-                              {v.quantity > 0 && <span className={CHIP}>{v.quantity} dona</span>}
-                              {g === 'boxed' && v.box_count != null && v.box_count > 0 && <span className={CHIP}>{v.box_count} quti</span>}
-                              {v.weight_kg > 0 && <span className={CHIP}>{v.weight_kg} kg</span>}
+                              {v.quantity > 0 && <span className={CHIP}>{t('{{n}} dona', { n: v.quantity })}</span>}
+                              {g === 'boxed' && v.box_count != null && v.box_count > 0 && <span className={CHIP}>{t('{{n}} quti', { n: v.box_count })}</span>}
+                              {v.weight_kg > 0 && <span className={CHIP}>{t('{{n}} kg', { n: v.weight_kg })}</span>}
                               {v.tare_kg != null && v.tare_kg > 0 && (
                                 <>
-                                  <span className={CHIP}>{Math.max(0, v.weight_kg - v.tare_kg).toFixed(1)} kg sof</span>
-                                  <span className={CHIP_MUTED}>tara {v.tare_kg}</span>
+                                  <span className={CHIP}>{t('{{n}} kg sof', { n: Math.max(0, v.weight_kg - v.tare_kg).toFixed(1) })}</span>
+                                  <span className={CHIP_MUTED}>{t('tara {{n}}', { n: v.tare_kg })}</span>
                                 </>
                               )}
                               {v.cargo_price > 0 && (
@@ -142,7 +144,7 @@ export default function Products() {
                         </div>
                         {jamiParts.length > 0 && (
                           <p className="text-xs font-semibold text-slate-500 mt-1.5">
-                            Jami: {jamiParts.join(' · ')}
+                            {t('Jami:')} {jamiParts.join(' · ')}
                           </p>
                         )}
                       </>
@@ -155,7 +157,7 @@ export default function Products() {
                       onClick={() => openLink(labelUrl(p.barcode, new Date().toISOString().slice(0, 10)))}
                       className="press py-2 rounded-xl text-[11px] font-semibold bg-slate-100 text-slate-700 flex flex-col items-center gap-0.5"
                     >
-                      <span>🖨️ Barkod</span>
+                      <span>🖨️ {t('Barkod')}</span>
                       <span className="text-[10px] text-slate-400 font-mono truncate w-full text-center">{p.barcode}</span>
                     </button>
                     {editable && (
@@ -164,18 +166,18 @@ export default function Products() {
                         className={`press py-2 rounded-xl text-[11px] font-semibold ${incomplete ? 'text-white' : 'bg-slate-100 text-slate-700'}`}
                         style={incomplete ? { background: 'var(--brand-gradient)' } : undefined}
                       >
-                        {incomplete ? 'To\'ldirish' : '✏️ Tahrirlash'}
+                        {incomplete ? t("To'ldirish") : `✏️ ${t('Tahrirlash')}`}
                       </button>
                     )}
                     {editable && (
                       <button
                         onClick={() => {
-                          if (confirm(`"${p.name}" o'chirilsinmi? Bu amalni qaytarib bo'lmaydi.`)) remove.mutate(p.id)
+                          if (confirm(t('"{{name}}" o\'chirilsinmi? Bu amalni qaytarib bo\'lmaydi.', { name: p.name }))) remove.mutate(p.id)
                         }}
                         disabled={remove.isPending && remove.variables === p.id}
                         className="press py-2 rounded-xl text-[11px] font-semibold bg-red-50 text-red-600 disabled:opacity-50"
                       >
-                        🗑️ O'chirish
+                        🗑️ {t("O'chirish")}
                       </button>
                     )}
                   </div>

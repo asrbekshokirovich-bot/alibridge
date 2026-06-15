@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import client from '@/shared/api/client'
 import { productGroup, typeEmoji } from '@/shared/lib/product'
 import { Header, ListSkeleton, EmptyState, StatusBadge, IconBox } from '@/shared/ui'
@@ -7,16 +8,16 @@ import type { Product } from '@/shared/types'
 const CHIP = 'text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg'
 const CHIP_MUTED = 'text-xs font-medium text-slate-400 bg-slate-50 px-2 py-0.5 rounded-lg'
 
-const STATUS_LABEL: Record<string, { label: string; tone: 'green' | 'yellow' | 'red' | 'gray' | 'blue' }> = {
-  in_warehouse_uz: { label: 'Toshkent omborida', tone: 'blue' },
-  pending_admin: { label: 'Tasdiq kutilmoqda', tone: 'yellow' },
-  confirmed: { label: 'Tasdiqlangan', tone: 'green' },
-  with_carrier: { label: 'Yo\'lovchida', tone: 'yellow' },
-  delivered_tr: { label: 'Turkiyada', tone: 'green' },
-  damaged: { label: 'Shikastlangan', tone: 'red' },
-}
-
 export default function Products() {
+  const { t } = useTranslation()
+  const STATUS_LABEL: Record<string, { label: string; tone: 'green' | 'yellow' | 'red' | 'gray' | 'blue' }> = {
+    in_warehouse_uz: { label: t('Toshkent omborida'), tone: 'blue' },
+    pending_admin: { label: t('Tasdiq kutilmoqda'), tone: 'yellow' },
+    confirmed: { label: t('Tasdiqlangan'), tone: 'green' },
+    with_carrier: { label: t('Yo\'lovchida'), tone: 'yellow' },
+    delivered_tr: { label: t('Turkiyada'), tone: 'green' },
+    damaged: { label: t('Shikastlangan'), tone: 'red' },
+  }
   const { data, isLoading } = useQuery({
     queryKey: ['admin-products'],
     queryFn: () => client.get<Product[]>('/admin/products').then((r) => r.data),
@@ -24,12 +25,12 @@ export default function Products() {
 
   return (
     <div className="min-h-screen pb-8 animate-fade-in">
-      <Header title="Mahsulotlar" subtitle="Barcha yuklar" showBack />
+      <Header title={t('Mahsulotlar')} subtitle={t('Barcha yuklar')} showBack />
 
       {isLoading ? (
         <ListSkeleton />
       ) : !data?.length ? (
-        <EmptyState icon={<IconBox size={30} />} title="Mahsulot yo'q" description="Hali mahsulot qo'shilmagan" />
+        <EmptyState icon={<IconBox size={30} />} title={t('Mahsulot yo\'q')} description={t('Hali mahsulot qo\'shilmagan')} />
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((p) => {
@@ -41,8 +42,8 @@ export default function Products() {
             const totalQty = realVariants.reduce((s, v) => s + (v.quantity || 0), 0)
             const totalKg = realVariants.reduce((s, v) => s + Math.max(0, (v.weight_kg || 0) - (v.tare_kg || 0)), 0)
             const jamiParts = [
-              totalQty > 0 ? `${totalQty} dona` : '',
-              g !== 'piece' && totalKg >= 0.1 ? `${totalKg.toFixed(1)} kg` : '',
+              totalQty > 0 ? t('{{n}} dona', { n: totalQty }) : '',
+              g !== 'piece' && totalKg >= 0.1 ? t('{{n}} kg', { n: totalKg.toFixed(1) }) : '',
             ].filter(Boolean)
             return (
               <div key={p.id} className="bg-white rounded-2xl p-3.5 border border-slate-100 shadow-sm">
@@ -70,13 +71,13 @@ export default function Products() {
                               {v.size_label && (
                                 <span className="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg">{v.size_label}</span>
                               )}
-                              {v.quantity > 0 && <span className={CHIP}>{v.quantity} dona</span>}
-                              {g === 'boxed' && v.box_count != null && v.box_count > 0 && <span className={CHIP}>{v.box_count} quti</span>}
-                              {v.weight_kg > 0 && <span className={CHIP}>{v.weight_kg} kg</span>}
+                              {v.quantity > 0 && <span className={CHIP}>{t('{{n}} dona', { n: v.quantity })}</span>}
+                              {g === 'boxed' && v.box_count != null && v.box_count > 0 && <span className={CHIP}>{t('{{n}} quti', { n: v.box_count })}</span>}
+                              {v.weight_kg > 0 && <span className={CHIP}>{t('{{n}} kg', { n: v.weight_kg })}</span>}
                               {v.tare_kg != null && v.tare_kg > 0 && (
                                 <>
-                                  <span className={CHIP}>{Math.max(0, v.weight_kg - v.tare_kg).toFixed(1)} kg sof</span>
-                                  <span className={CHIP_MUTED}>tara {v.tare_kg}</span>
+                                  <span className={CHIP}>{t('{{n}} kg sof', { n: Math.max(0, v.weight_kg - v.tare_kg).toFixed(1) })}</span>
+                                  <span className={CHIP_MUTED}>{t('tara {{n}}', { n: v.tare_kg })}</span>
                                 </>
                               )}
                               {v.cargo_price > 0 && (
@@ -88,12 +89,12 @@ export default function Products() {
                           ))}
                         </div>
                         {jamiParts.length > 0 && (
-                          <p className="text-xs font-semibold text-slate-500 mt-1.5">Jami: {jamiParts.join(' · ')}</p>
+                          <p className="text-xs font-semibold text-slate-500 mt-1.5">{t('Jami:')} {jamiParts.join(' · ')}</p>
                         )}
                       </>
                     ) : (
                       <div className="flex items-center gap-2 mt-2 flex-wrap text-xs">
-                        <span className={CHIP}>{g === 'piece' ? `${p.quantity} dona` : `${p.weight_kg} kg · ${p.quantity} dona`}</span>
+                        <span className={CHIP}>{g === 'piece' ? t('{{n}} dona', { n: p.quantity }) : t('{{kg}} kg · {{n}} dona', { kg: p.weight_kg, n: p.quantity })}</span>
                         {p.cargo_price > 0 && (
                           <span className="font-bold ml-auto" style={{ color: 'var(--brand)' }}>${p.cargo_price}/{unit}</span>
                         )}

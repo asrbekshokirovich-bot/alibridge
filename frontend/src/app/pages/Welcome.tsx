@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import { useAuthStore } from '@/shared/store/auth'
@@ -7,6 +8,7 @@ import type { Role, User } from '@/shared/types'
 import { IconBag, IconPlane } from '@/shared/ui'
 
 export default function Welcome() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { haptic, notify } = useTelegram()
   const user = useAuthStore((s) => s.user)
@@ -41,7 +43,7 @@ export default function Welcome() {
       // Avval login bo'lganligiga ishonch hosil qilamiz (token yo'q bo'lsa)
       const ok = await ensureLogin()
       if (!ok) {
-        setError("Iltimos, botga qaytib /start ni bosing va ilovani qayta oching")
+        setError(t("Iltimos, botga qaytib /start ni bosing va ilovani qayta oching"))
         notify('error')
         return
       }
@@ -65,7 +67,7 @@ export default function Welcome() {
           <IconPlane size={38} className="text-white" />
         </div>
         <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Ali Bridge</h1>
-        <p className="text-sm text-slate-500 mt-1.5">Toshkent → Turkiya kargo tizimi</p>
+        <p className="text-sm text-slate-500 mt-1.5">{t('Toshkent → Turkiya kargo tizimi')}</p>
       </div>
 
       <div className="flex flex-col gap-3.5 flex-1">
@@ -77,8 +79,8 @@ export default function Welcome() {
             <IconPlane size={28} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-slate-900 text-[16px]">Turkiyaga yuk olib ketish</h3>
-            <p className="text-[13px] text-slate-500 mt-0.5">Yo'lovchi sifatida pul ishlang</p>
+            <h3 className="font-bold text-slate-900 text-[16px]">{t('Turkiyaga yuk olib ketish')}</h3>
+            <p className="text-[13px] text-slate-500 mt-0.5">{t("Yo'lovchi sifatida pul ishlang")}</p>
           </div>
           {loading === 'carrier'
             ? <span className="w-5 h-5 border-2 border-slate-200 border-t-slate-500 rounded-full animate-spin shrink-0" />
@@ -93,8 +95,8 @@ export default function Welcome() {
             <IconBag size={28} />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-slate-900 text-[16px]">Buyurtma berish</h3>
-            <p className="text-[13px] text-slate-500 mt-0.5">Mahsulot buyurtma qiling</p>
+            <h3 className="font-bold text-slate-900 text-[16px]">{t('Buyurtma berish')}</h3>
+            <p className="text-[13px] text-slate-500 mt-0.5">{t('Mahsulot buyurtma qiling')}</p>
           </div>
           {loading === 'orderer'
             ? <span className="w-5 h-5 border-2 border-slate-200 border-t-slate-500 rounded-full animate-spin shrink-0" />

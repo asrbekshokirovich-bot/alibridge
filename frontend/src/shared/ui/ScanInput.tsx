@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { IconScan } from './icons'
 
 interface Props {
@@ -10,7 +11,8 @@ interface Props {
   placeholder?: string
 }
 
-export function ScanInput({ value, onChange, onScan, loading, placeholder = 'Barkodni skanlang' }: Props) {
+export function ScanInput({ value, onChange, onScan, loading, placeholder }: Props) {
+  const { t } = useTranslation()
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Pistoletcha skaner Enter yuboradi — avtofokus muhim.
@@ -57,7 +59,7 @@ export function ScanInput({ value, onChange, onScan, loading, placeholder = 'Bar
           inputMode="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t('Barkodni skanlang')}
           className="w-full pl-12 pr-24 py-4 bg-white border-2 border-slate-200 rounded-2xl font-mono text-[15px] focus:border-red-400 focus:outline-none transition-colors shadow-sm"
           autoComplete="off"
         />
@@ -67,10 +69,10 @@ export function ScanInput({ value, onChange, onScan, loading, placeholder = 'Bar
           style={{ background: 'var(--brand-gradient)' }}
           className="press absolute right-2 top-1/2 -translate-y-1/2 text-white text-sm font-semibold px-4 py-2.5 rounded-xl disabled:opacity-40"
         >
-          {loading ? '...' : 'Skan'}
+          {loading ? '...' : t('Skan')}
         </button>
       </div>
-      <p className="text-xs text-slate-400 mt-2 text-center">📷 Pistoletcha bilan skanlang yoki qo'lda kiriting</p>
+      <p className="text-xs text-slate-400 mt-2 text-center">{t('📷 Pistoletcha bilan skanlang yoki qo\'lda kiriting')}</p>
     </form>
   )
 }

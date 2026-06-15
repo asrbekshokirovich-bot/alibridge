@@ -37,10 +37,13 @@ const MENU: Partial<Record<Role, MenuItem[]>> = {
   ],
   warehouse_tr: [
     { label: 'Bosh sahifa', path: '/warehouse-tr', icon: <IconHome size={20} /> },
+    { label: 'Jarayondagi yuklar', path: '/warehouse-tr/incoming', icon: <IconPlane size={20} /> },
     { label: 'Yo\'lovchidan qabul', path: '/warehouse-tr/receive-carrier', icon: <IconHandshake size={20} /> },
+    { label: 'Skladdagi yuklar', path: '/warehouse-tr/held', icon: <IconBox size={20} /> },
     { label: 'Kuryerga topshirish', path: '/warehouse-tr/handover-courier', icon: <IconTruck size={20} /> },
-    { label: 'Eshikdan mijoz', path: '/warehouse-tr/walk-in', icon: <IconUser size={20} /> },
-    { label: 'UZ mahsulotlari', path: '/warehouse-tr/uz-products', icon: <IconBox size={20} /> },
+    { label: 'Telegramsiz mijozlar', path: '/warehouse-tr/walk-in', icon: <IconUser size={20} /> },
+    { label: 'Toshkent mahsulotlari', path: '/warehouse-tr/uz-products', icon: <IconBox size={20} /> },
+    { label: 'Kunlik hisobot', path: '/warehouse-tr/daily-report', icon: <IconList size={20} /> },
   ],
   courier_uz: [
     { label: 'Bosh sahifa', path: '/courier-uz', icon: <IconHome size={20} /> },

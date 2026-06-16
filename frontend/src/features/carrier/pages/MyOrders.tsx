@@ -77,8 +77,10 @@ export default function MyOrders() {
                 <div className="flex items-center justify-between px-4 py-3 border-b border-slate-50">
                   <div>
                     <span className="text-sm font-bold text-slate-900">{t('Buyurtma #{{id}}', { id: order.id })}</span>
-                    {order.flight_date && (
-                      <p className="text-xs text-slate-400 mt-0.5">✈️ {order.flight_date}</p>
+                    {(order.flight_number || order.flight_date) && (
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        ✈️ {[order.flight_number, order.flight_date].filter(Boolean).join(' · ')}
+                      </p>
                     )}
                   </div>
                   <StatusBadge tone={st.tone} dot>{st.text}</StatusBadge>

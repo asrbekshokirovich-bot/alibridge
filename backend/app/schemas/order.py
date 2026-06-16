@@ -19,6 +19,7 @@ class CreateOrderRequest(BaseModel):
     pickup_address: str | None = Field(default=None, max_length=512)
     delivery_address_tr: str = Field(min_length=1, max_length=512)
     flight_date: date | None = Field(default=None)
+    flight_number: str | None = Field(default=None, max_length=32)
 
 
 class OrderItemOut(BaseModel):
@@ -42,6 +43,7 @@ class CarrierOrderOut(BaseModel):
     pickup_address: str | None = None
     delivery_address_tr: str
     flight_date: date | None = None
+    flight_number: str | None = None
     status: OrderStatus
     created_at: str
 

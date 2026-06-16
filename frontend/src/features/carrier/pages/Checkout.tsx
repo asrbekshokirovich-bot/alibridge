@@ -43,6 +43,7 @@ export default function Checkout() {
         pickup_address: pickupType === 'courier' ? pickupAddress : null,
         delivery_address_tr: deliveryAddress,
         flight_date: ticket?.flight_date ?? null,
+        flight_number: ticket?.flight_number ?? null,
       })
       notify('success')
       clearTicket()

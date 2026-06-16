@@ -96,6 +96,7 @@ export interface Product {
 // Yo'lovchi bilet ma'lumotlari (har safar yangilanadi)
 export interface Ticket {
   flight_date: string     // uchish sanasi
+  flight_number?: string  // reys raqami (masalan HY601)
 }
 
 // Savatdagi element — tanlangan o'lcham (variant) va miqdor bilan
@@ -132,6 +133,7 @@ export interface CarrierOrder {
   pickup_address?: string
   delivery_address_tr: string
   flight_date?: string
+  flight_number?: string
   status: OrderStatus
   created_at: string
 }

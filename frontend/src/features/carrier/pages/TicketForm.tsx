@@ -17,6 +17,7 @@ export default function TicketForm() {
 
   const cart = state?.cart ?? []
   const [flightDate, setFlightDate] = useState('')
+  const [flightNumber, setFlightNumber] = useState('')
 
   // Savatsiz ochilsa — mahsulotlarga qaytaramiz
   if (cart.length === 0) return <Navigate to="/carrier/products" replace />
@@ -27,7 +28,7 @@ export default function TicketForm() {
 
   const handleSubmit = () => {
     haptic('medium')
-    setTicket({ flight_date: flightDate })
+    setTicket({ flight_date: flightDate, flight_number: flightNumber.trim() || undefined })
     navigate('/carrier/checkout', { state: { cart } })
   }
 
@@ -50,6 +51,13 @@ export default function TicketForm() {
           {flightDate && !dateValid && (
             <p className="text-xs text-red-500 mt-1.5">{t("Sana o'tmishda bo'lishi mumkin emas")}</p>
           )}
+        </div>
+
+        <div className="mt-4">
+          <Input label={t('Reys raqami')} placeholder={t('Masalan: HY601')}
+            value={flightNumber} onChange={(e) => setFlightNumber(e.target.value)}
+            maxLength={32} />
+          <p className="text-xs text-slate-400 mt-1.5">{t('Ixtiyoriy')}</p>
         </div>
 
         <Button fullWidth className="mt-6" disabled={!valid} onClick={handleSubmit}>

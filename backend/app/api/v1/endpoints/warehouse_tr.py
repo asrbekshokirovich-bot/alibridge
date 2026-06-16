@@ -312,18 +312,42 @@ async def incoming(
         )
         .order_by(CustodyHolding.holder_type, CustodyHolding.holder_id, Product.created_at.desc())
     )
-    return [
-        HeldCargoItem(
-            product_id=p.id,
-            barcode=p.barcode,
-            product_name=p.name,
-            type=p.type,
-            size_label=v.size_label,
-            quantity=h.quantity,
-            stage_label=STAGE_LABELS.get(h.holder_type, ""),
-            holder_id=h.holder_id,
-            holder_name=f"{u.first_name} {u.last_name}".strip() if u else "",
-            holder_number=u.carrier_number if u else None,
+    data = rows.all()
+
+    # Har yo'lovchining (CARRIER) eng so'nggi buyurtmasidan reys ma'lumoti
+    carrier_ids = {
+        h.holder_id for h, _, _, _ in data if h.holder_type == HolderType.CARRIER and h.holder_id
+    }
+    flights: dict[int, Order] = {}
+    if carrier_ids:
+        order_rows = await db.execute(
+            select(Order)
+            .where(Order.carrier_id.in_(carrier_ids))
+            .order_by(Order.carrier_id, Order.created_at.desc())
         )
-        for h, p, v, u in rows.all()
-    ]
+        for o in order_rows.scalars().all():
+            flights.setdefault(o.carrier_id, o)  # birinchi = eng yangi
+
+    result: list[HeldCargoItem] = []
+    for h, p, v, u in data:
+        order = flights.get(h.holder_id)
+        result.append(
+            HeldCargoItem(
+                product_id=p.id,
+                barcode=p.barcode,
+                product_name=p.name,
+                type=p.type,
+                size_label=v.size_label,
+                quantity=h.quantity,
+                stage_label=STAGE_LABELS.get(h.holder_type, ""),
+                holder_id=h.holder_id,
+                holder_name=f"{u.first_name} {u.last_name}".strip() if u else "",
+                holder_number=u.carrier_number if u else None,
+                holder_phone=u.phone if u else "",
+                holder_username=u.username if u else None,
+                holder_telegram_id=u.telegram_id if u else None,
+                flight_date=order.flight_date.isoformat() if order and order.flight_date else None,
+                flight_number=order.flight_number if order else None,
+            )
+        )
+    return result

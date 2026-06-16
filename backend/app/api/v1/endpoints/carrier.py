@@ -110,6 +110,7 @@ async def my_orders(
                 pickup_address=o.pickup_address,
                 delivery_address_tr=o.delivery_address_tr,
                 flight_date=o.flight_date,
+                flight_number=o.flight_number,
                 status=o.status,
                 created_at=o.created_at.date().isoformat(),
             )

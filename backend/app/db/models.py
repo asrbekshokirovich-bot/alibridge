@@ -128,6 +128,7 @@ class Order(Base):
     pickup_address: Mapped[str | None] = mapped_column(String(512), nullable=True)
     delivery_address_tr: Mapped[str] = mapped_column(String(512), default="")
     flight_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    flight_number: Mapped[str | None] = mapped_column(String(32), nullable=True)
     status: Mapped[OrderStatus] = mapped_column(
         String(32), default=OrderStatus.PENDING_ADMIN, index=True
     )

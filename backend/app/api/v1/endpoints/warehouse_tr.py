@@ -202,6 +202,68 @@ async def confirm_handover(
     return OkResponse(ok=True)
 
 
+# ─── Kuryerdan qabul (TR kuryeri qaytargan yukni ombor oladi) ───────────────────
+
+
+@router.post("/scan-receive-courier", response_model=ScanResponse)
+async def scan_receive_courier(
+    body: ScanRequest,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*ROLE)),
+) -> ScanResponse:
+    product = await db.scalar(
+        select(Product)
+        .options(selectinload(Product.variants))
+        .where(Product.barcode == body.barcode)
+    )
+    if product is None:
+        raise AppError("BARCODE_NOT_FOUND", "Barkod topilmadi", status_code=400)
+    # TR kuryerida (COURIER_TR) shu yukdan nechta bor — ombor qabul qiladi
+    avail = await availability_by_type(db, product=product, holder_type=HolderType.COURIER_TR)
+    if not avail:
+        raise AppError(
+            "INVALID_PRODUCT_STATE",
+            "Bu yukdan kuryerda qolmagan yoki allaqachon qabul qilingan",
+        )
+    return ScanResponse(
+        barcode=product.barcode,
+        product_name=product.name,
+        quantity=sum(a[2] for a in avail),
+        available_by_variant=[
+            VariantAvailability(variant_id=vid, size_label=sl, available=q) for vid, sl, q in avail
+        ],
+    )
+
+
+@router.post("/confirm-receive-courier", response_model=OkResponse)
+async def confirm_receive_courier(
+    body: ConfirmRequest,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*ROLE)),
+) -> OkResponse:
+    for item in body.items:
+        product = await db.scalar(
+            select(Product)
+            .options(selectinload(Product.variants))
+            .where(Product.barcode == item.barcode)
+        )
+        if product is None:
+            raise AppError("BARCODE_NOT_FOUND", f"Barkod topilmadi: {item.barcode}")
+        variant_id = await resolve_variant_id(db, product=product, variant_id=item.variant_id)
+        await drain_from_type(
+            db,
+            product,
+            variant_id=variant_id,
+            quantity=item.quantity,
+            from_holder_type=HolderType.COURIER_TR,
+            to_holder_type=HolderType.WAREHOUSE_TR,
+            to_holder_id=0,
+            event_type=CustodyEventType.WAREHOUSE_TR_RECEIVED,
+            scanned_by=user.id,
+        )
+    return OkResponse(ok=True)
+
+
 # ─── Walk-in mijoz ──────────────────────────────────────────────────────────────
 
 

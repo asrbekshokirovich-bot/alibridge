@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import { useAuthStore } from '@/shared/store/auth'
-import { DashboardHeader, IconBox, IconHandshake, IconTruck, IconBag } from '@/shared/ui'
+import { DashboardHeader, IconBox, IconHandshake, IconBag } from '@/shared/ui'
 
 export default function CourierTrDashboard() {
   const navigate = useNavigate()
@@ -14,7 +14,6 @@ export default function CourierTrDashboard() {
     { label: t('Yo\'lovchidan yuk qabul qilish'), desc: t('Barkodni skanlab qabul qilish'), path: '/courier-tr/receive-from-uz', icon: <IconBox size={26} />, gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
     { label: t('Mendagi yuklar'), desc: t('Hozir sizda turgan yuklar'), path: '/courier-tr/my-products', icon: <IconBag size={26} />, gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' },
     { label: t('Yukni omborga topshirish'), desc: t('Turkiya omboriga topshirish'), path: '/courier-tr/handover-warehouse', icon: <IconHandshake size={26} />, gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
-    { label: t('Yetkazish'), desc: t('Buyurtmachiga topshirish'), path: '/courier-tr/deliveries', icon: <IconTruck size={26} />, gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' },
   ]
 
   return (

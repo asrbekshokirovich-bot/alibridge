@@ -302,14 +302,15 @@ async def incoming(
     """
     in_transit = (HolderType.CARRIER, HolderType.COURIER_TR)
     rows = await db.execute(
-        select(CustodyHolding, Product, ProductVariant)
+        select(CustodyHolding, Product, ProductVariant, User)
         .join(Product, Product.id == CustodyHolding.product_id)
         .join(ProductVariant, ProductVariant.id == CustodyHolding.variant_id)
+        .outerjoin(User, User.id == CustodyHolding.holder_id)
         .where(
             CustodyHolding.holder_type.in_(in_transit),
             CustodyHolding.quantity > 0,
         )
-        .order_by(CustodyHolding.holder_type, Product.created_at.desc())
+        .order_by(CustodyHolding.holder_type, CustodyHolding.holder_id, Product.created_at.desc())
     )
     return [
         HeldCargoItem(
@@ -320,6 +321,9 @@ async def incoming(
             size_label=v.size_label,
             quantity=h.quantity,
             stage_label=STAGE_LABELS.get(h.holder_type, ""),
+            holder_id=h.holder_id,
+            holder_name=f"{u.first_name} {u.last_name}".strip() if u else "",
+            holder_number=u.carrier_number if u else None,
         )
-        for h, p, v in rows.all()
+        for h, p, v, u in rows.all()
     ]

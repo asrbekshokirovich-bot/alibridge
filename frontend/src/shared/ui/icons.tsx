@@ -108,3 +108,9 @@ export const IconCard = ({ size = 24, className }: IconProps) => (
     <path d="M2 10h20" {...stroke} />
   </svg>
 )
+
+export const IconChevronDown = ({ size = 24, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M6 9l6 6 6-6" {...stroke} />
+  </svg>
+)

@@ -165,6 +165,9 @@ class HeldCargoItem(BaseModel):
     size_label: str
     quantity: int
     stage_label: str = ""  # yo'ldagi yuk qaysi bosqichda (jarayondagi ro'yxat uchun)
+    holder_id: int = 0  # yo'ldagi yukni ushlab turgan ega (yo'lovchi/kuryer) user id
+    holder_name: str = ""  # eganing ismi (jarayondagi ro'yxatda guruhlash uchun)
+    holder_number: int | None = None  # yo'lovchi ALB raqami (carrier_number)
 
 
 class StageQuantity(BaseModel):

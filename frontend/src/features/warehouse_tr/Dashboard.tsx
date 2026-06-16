@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/shared/store/auth'
-import { DashboardHeader, ActionGrid, IconPackagePlus, IconTruck, IconUser, IconBox, IconList, IconPlane } from '@/shared/ui'
+import { DashboardHeader, ActionGrid, IconPackagePlus, IconTruck, IconUser, IconBox, IconList, IconPlane, IconAlert } from '@/shared/ui'
 import type { Action } from '@/shared/ui'
 
 export default function WarehouseTrDashboard() {
@@ -15,6 +15,7 @@ export default function WarehouseTrDashboard() {
     { label: t('Telegramsiz mijozlar'), desc: t('Qo\'lda ro\'yxat'), path: '/warehouse-tr/walk-in', icon: <IconUser size={24} />, gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
     { label: t('Toshkent mahsulotlari'), desc: t('Holatni kuzatish'), path: '/warehouse-tr/uz-products', icon: <IconBox size={24} />, gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' },
     { label: t('Kunlik hisobot'), desc: t('Omborga kelgan yuklar'), path: '/warehouse-tr/daily-report', icon: <IconList size={24} />, gradient: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)' },
+    { label: t('Zarar yetgan yuklar'), desc: t('Shikast holatlari'), path: '/warehouse-tr/disputes', icon: <IconAlert size={24} />, gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
   ]
   return (
     <div className="min-h-screen animate-fade-in">

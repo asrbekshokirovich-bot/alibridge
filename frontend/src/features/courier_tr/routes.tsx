@@ -3,6 +3,7 @@ import Dashboard from './Dashboard'
 import ReceiveFromUZ from './pages/ReceiveFromUZ'
 import HandoverWarehouse from './pages/HandoverWarehouse'
 import MyProducts from './pages/MyProducts'
+import Disputes from './pages/Disputes'
 
 export default function CourierTrRoutes() {
   return (
@@ -11,6 +12,7 @@ export default function CourierTrRoutes() {
       <Route path="/receive-from-uz" element={<ReceiveFromUZ />} />
       <Route path="/handover-warehouse" element={<HandoverWarehouse />} />
       <Route path="/my-products" element={<MyProducts />} />
+      <Route path="/disputes" element={<Disputes />} />
     </Routes>
   )
 }

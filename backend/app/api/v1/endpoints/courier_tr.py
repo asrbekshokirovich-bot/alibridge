@@ -27,9 +27,12 @@ from app.db.models import (
 )
 from app.schemas.common import OkResponse
 from app.schemas.courier import (
+    CarrierProductItem,
     ConfirmDeliveryRequest,
     CourierUzMyProduct,
     DeliveryItem,
+    ReceiveConfirmRequest,
+    ReceiveScanRequest,
     ReportDamagedRequest,
     ScanDeliveryRequest,
 )
@@ -41,6 +44,7 @@ from app.schemas.warehouse import (
 )
 from app.services.custody_service import (
     availability_by_type,
+    availability_for_holder,
     drain_from_type,
     get_product_by_barcode,
     is_fully_arrived,
@@ -84,19 +88,75 @@ async def _carrier_for_product(db: AsyncSession, product_id: int) -> User | None
 # ─── O'zbekistondan kelgan yuklarni qabul ───────────────────────────────────────
 
 
+async def _get_carrier_by_number(db: AsyncSession, carrier_number: int) -> User:
+    carrier = await db.scalar(
+        select(User).where(User.carrier_number == carrier_number)
+    )
+    if carrier is None:
+        raise AppError(
+            "CARRIER_NOT_FOUND", f"Yo'lovchi #{carrier_number} topilmadi", status_code=404
+        )
+    return carrier
+
+
+@router.get("/carrier-products", response_model=list[CarrierProductItem])
+async def carrier_products(
+    carrier_number: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*ROLE)),
+) -> list[CarrierProductItem]:
+    """Yo'lovchi raqami bo'yicha uning CARRIER custody'sidagi yuklarni qaytaradi."""
+    carrier = await _get_carrier_by_number(db, carrier_number)
+    rows = await db.execute(
+        select(CustodyHolding, Product, ProductVariant)
+        .join(Product, Product.id == CustodyHolding.product_id)
+        .join(ProductVariant, ProductVariant.id == CustodyHolding.variant_id)
+        .where(
+            CustodyHolding.holder_type == HolderType.CARRIER,
+            CustodyHolding.holder_id == carrier.id,
+            CustodyHolding.quantity > 0,
+        )
+    )
+    result: list[CarrierProductItem] = []
+    for h, p, v in rows.all():
+        result.append(CarrierProductItem(
+            product_id=p.id,
+            variant_id=v.id,
+            barcode=p.barcode,
+            product_name=p.name,
+            category=p.category,
+            image_url=p.image_url,
+            size_label=v.size_label,
+            quantity=h.quantity,
+        ))
+    return result
+
+
 @router.post("/scan-receive", response_model=ScanResponse)
 async def scan_receive(
-    body: ScanRequest,
+    body: ReceiveScanRequest,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*ROLE)),
 ) -> ScanResponse:
-    # Manba: yo'lovchi (CARRIER) — TR kuryeri yo'lovchidan oladi
-    product, avail, carrier = await _scan_avail(db, body.barcode, HolderType.CARRIER)
+    """Aniq yo'lovchining CARRIER custody'sidan barkodni tekshiradi."""
+    carrier = await _get_carrier_by_number(db, body.carrier_number)
+    product = await db.scalar(
+        select(Product)
+        .options(selectinload(Product.variants))
+        .where(Product.barcode == body.barcode)
+    )
+    if product is None:
+        raise AppError("BARCODE_NOT_FOUND", "Barkod topilmadi", status_code=400)
+    avail = await availability_for_holder(
+        db, product=product, holder_type=HolderType.CARRIER, holder_id=carrier.id
+    )
+    if not avail:
+        raise AppError("INVALID_PRODUCT_STATE", "Bu yuk shu yo'lovchida topilmadi")
     return ScanResponse(
         barcode=product.barcode,
         product_name=product.name,
-        carrier_name=f"{carrier.first_name} {carrier.last_name}".strip() if carrier else None,
-        carrier_number=carrier.carrier_number if carrier else None,
+        carrier_name=f"{carrier.first_name} {carrier.last_name}".strip(),
+        carrier_number=carrier.carrier_number,
         quantity=sum(a[2] for a in avail),
         available_by_variant=[
             VariantAvailability(variant_id=vid, size_label=sl, available=q) for vid, sl, q in avail
@@ -106,11 +166,12 @@ async def scan_receive(
 
 @router.post("/confirm-receive", response_model=OkResponse)
 async def confirm_receive(
-    body: ConfirmRequest,
+    body: ReceiveConfirmRequest,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*ROLE)),
 ) -> OkResponse:
-    affected_carriers: set[int] = set()
+    """Skanlangan yuklarni aniq yo'lovchidan (CARRIER holder_id) COURIER_TR ga o'tkazadi."""
+    carrier = await _get_carrier_by_number(db, body.carrier_number)
     for item in body.items:
         product = await db.scalar(
             select(Product)
@@ -120,25 +181,20 @@ async def confirm_receive(
         if product is None:
             raise AppError("BARCODE_NOT_FOUND", f"Barkod topilmadi: {item.barcode}")
         variant_id = await resolve_variant_id(db, product=product, variant_id=item.variant_id)
-        # Yuk bir nechta yo'lovchiga bo'lingan bo'lishi mumkin — hammasidan yig'ib olamiz
-        await drain_from_type(
+        await transfer_custody(
             db,
             product,
             variant_id=variant_id,
             quantity=item.quantity,
             from_holder_type=HolderType.CARRIER,
+            from_holder_id=carrier.id,
             to_holder_type=HolderType.COURIER_TR,
             to_holder_id=user.id,
             event_type=CustodyEventType.COURIER_TR_RECEIVED,
             scanned_by=user.id,
         )
-        carrier = await _carrier_for_product(db, product.id)
-        if carrier:
-            affected_carriers.add(carrier.id)
 
-    # Yuk tashilgach to'lov avto-hisoblanadi (invariant)
-    for carrier_id in affected_carriers:
-        await recompute_carrier_payment(db, carrier_id)
+    await recompute_carrier_payment(db, carrier.id)
     return OkResponse(ok=True)
 
 

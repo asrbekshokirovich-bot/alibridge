@@ -49,8 +49,11 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 ROLE = (Role.ADMIN,)
 
-# Nizolar (disputes) — admin + Toshkent ombor xodimi ko'radi va hal qiladi
-DISPUTE_ROLE = (Role.ADMIN, Role.WAREHOUSE_UZ)
+# Nizolar (disputes) — admin, Toshkent ombor, Turkiya ombor, Turkiya kuryeri ko'radi
+DISPUTE_ROLE = (Role.ADMIN, Role.WAREHOUSE_UZ, Role.WAREHOUSE_TR, Role.COURIER_TR)
+
+# Nizoni hal qilish/rad etish — faqat admin + Toshkent ombor xodimi
+DISPUTE_RESOLVE_ROLE = (Role.ADMIN, Role.WAREHOUSE_UZ)
 
 # Faqat ko'rish (read-only) — admin + Toshkent ombor xodimi yuk harakatini kuzatadi
 VIEW_ROLE = (Role.ADMIN, Role.WAREHOUSE_UZ)
@@ -460,7 +463,7 @@ async def update_dispute(
     dispute_id: int,
     body: UpdateDisputeRequest,
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(require_role(*DISPUTE_ROLE)),
+    user: User = Depends(require_role(*DISPUTE_RESOLVE_ROLE)),
 ) -> OkResponse:
     d = await db.get(Dispute, dispute_id)
     if d is None:

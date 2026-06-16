@@ -421,5 +421,20 @@
   "Qabul qildim": "Я принял",
   "Tasdiqlanmoqda…": "Подтверждается…",
   "Avval manzil va reys raqamini kiriting": "Сначала введите адрес и номер рейса",
-  "Kuryer raqamingizni kiritib yuklarni skanlaydi. Keyin shu yerda manzil va reysni kiritib qabulni tasdiqlaysiz.": "Курьер введёт ваш номер и отсканирует грузы. Затем здесь вы введёте адрес и рейс и подтвердите приём."
+  "Kuryer raqamingizni kiritib yuklarni skanlaydi. Keyin shu yerda manzil va reysni kiritib qabulni tasdiqlaysiz.": "Курьер введёт ваш номер и отсканирует грузы. Затем здесь вы введёте адрес и рейс и подтвердите приём.",
+  "Zarar yetgan yuklar": "Повреждённые грузы",
+  "Skanlandi": "Отсканировано",
+  "Zarar deb belgilash": "Отметить как повреждённый",
+  "Izoh (report)": "Примечание (рапорт)",
+  "Bekor": "Отмена",
+  "Bosh sahifa": "Главная",
+  "Yuklarni skanlang": "Отсканируйте грузы",
+  "{{n}} / {{total}}": "{{n}} / {{total}}",
+  "Skanlanmagan · zarar uchun bosing": "Не отсканирован · нажмите для повреждения",
+  "Skanlandi: {{n}} / {{q}}": "Отсканировано: {{n}} / {{q}}",
+  "Zarar — qabul qilinmadi": "Повреждён — не принят",
+  "Qabul qilish ({{n}} ta)": "Принять ({{n}} шт.)",
+  "{{n}} ta mahsulot sizga (kuryerga) o'tdi.": "{{n}} товаров перешло вам (курьеру).",
+  "Bu yo'lovchida hozir yuk yo'q": "У этого пассажира сейчас нет грузов",
+  "Zarar yetgan yuk": "Повреждённый груз"
 }

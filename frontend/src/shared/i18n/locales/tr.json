@@ -421,5 +421,20 @@
   "Qabul qildim": "Teslim aldım",
   "Tasdiqlanmoqda…": "Onaylanıyor…",
   "Avval manzil va reys raqamini kiriting": "Önce adres ve uçuş numarasını girin",
-  "Kuryer raqamingizni kiritib yuklarni skanlaydi. Keyin shu yerda manzil va reysni kiritib qabulni tasdiqlaysiz.": "Kurye numaranızı girip yükleri tarar. Sonra burada adres ve uçuşu girip teslim almayı onaylarsınız."
+  "Kuryer raqamingizni kiritib yuklarni skanlaydi. Keyin shu yerda manzil va reysni kiritib qabulni tasdiqlaysiz.": "Kurye numaranızı girip yükleri tarar. Sonra burada adres ve uçuşu girip teslim almayı onaylarsınız.",
+  "Zarar yetgan yuklar": "Hasarlı yükler",
+  "Skanlandi": "Tarandı",
+  "Zarar deb belgilash": "Hasarlı olarak işaretle",
+  "Izoh (report)": "Açıklama (rapor)",
+  "Bekor": "İptal",
+  "Bosh sahifa": "Ana sayfa",
+  "Yuklarni skanlang": "Yükleri tarayın",
+  "{{n}} / {{total}}": "{{n}} / {{total}}",
+  "Skanlanmagan · zarar uchun bosing": "Taranmadı · hasar için basın",
+  "Skanlandi: {{n}} / {{q}}": "Tarandı: {{n}} / {{q}}",
+  "Zarar — qabul qilinmadi": "Hasar — kabul edilmedi",
+  "Qabul qilish ({{n}} ta)": "Kabul et ({{n}} adet)",
+  "{{n}} ta mahsulot sizga (kuryerga) o'tdi.": "{{n}} ürün size (kuryeye) geçti.",
+  "Bu yo'lovchida hozir yuk yo'q": "Bu yolcuda şu anda yük yok",
+  "Zarar yetgan yuk": "Hasarlı yük"
 }

@@ -56,6 +56,29 @@ class ConfirmAirportRequest(BaseModel):
 # ─── Courier TR ─────────────────────────────────────────────────────────────────
 
 
+class CarrierProductItem(BaseModel):
+    """Yo'lovchida (CARRIER custody) turgan bitta yuk — TR kuryeri qabul ro'yxati."""
+
+    product_id: int
+    variant_id: int
+    barcode: str
+    product_name: str
+    category: str = ""
+    image_url: str | None = None
+    size_label: str = ""
+    quantity: int = 0  # shu yo'lovchida shu variantdan nechta
+
+
+class ReceiveScanRequest(BaseModel):
+    barcode: str
+    carrier_number: int
+
+
+class ReceiveConfirmRequest(BaseModel):
+    carrier_number: int
+    items: list[CustodyTransferItem] = Field(min_length=1, max_length=200)
+
+
 class ReportDamagedRequest(BaseModel):
     carrier_number: int | None = None
     barcode: str

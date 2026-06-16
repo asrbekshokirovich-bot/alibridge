@@ -88,7 +88,7 @@ async def on_damage_reported(
 ) -> None:
     cn = f" (yo'lovchi #{carrier_number})" if carrier_number else ""
     text = f"⚠️ Shikast qayd etildi{cn}\nBarkod: {barcode}\nIzoh: {note}"
-    await notify_roles(db, (Role.ADMIN, Role.WAREHOUSE_TR), text)
+    await notify_roles(db, (Role.ADMIN, Role.WAREHOUSE_TR, Role.WAREHOUSE_UZ), text)
 
 
 async def on_airport_handover_pending(

@@ -8,6 +8,7 @@ import UzProducts from './pages/UzProducts'
 import DailyInReport from './pages/DailyInReport'
 import HeldCargo from './pages/HeldCargo'
 import Incoming from './pages/Incoming'
+import Disputes from './pages/Disputes'
 
 export default function WarehouseTrRoutes() {
   return (
@@ -21,6 +22,7 @@ export default function WarehouseTrRoutes() {
       <Route path="/daily-report" element={<DailyInReport />} />
       <Route path="/held" element={<HeldCargo />} />
       <Route path="/incoming" element={<Incoming />} />
+      <Route path="/disputes" element={<Disputes />} />
     </Routes>
   )
 }

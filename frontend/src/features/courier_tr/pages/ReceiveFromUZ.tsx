@@ -1,114 +1,286 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { useTelegram } from '@/shared/hooks/useTelegram'
-import { useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import client, { extractErrorMessage } from '@/shared/api/client'
-import { Header, Button, Input, Textarea, ScanSession, SuccessScreen, IconBox, IconAlert } from '@/shared/ui'
+import { useTelegram } from '@/shared/hooks/useTelegram'
+import {
+  Header, Button, Input, Textarea, ScanInput, Sheet, SuccessScreen,
+  ListSkeleton, EmptyState, IconBox, IconAlert, IconCheck, IconPlane,
+} from '@/shared/ui'
 
-type View = 'menu' | 'receive' | 'damaged'
+interface CarrierProduct {
+  product_id: number
+  variant_id: number
+  barcode: string
+  product_name: string
+  category: string
+  image_url: string | null
+  size_label: string
+  quantity: number
+}
+
+// Bir qator holati: yo'lovchidagi yuk + skanlangan/zararlangan belgisi
+interface Row extends CarrierProduct {
+  scanned: number   // skanlangan dona (0 = qizil)
+  damaged: boolean  // zarar deb belgilangan
+}
+
+const keyOf = (p: { barcode: string; variant_id: number }) => `${p.barcode}:${p.variant_id}`
 
 export default function ReceiveFromUZ() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { notify, haptic } = useTelegram()
-  const [view, setView] = useState<View>('menu')
 
-  // Shikast holati
-  const [damaged, setDamaged] = useState({ carrier_number: '', barcode: '', note: '' })
-  const [damagedError, setDamagedError] = useState('')
-  const [damagedDone, setDamagedDone] = useState(false)
+  const [carrierNumber, setCarrierNumber] = useState('')
+  const [started, setStarted] = useState(false)
+  const [rows, setRows] = useState<Row[]>([])
+  const [barcode, setBarcode] = useState('')
+  const [error, setError] = useState('')
+  const [done, setDone] = useState(false)
 
-  const damagedMutation = useMutation({
-    mutationFn: () => client.post('/courier-tr/report-damaged', {
-      carrier_number: parseInt(damaged.carrier_number),
-      barcode: damaged.barcode, note: damaged.note,
-    }),
-    onSuccess: () => { notify('success'); setDamagedDone(true) },
-    onError: (err) => { setDamagedError(extractErrorMessage(err)); notify('error') },
+  // Zarar modal
+  const [damageRow, setDamageRow] = useState<Row | null>(null)
+  const [damageNote, setDamageNote] = useState('')
+
+  const cn = parseInt(carrierNumber, 10)
+  const validCn = !!carrierNumber && !isNaN(cn) && cn > 0
+
+  // Yo'lovchi yuklarini yuklash
+  const { isLoading, isError, error: loadError } = useQuery({
+    queryKey: ['courier-tr-carrier-products', cn],
+    enabled: started && validCn,
+    queryFn: () =>
+      client.get<CarrierProduct[]>('/courier-tr/carrier-products', { params: { carrier_number: cn } })
+        .then((r) => {
+          setRows(r.data.map((p) => ({ ...p, scanned: 0, damaged: false })))
+          return r.data
+        }),
   })
 
-  // === Qabul qilish (ScanSession) ===
-  if (view === 'receive') {
-    return (
-      <ScanSession
-        title={t('Yuklarni qabul qilish')}
-        subtitle={t('Barkodlarni skanlang')}
-        showBack
-        onBack={() => setView('menu')}
-        scanUrl="/courier-tr/scan-receive"
-        confirmUrl="/courier-tr/confirm-receive"
-        successTitle={t('Qabul qilindi!')}
-        successDesc={(n) => t('{{n}} ta mahsulot omborga olib boriladi.', { n })}
-      />
-    )
-  }
+  const okRows = rows.filter((r) => r.scanned > 0 && !r.damaged)
+  const totalOk = useMemo(() => okRows.reduce((s, r) => s + r.scanned, 0), [okRows])
 
-  // === Shikast ===
-  if (view === 'damaged') {
-    if (damagedDone) {
-      return <SuccessScreen title={t('Kiritildi!')} description={t('Admin va Turkiya ombori xabardor qilindi.')}
-        action={<Button fullWidth variant="secondary"
-          onClick={() => { setDamagedDone(false); setDamaged({ carrier_number: '', barcode: '', note: '' }) }}>
-          {t('Yana kiritish')}
-        </Button>} />
+  // Skan — barkodga mos qatorni topib, skanlangan miqdorni +1 (cheklov: quantity)
+  const handleScan = (raw: string) => {
+    const bc = raw.trim()
+    if (!bc) return
+    setError('')
+    const matching = rows.filter((r) => r.barcode === bc && !r.damaged)
+    if (matching.length === 0) {
+      const isDamaged = rows.some((r) => r.barcode === bc && r.damaged)
+      notify('error')
+      setError(isDamaged
+        ? t('{{bc}}: bu yuk zarar deb belgilangan', { bc })
+        : t('{{bc}}: bu yo\'lovchida bunday yuk yo\'q', { bc }))
+      return
     }
+    // Bir barkod ko'p o'lchamli bo'lsa — to'lmagan birinchi qatorga qo'shamiz
+    const target = matching.find((r) => r.scanned < r.quantity)
+    if (!target) {
+      notify('warning')
+      setError(t('{{bc}}: hammasi skanlangan', { bc }))
+      return
+    }
+    haptic('light')
+    notify('success')
+    setRows((prev) => prev.map((r) =>
+      keyOf(r) === keyOf(target) ? { ...r, scanned: Math.min(r.scanned + 1, r.quantity) } : r,
+    ))
+  }
+
+  // Zarar modalni ochish (qizil qatordan)
+  const openDamage = (row: Row) => {
+    haptic('medium')
+    setDamageNote('')
+    setError('')
+    setDamageRow(row)
+  }
+
+  const damageMutation = useMutation({
+    mutationFn: (row: Row) => client.post('/courier-tr/report-damaged', {
+      carrier_number: cn,
+      barcode: row.barcode,
+      note: damageNote,
+    }),
+    onSuccess: (_, row) => {
+      notify('success')
+      setRows((prev) => prev.map((r) =>
+        keyOf(r) === keyOf(row) ? { ...r, damaged: true, scanned: 0 } : r,
+      ))
+      setDamageRow(null)
+    },
+    onError: (err) => { setError(extractErrorMessage(err)); notify('error') },
+  })
+
+  const confirm = useMutation({
+    mutationFn: () => client.post('/courier-tr/confirm-receive', {
+      carrier_number: cn,
+      items: okRows.map((r) => ({ barcode: r.barcode, variant_id: r.variant_id, quantity: r.scanned })),
+    }),
+    onSuccess: () => { notify('success'); setDone(true) },
+    onError: (err) => { setError(extractErrorMessage(err)); notify('error') },
+  })
+
+  // === Yakuniy ekran ===
+  if (done) {
+    return <SuccessScreen
+      title={t('Qabul qilindi!')}
+      description={t('{{n}} ta mahsulot sizga (kuryerga) o\'tdi.', { n: totalOk })}
+      action={<Button fullWidth onClick={() => navigate('/courier-tr')}>{t('Bosh sahifa')}</Button>}
+    />
+  }
+
+  // === 1-bosqich: yo'lovchi raqami ===
+  if (!started) {
     return (
-      <div className="min-h-screen pb-32 animate-fade-in">
-        <Header title={t('Shikastlangan yuklar')} showBack onBack={() => setView('menu')} />
-        <div className="px-4 pt-5 space-y-4">
-          <div className="rounded-2xl p-4 flex gap-3 bg-red-50">
-            <div className="text-red-500 shrink-0"><IconAlert size={20} /></div>
-            <p className="text-[13px] text-red-900/70 leading-snug">
-              {t('Yo\'lovchi raqamini kiriting, so\'ng shikastlangan mahsulot barkodini skanlang.')}
-            </p>
+      <div className="min-h-screen animate-fade-in">
+        <Header title={t('Yo\'lovchidan qabul')} showBack onBack={() => navigate('/courier-tr')} />
+        <form className="px-5 pt-8" onSubmit={(e) => { e.preventDefault(); if (validCn) { haptic('medium'); setStarted(true) } }}>
+          <div className="flex flex-col items-center mb-8">
+            <div className="w-16 h-16 rounded-3xl flex items-center justify-center text-white mb-3" style={{ background: 'var(--brand-gradient)' }}>
+              <IconPlane size={30} />
+            </div>
+            <h2 className="text-lg font-bold text-slate-900">{t('Yo\'lovchi raqami')}</h2>
+            <p className="text-sm text-slate-500 text-center mt-1">{t('Yo\'lovchining tartib raqamini kiriting')}</p>
           </div>
-          <Input type="number" label={t('Yo\'lovchi raqami')} placeholder={t('Masalan: 47')}
-            value={damaged.carrier_number} onChange={(e) => setDamaged({ ...damaged, carrier_number: e.target.value })} />
-          <Input label={t('Shikastlangan mahsulot barkodi')} placeholder={t('Barkod')} className="font-mono"
-            value={damaged.barcode} onChange={(e) => setDamaged({ ...damaged, barcode: e.target.value })} />
-          <Textarea label={t('Izoh (ixtiyoriy)')} placeholder={t('Nima bo\'lgani haqida')} rows={3}
-            value={damaged.note} onChange={(e) => setDamaged({ ...damaged, note: e.target.value })} />
-          {damagedError && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{damagedError}</div>}
-        </div>
-        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100">
-          <Button variant="danger" fullWidth loading={damagedMutation.isPending}
-            disabled={!damaged.carrier_number.trim() || isNaN(parseInt(damaged.carrier_number, 10)) || !damaged.barcode.trim()}
-            onClick={() => { setDamagedError(''); damagedMutation.mutate() }}>
-            {t('Shikastlangan deb belgilash')}
-          </Button>
-        </div>
+          <Input type="number" inputMode="numeric" autoFocus placeholder={t('Masalan: 47')}
+            className="text-center text-lg font-bold"
+            value={carrierNumber} onChange={(e) => setCarrierNumber(e.target.value)} />
+          <Button type="submit" fullWidth className="mt-4" disabled={!validCn}>{t('Davom etish')}</Button>
+        </form>
       </div>
     )
   }
 
-  // === Menu ===
+  // === 2-bosqich: ro'yxat + skan + zarar ===
   return (
-    <div className="min-h-screen animate-fade-in">
-      <Header title={t('O\'zbekistondan yuklar')} showBack onBack={() => navigate('/courier-tr')} />
-      <div className="px-4 pt-6 space-y-3.5">
-        <button onClick={() => { haptic('light'); setView('receive') }}
-          className="press w-full bg-white rounded-3xl p-5 border border-slate-100 shadow-[var(--shadow-md)] text-left flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
-            <IconBox size={26} />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-bold text-slate-900">{t('Yuklarni qabul qilish')}</h3>
-            <p className="text-sm text-slate-400">{t('Yo\'lovchidan olish')}</p>
-          </div>
-        </button>
+    <div className="min-h-screen flex flex-col animate-fade-in">
+      <Header title={t('Yo\'lovchi #{{carrierNumber}}', { carrierNumber })}
+        subtitle={t('Yuklarni skanlang')} showBack onBack={() => { setStarted(false); setRows([]) }} />
 
-        <button onClick={() => { haptic('light'); setView('damaged') }}
-          className="press w-full bg-white rounded-3xl p-5 border border-red-100 shadow-[var(--shadow-md)] text-left flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white" style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)' }}>
-            <IconAlert size={26} />
+      <ScanInput value={barcode} onChange={setBarcode} onScan={handleScan} />
+
+      {error && (
+        <div className="mx-4 -mt-1 mb-2 bg-red-50 text-red-600 text-sm px-4 py-2.5 rounded-xl animate-fade-in">{error}</div>
+      )}
+
+      {isLoading ? (
+        <ListSkeleton />
+      ) : isError ? (
+        <div className="px-4 pt-2">
+          <p className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{extractErrorMessage(loadError)}</p>
+        </div>
+      ) : rows.length === 0 ? (
+        <EmptyState icon={<IconBox size={30} />} title={t('Yuk yo\'q')}
+          description={t('Bu yo\'lovchida hozir yuk yo\'q')} />
+      ) : (
+        <>
+          {/* Sanagich */}
+          <div className="px-4 pb-2 flex items-center justify-between">
+            <span className="text-sm font-bold text-slate-700">{t('Skanlandi')}</span>
+            <span className="text-sm font-bold px-2.5 py-0.5 rounded-full text-white" style={{ background: 'var(--brand-gradient)' }}>
+              {t('{{n}} / {{total}}', { n: totalOk, total: rows.reduce((s, r) => s + r.quantity, 0) })}
+            </span>
           </div>
-          <div className="flex-1">
-            <h3 className="font-bold text-slate-900">{t('Shikastlangan yuklar')}</h3>
-            <p className="text-sm text-slate-400">{t('Zararni qayd etish')}</p>
+
+          <div className="flex-1 overflow-y-auto px-4 space-y-2 pb-32 web-grid">
+            {rows.map((r) => {
+              const fullyScanned = r.scanned >= r.quantity && !r.damaged
+              const isRed = r.scanned === 0 && !r.damaged
+              const border = r.damaged
+                ? 'border-slate-200 bg-slate-50 opacity-60'
+                : fullyScanned
+                ? 'border-emerald-300 bg-emerald-50/50'
+                : isRed
+                ? 'border-red-200 bg-red-50/50'
+                : 'border-amber-200 bg-amber-50/40'
+              return (
+                <button
+                  key={keyOf(r)}
+                  type="button"
+                  disabled={r.damaged || !isRed}
+                  onClick={() => isRed && openDamage(r)}
+                  className={`w-full text-left rounded-2xl p-3.5 border flex items-center gap-3 animate-scale-in ${border} ${isRed ? 'press' : ''}`}
+                >
+                  <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-xl shrink-0 overflow-hidden border border-slate-100">
+                    {r.image_url ? <img src={r.image_url} alt="" className="w-full h-full object-cover" /> : '📦'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm text-slate-900 truncate">
+                      {r.product_name}{r.size_label ? ` · ${r.size_label}` : ''}
+                    </p>
+                    <p className="text-[11px] font-mono text-slate-400">{r.barcode}</p>
+                    {r.damaged ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 mt-1">
+                        <IconAlert size={13} /> {t('Zarar — qabul qilinmadi')}
+                      </span>
+                    ) : isRed ? (
+                      <span className="text-xs text-red-500 font-medium mt-0.5 inline-block">
+                        {t('Skanlanmagan · zarar uchun bosing')}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-emerald-600 font-semibold mt-0.5 inline-block">
+                        {t('Skanlandi: {{n}} / {{q}}', { n: r.scanned, q: r.quantity })}
+                      </span>
+                    )}
+                  </div>
+                  <div className="shrink-0">
+                    {r.damaged ? (
+                      <span className="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center">✕</span>
+                    ) : fullyScanned ? (
+                      <span className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center"><IconCheck size={18} /></span>
+                    ) : (
+                      <span className="text-xs font-bold text-white px-2 py-1 rounded-lg" style={{ background: 'var(--brand)' }}>
+                        {t('{{n}} ta', { n: r.quantity })}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
           </div>
-        </button>
-      </div>
+        </>
+      )}
+
+      {/* Tasdiqlash */}
+      {okRows.length > 0 && (
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100">
+          <button onClick={() => confirm.mutate()} disabled={confirm.isPending}
+            style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' }}
+            className="press w-full text-white rounded-2xl py-4 font-bold shadow-[0_8px_24px_rgba(34,197,94,0.35)] disabled:opacity-50">
+            {confirm.isPending ? t('Yuklanmoqda...') : t('Qabul qilish ({{n}} ta)', { n: totalOk })}
+          </button>
+        </div>
+      )}
+
+      {/* Zarar modal */}
+      <Sheet open={!!damageRow} onClose={() => setDamageRow(null)}>
+        {damageRow && (
+          <div className="px-5 pb-2">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-11 h-11 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center"><IconAlert size={22} /></div>
+              <div>
+                <h3 className="font-bold text-slate-900">{t('Zarar yetgan yuk')}</h3>
+                <p className="text-xs text-slate-400 font-mono">{damageRow.barcode}</p>
+              </div>
+            </div>
+            <p className="text-sm text-slate-600 mb-3">
+              {damageRow.product_name}{damageRow.size_label ? ` · ${damageRow.size_label}` : ''}
+            </p>
+            <Textarea label={t('Izoh (report)')} placeholder={t('Nima bo\'lgani haqida')} rows={3}
+              value={damageNote} onChange={(e) => setDamageNote(e.target.value)} />
+            <div className="flex gap-2 mt-4">
+              <Button variant="ghost" fullWidth onClick={() => setDamageRow(null)}>{t('Bekor')}</Button>
+              <Button variant="danger" fullWidth loading={damageMutation.isPending}
+                onClick={() => damageMutation.mutate(damageRow)}>
+                {t('Zarar deb belgilash')}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Sheet>
     </div>
   )
 }

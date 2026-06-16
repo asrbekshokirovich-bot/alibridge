@@ -26,8 +26,10 @@ export default function UzProducts() {
           {products.map((p) => (
             <div key={p.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="w-11 h-11 rounded-xl bg-slate-50 flex items-center justify-center text-xl shrink-0">
-                  {typeEmoji(p.type)}
+                <div className="w-11 h-11 rounded-xl bg-slate-50 flex items-center justify-center text-xl shrink-0 overflow-hidden">
+                  {p.image_url
+                    ? <img src={p.image_url} alt="" className="w-full h-full object-cover" />
+                    : typeEmoji(p.type)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">

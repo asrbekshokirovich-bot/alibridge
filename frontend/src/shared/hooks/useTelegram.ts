@@ -8,6 +8,7 @@ declare global {
         expand: () => void
         close: () => void
         openLink: (url: string, options?: { try_instant_view?: boolean }) => void
+        openTelegramLink: (url: string) => void
         initData: string
         initDataUnsafe: {
           user?: {
@@ -84,6 +85,18 @@ export function useTelegram() {
     }
   }
 
+  // Telegram ichidagi havolani (t.me/...) Mini App'dan to'g'ri ochish.
+  // openLink t.me ni tashqi brauzerda ochadi — profil ochilmaydi.
+  const openTelegramLink = (url: string) => {
+    if (tg?.openTelegramLink) {
+      tg.openTelegramLink(url)
+    } else if (tg?.openLink) {
+      tg.openLink(url)
+    } else {
+      window.open(url, '_blank', 'noopener,noreferrer')
+    }
+  }
+
   return {
     tg,
     isReady,
@@ -92,5 +105,6 @@ export function useTelegram() {
     haptic,
     notify,
     openLink,
+    openTelegramLink,
   }
 }

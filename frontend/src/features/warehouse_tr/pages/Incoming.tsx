@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import type { ProductType } from '@/shared/types'
 import { typeEmoji } from '@/shared/lib/product'
+import { useTelegram } from '@/shared/hooks/useTelegram'
 import { Header, ListSkeleton, EmptyState, IconTruck, IconUser, IconChevronDown } from '@/shared/ui'
 
 interface InTransitItem {
@@ -37,11 +38,11 @@ interface HolderGroup {
   total: number
 }
 
-// Telegram profil havolasi (lichkaga o'tish)
-function telegramLink(username: string | null, telegramId: number | null): string | null {
-  if (username) return `https://t.me/${username}`
-  if (telegramId) return `tg://user?id=${telegramId}`
-  return null
+// Telegram profil havolasi (lichkaga o'tish).
+// Mini App'da openTelegramLink faqat t.me/... ni qabul qiladi —
+// username bo'lmasa profilga o'tib bo'lmaydi (Telegram cheklovi).
+function telegramLink(username: string | null): string | null {
+  return username ? `https://t.me/${username}` : null
 }
 
 interface StageGroup {
@@ -86,6 +87,7 @@ function groupByStageAndHolder(items: InTransitItem[]): StageGroup[] {
 
 export default function Incoming() {
   const { t } = useTranslation()
+  const { openTelegramLink, openLink } = useTelegram()
   const [open, setOpen] = useState<Record<number, boolean>>({})
   const { data: items, isLoading, isError, error } = useQuery({
     queryKey: ['warehouse-tr-incoming'],
@@ -128,20 +130,21 @@ export default function Incoming() {
               <div className="space-y-2">
                 {g.holders.map((h) => {
                   const isOpen = open[h.holder_id] ?? false
-                  const tgLink = telegramLink(h.holder_username, h.holder_telegram_id)
+                  const tgLink = telegramLink(h.holder_username)
+                  const openProfile = () => { if (tgLink) openTelegramLink(tgLink) }
                   return (
                     <div key={h.holder_id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden web-grid">
                       <div className="flex items-center gap-3 p-3.5">
                         {tgLink ? (
-                          <a
-                            href={tgLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            type="button"
+                            onClick={openProfile}
+                            aria-label={t('Telegram profili')}
                             className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 press"
                             style={{ background: 'var(--brand-gradient)' }}
                           >
                             <IconUser size={20} />
-                          </a>
+                          </button>
                         ) : (
                           <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
                             <IconUser size={20} />
@@ -150,15 +153,14 @@ export default function Incoming() {
 
                         <div className="flex-1 min-w-0">
                           {tgLink ? (
-                            <a
-                              href={tgLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="font-semibold text-sm truncate block hover:underline"
+                            <button
+                              type="button"
+                              onClick={openProfile}
+                              className="font-semibold text-sm truncate block text-left hover:underline"
                               style={{ color: 'var(--brand)' }}
                             >
                               {h.holder_name || t('Nomalum')}
-                            </a>
+                            </button>
                           ) : (
                             <p className="font-semibold text-sm text-slate-900 truncate">
                               {h.holder_name || t('Nomalum')}
@@ -167,9 +169,13 @@ export default function Incoming() {
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-400 mt-0.5">
                             {h.holder_number != null && <span className="font-mono">ALB-{h.holder_number}</span>}
                             {h.holder_phone && (
-                              <a href={`tel:${h.holder_phone}`} className="font-mono hover:underline" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); openLink(`tel:${h.holder_phone}`) }}
+                                className="font-mono hover:underline"
+                              >
                                 {h.holder_phone}
-                              </a>
+                              </button>
                             )}
                           </div>
                           {(h.flight_number || h.flight_date) && (

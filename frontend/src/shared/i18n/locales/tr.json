@@ -413,5 +413,13 @@
   "«Yuklarim»": "«Kargolarım»",
   "⚠️ O'lcham tanlanmagan yuklar tasdiqlanmaydi": "⚠️ Beden seçilmemiş yükler onaylanmaz",
   "✓ Tasdiqlandi": "✓ Onaylandı",
-  "📷 Pistoletcha bilan skanlang yoki qo'lda kiriting": "📷 Tarayıcıyla tarayın veya elle girin"
+  "📷 Pistoletcha bilan skanlang yoki qo'lda kiriting": "📷 Tarayıcıyla tarayın veya elle girin",
+  "Qabuldan oldin maʼlumotlarni kiriting": "Teslim almadan önce bilgileri girin",
+  "Turkiyadagi manzil": "Türkiye'deki adres",
+  "Yukni olib ketish manzili": "Yük teslim alma adresi",
+  "Kuryer topshirmoqchi": "Kurye teslim etmek istiyor",
+  "Qabul qildim": "Teslim aldım",
+  "Tasdiqlanmoqda…": "Onaylanıyor…",
+  "Avval manzil va reys raqamini kiriting": "Önce adres ve uçuş numarasını girin",
+  "Kuryer raqamingizni kiritib yuklarni skanlaydi. Keyin shu yerda manzil va reysni kiritib qabulni tasdiqlaysiz.": "Kurye numaranızı girip yükleri tarar. Sonra burada adres ve uçuşu girip teslim almayı onaylarsınız."
 }

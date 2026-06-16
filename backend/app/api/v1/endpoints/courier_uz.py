@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import require_role
+from app.bot import notify
 from app.core.enums import (
     CustodyEventType,
     HolderType,
@@ -19,6 +20,7 @@ from app.db.models import (
     CustodyHolding,
     Order,
     OrderItem,
+    PendingHandover,
     Product,
     ProductVariant,
     User,
@@ -385,7 +387,15 @@ async def confirm_airport(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*ROLE)),
 ) -> OkResponse:
+    """Kuryer aeroportда yo'lovchiga topshiradi — lekin yuk DARHOL o'tmaydi.
+
+    Pending topshiriq yaratiladi, yo'lovchiga bildirishnoma boradi. Yo'lovchi
+    Turkiya manzili + reys raqamini kiritib tasdiqlaganidan keyingina custody
+    COURIER_UZ -> CARRIER ga o'tadi (confirm-airport-receive).
+    """
     carrier = await _find_carrier_by_number(db, body.carrier_number)
+    items_json: list[dict] = []
+    total = 0
     for item in body.items:
         product = await db.scalar(
             select(Product)
@@ -397,17 +407,18 @@ async def confirm_airport(
         variant_id = await resolve_variant_id(db, product=product, variant_id=item.variant_id)
         # Buyurtmali yuk faqat egasiga; buyurtmasiz yuk istalgan yo'lovchiga
         await _ensure_can_handover(db, product.id, carrier.id)
-        # Kuryerning o'zidan (COURIER_UZ, user.id) yo'lovchiga
-        await transfer_custody(
-            db,
-            product,
-            variant_id=variant_id,
-            quantity=item.quantity,
-            from_holder_type=HolderType.COURIER_UZ,
-            from_holder_id=user.id,
-            to_holder_type=HolderType.CARRIER,
-            to_holder_id=carrier.id,
-            event_type=CustodyEventType.AIRPORT_HANDOVER,
-            scanned_by=user.id,
+        items_json.append(
+            {"barcode": item.barcode, "variant_id": variant_id, "quantity": item.quantity}
         )
+        total += item.quantity
+
+    pending = PendingHandover(
+        carrier_id=carrier.id,
+        courier_id=user.id,
+        items=items_json,
+        status="pending",
+    )
+    db.add(pending)
+    await db.flush()
+    await notify.on_airport_handover_pending(db, carrier_id=carrier.id, count=total)
     return OkResponse(ok=True)

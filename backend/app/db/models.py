@@ -4,6 +4,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from sqlalchemy import (
+    JSON,
     BigInteger,
     Boolean,
     Date,
@@ -282,6 +283,24 @@ class Counter(Base):
     value: Mapped[int] = mapped_column(Integer, default=0)
 
 
+class PendingHandover(Base):
+    """Aeroportда kuryer yo'lovchiga topshirmoqchi bo'lgan, lekin yo'lovchi
+    hali TASDIQLAMAGAN topshiriqlar. Yo'lovchi Turkiya manzili + reys raqamini
+    kiritib tasdiqlaganidan keyingina custody COURIER_UZ -> CARRIER ga o'tadi.
+
+    items: [{"barcode": str, "variant_id": int|null, "quantity": int}, ...]
+    """
+
+    __tablename__ = "pending_handovers"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    carrier_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    courier_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    items: Mapped[list] = mapped_column(JSON, default=list)
+    status: Mapped[str] = mapped_column(String(16), default="pending", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+
 __all__ = [
     "User",
     "Product",
@@ -294,4 +313,5 @@ __all__ = [
     "CustodyEvent",
     "CustodyHolding",
     "Counter",
+    "PendingHandover",
 ]

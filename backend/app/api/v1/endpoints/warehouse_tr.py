@@ -410,6 +410,7 @@ async def incoming(
                 holder_telegram_id=u.telegram_id if u else None,
                 flight_date=order.flight_date.isoformat() if order and order.flight_date else None,
                 flight_number=order.flight_number if order else None,
+                delivery_address_tr=order.delivery_address_tr if order else "",
             )
         )
     return result

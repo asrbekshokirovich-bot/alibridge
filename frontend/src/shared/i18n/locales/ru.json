@@ -413,5 +413,13 @@
   "«Yuklarim»": "«Мои грузы»",
   "⚠️ O'lcham tanlanmagan yuklar tasdiqlanmaydi": "⚠️ Грузы без выбранного размера не подтверждаются",
   "✓ Tasdiqlandi": "✓ Подтверждено",
-  "📷 Pistoletcha bilan skanlang yoki qo'lda kiriting": "📷 Сканируйте сканером или введите вручную"
+  "📷 Pistoletcha bilan skanlang yoki qo'lda kiriting": "📷 Сканируйте сканером или введите вручную",
+  "Qabuldan oldin maʼlumotlarni kiriting": "Перед приёмом введите данные",
+  "Turkiyadagi manzil": "Адрес в Турции",
+  "Yukni olib ketish manzili": "Адрес получения груза",
+  "Kuryer topshirmoqchi": "Курьер хочет передать",
+  "Qabul qildim": "Я принял",
+  "Tasdiqlanmoqda…": "Подтверждается…",
+  "Avval manzil va reys raqamini kiriting": "Сначала введите адрес и номер рейса",
+  "Kuryer raqamingizni kiritib yuklarni skanlaydi. Keyin shu yerda manzil va reysni kiritib qabulni tasdiqlaysiz.": "Курьер введёт ваш номер и отсканирует грузы. Затем здесь вы введёте адрес и рейс и подтвердите приём."
 }

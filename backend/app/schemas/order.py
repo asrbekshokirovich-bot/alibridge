@@ -70,3 +70,32 @@ class CourierBrief(BaseModel):
 
 class AutoReceiveRequest(BaseModel):
     courier_id: int
+
+
+class PendingHandoverItemOut(BaseModel):
+    """Pending topshiriqdagi bitta yuk satri."""
+
+    barcode: str
+    product_name: str = ""
+    image_url: str | None = None
+    size_label: str = ""
+    quantity: int = 0
+
+
+class PendingHandoverOut(BaseModel):
+    """Yo'lovchi tasdig'i kutilayotgan aeroport topshirig'i."""
+
+    id: int
+    courier_name: str = ""
+    total: int = 0
+    created_at: str = ""
+    items: list[PendingHandoverItemOut] = []
+
+
+class ConfirmHandoverRequest(BaseModel):
+    """Yo'lovchi pending topshiriqni tasdiqlaydi — manzil + reys majburiy."""
+
+    pending_id: int
+    delivery_address_tr: str = Field(min_length=1, max_length=512)
+    flight_number: str = Field(min_length=1, max_length=32)
+    flight_date: date | None = None

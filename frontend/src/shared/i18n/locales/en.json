@@ -413,5 +413,13 @@
   "«Yuklarim»": "\"My parcels\"",
   "⚠️ O'lcham tanlanmagan yuklar tasdiqlanmaydi": "⚠️ Parcels without a selected size won't be confirmed",
   "✓ Tasdiqlandi": "✓ Confirmed",
-  "📷 Pistoletcha bilan skanlang yoki qo'lda kiriting": "📷 Scan with the scanner or enter manually"
+  "📷 Pistoletcha bilan skanlang yoki qo'lda kiriting": "📷 Scan with the scanner or enter manually",
+  "Qabuldan oldin maʼlumotlarni kiriting": "Enter details before accepting",
+  "Turkiyadagi manzil": "Address in Turkey",
+  "Yukni olib ketish manzili": "Cargo pickup address",
+  "Kuryer topshirmoqchi": "Courier wants to hand over",
+  "Qabul qildim": "I received",
+  "Tasdiqlanmoqda…": "Confirming…",
+  "Avval manzil va reys raqamini kiriting": "Enter the address and flight number first",
+  "Kuryer raqamingizni kiritib yuklarni skanlaydi. Keyin shu yerda manzil va reysni kiritib qabulni tasdiqlaysiz.": "The courier enters your number and scans the cargo. Then here you enter the address and flight and confirm receipt."
 }

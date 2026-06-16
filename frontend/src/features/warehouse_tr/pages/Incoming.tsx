@@ -23,6 +23,7 @@ interface InTransitItem {
   holder_telegram_id: number | null
   flight_date: string | null
   flight_number: string | null
+  delivery_address_tr: string
 }
 
 interface HolderGroup {
@@ -34,6 +35,7 @@ interface HolderGroup {
   holder_telegram_id: number | null
   flight_date: string | null
   flight_number: string | null
+  delivery_address_tr: string
   items: InTransitItem[]
   total: number
 }
@@ -74,6 +76,7 @@ function groupByStageAndHolder(items: InTransitItem[]): StageGroup[] {
         holder_telegram_id: it.holder_telegram_id,
         flight_date: it.flight_date,
         flight_number: it.flight_number,
+        delivery_address_tr: it.delivery_address_tr,
         items: [it],
         total: it.quantity,
       })
@@ -181,6 +184,11 @@ export default function Incoming() {
                           {(h.flight_number || h.flight_date) && (
                             <p className="text-[11px] text-slate-500 mt-0.5">
                               ✈️ {[h.flight_number, h.flight_date].filter(Boolean).join(' · ')}
+                            </p>
+                          )}
+                          {h.delivery_address_tr && (
+                            <p className="text-[11px] text-slate-500 mt-0.5">
+                              📍 {h.delivery_address_tr}
                             </p>
                           )}
                         </div>

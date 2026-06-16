@@ -168,6 +168,7 @@ class HeldCargoItem(BaseModel):
     holder_id: int = 0  # yo'ldagi yukni ushlab turgan ega (yo'lovchi/kuryer) user id
     holder_name: str = ""  # eganing ismi (jarayondagi ro'yxatda guruhlash uchun)
     holder_number: int | None = None  # yo'lovchi ALB raqami (carrier_number)
+    delivery_address_tr: str = ""  # yo'lovchining Turkiyadagi yetkazish manzili
     holder_phone: str = ""  # eganing telefon raqami
     holder_username: str | None = None  # Telegram username (lichkaga o'tish uchun)
     holder_telegram_id: int | None = None  # Telegram id (username yo'q bo'lsa)

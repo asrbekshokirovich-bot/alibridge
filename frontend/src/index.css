@@ -186,10 +186,11 @@ body {
 
 /* Press effekt */
 .press {
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
 }
 .press:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
+  opacity: 0.85;
 }
 
 /* Brand gradient utility */

@@ -18,31 +18,30 @@ export function BottomNav({ items }: Props) {
 
   return (
     <div className="tg-only fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-30">
-      <div className="mx-3 mb-3 bg-white/90 backdrop-blur-xl rounded-3xl border border-slate-100 shadow-[var(--shadow-lg)]">
-        <div className="flex items-center justify-around px-2 py-2">
+      <div className="mx-3 mb-3 rounded-3xl border shadow-[var(--shadow-lg)]"
+        style={{ background: 'rgba(22,24,31,0.92)', borderColor: 'var(--border)', backdropFilter: 'blur(20px)' }}>
+        <div className="flex items-center justify-around px-1 py-2">
           {items.map((item) => {
-            const active = location.pathname === item.path
+            const active = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
             return (
               <button
                 key={item.path}
                 onClick={() => { haptic('light'); navigate(item.path) }}
-                className="press relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl min-w-[60px]"
+                className="press relative flex flex-col items-center gap-1 px-3 py-1.5 rounded-2xl min-w-[60px] transition-all"
+                style={active ? { background: 'rgba(255,71,87,0.12)' } : undefined}
               >
                 <div
-                  className={`flex items-center justify-center transition-colors ${active ? 'text-red-500' : 'text-slate-400'}`}
-                  style={active ? { color: 'var(--brand)' } : undefined}
+                  className="flex items-center justify-center transition-all"
+                  style={{ color: active ? 'var(--brand)' : 'var(--text-muted)' }}
                 >
                   {item.icon}
                 </div>
-                <span className={`text-[10px] font-medium transition-colors ${active ? 'text-red-500' : 'text-slate-400'}`}>
+                <span
+                  className="text-[10px] font-semibold transition-all"
+                  style={{ color: active ? 'var(--brand)' : 'var(--text-muted)' }}
+                >
                   {item.label}
                 </span>
-                {active && (
-                  <span
-                    className="absolute -bottom-0.5 w-1 h-1 rounded-full"
-                    style={{ background: 'var(--brand)' }}
-                  />
-                )}
               </button>
             )
           })}

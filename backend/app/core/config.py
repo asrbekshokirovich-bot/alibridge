@@ -44,6 +44,12 @@ class Settings(BaseSettings):
     # Database
     database_url: str
     db_use_ssl: bool = False
+    # Ulanish puli (connection pool) — NullPool O'RNIGA.
+    # Pul ulanishlarni qayta ishlatadi: har so'rovda yangi TCP+TLS+auth ochilmaydi.
+    # Supabase pooler ulanish limitiga sig'ish uchun kichik qiymatlar (maks = size+overflow).
+    db_pool_size: int = 5
+    db_max_overflow: int = 5
+    db_pool_recycle: int = 1800  # bo'sh ulanishni 30 daqiqada yangilash (pooler uzishi mumkin)
 
     # Public base URL (PDF yorliq linklari uchun) — bo'sh bo'lsa miniapp_url
     public_base_url: str = ""

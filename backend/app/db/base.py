@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy.pool import NullPool
 
 from app.core.config import settings
 
@@ -23,11 +22,21 @@ def _is_pgbouncer() -> bool:
 
 
 def _engine_kwargs() -> dict:
+    # Haqiqiy ulanish puli — barcha rejimlar uchun (NullPool ENDi ishlatilmaydi).
+    # Sabab: NullPool har so'rov uchun yangi ulanish ochadi — Supabase pooler
+    # eu-central-1'da bu ~200-700 ms (TCP+TLS+auth) qo'shadi. Pul ulanishni
+    # qayta ishlatadi, shu sababli so'rov ~100x tezroq javob beradi.
     kwargs: dict = {
         "echo": settings.app_debug,
+        "pool_size": settings.db_pool_size,
+        "max_overflow": settings.db_max_overflow,
+        "pool_recycle": settings.db_pool_recycle,
+        # Ishlatishdan oldin "SELECT 1" — pooler uzgan bo'sh ulanishni aniqlaydi.
         "pool_pre_ping": True,
     }
-    # Supabase pgbouncer (transaction pooler) prepared statement'larni qo'llamaydi.
+    # Supabase pgbouncer (pooler) prepared statement'larni (transaction mode'da) qo'llamaydi.
+    # Pul ulanishni qayta ishlatadi — bu pgbouncer bilan MOS keladi (client<->pgbouncer
+    # ulanishi qayta ishlatiladi, pgbouncer esa server tomonni o'zi multiplekslaydi).
     if _is_pgbouncer():
         kwargs["connect_args"] = {
             # asyncpg client-side statement cache'ni o'chirish
@@ -36,10 +45,6 @@ def _engine_kwargs() -> dict:
             # "prepared statement already exists" xatosini oldini oladi.
             "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4()}__",
         }
-        # Transaction pooler bilan SQLAlchemy connection pool'i mos kelmaydi —
-        # har so'rov uchun yangi ulanish (NullPool).
-        kwargs["poolclass"] = NullPool
-        kwargs.pop("pool_pre_ping", None)
     return kwargs
 
 

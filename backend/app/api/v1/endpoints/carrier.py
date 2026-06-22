@@ -197,9 +197,14 @@ async def pending_handovers(
     )
     by_barcode = {p.barcode: p for p in prod_rows.scalars().all()}
 
+    # Kuryer nomlarini bitta so'rovda olamiz (N+1 emas — har qator uchun alohida emas)
+    courier_ids = {p.courier_id for p in pendings}
+    courier_rows = await db.execute(select(User).where(User.id.in_(courier_ids)))
+    couriers_by_id = {u.id: u for u in courier_rows.scalars().all()}
+
     result: list[PendingHandoverOut] = []
     for p in pendings:
-        courier = await db.get(User, p.courier_id)
+        courier = couriers_by_id.get(p.courier_id)
         items_out: list[PendingHandoverItemOut] = []
         total = 0
         for it in p.items:

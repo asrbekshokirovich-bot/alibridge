@@ -267,10 +267,7 @@ async def confirm_handover(
 
     # Yo'lovchi kiritgan Turkiya manzili + reysni eng so'nggi buyurtmaga yozamiz
     last_order = await db.scalar(
-        select(Order)
-        .where(Order.carrier_id == user.id)
-        .order_by(Order.id.desc())
-        .limit(1)
+        select(Order).where(Order.carrier_id == user.id).order_by(Order.id.desc()).limit(1)
     )
     if last_order is not None:
         last_order.delivery_address_tr = body.delivery_address_tr

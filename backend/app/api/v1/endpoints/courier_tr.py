@@ -89,9 +89,7 @@ async def _carrier_for_product(db: AsyncSession, product_id: int) -> User | None
 
 
 async def _get_carrier_by_number(db: AsyncSession, carrier_number: int) -> User:
-    carrier = await db.scalar(
-        select(User).where(User.carrier_number == carrier_number)
-    )
+    carrier = await db.scalar(select(User).where(User.carrier_number == carrier_number))
     if carrier is None:
         raise AppError(
             "CARRIER_NOT_FOUND", f"Yo'lovchi #{carrier_number} topilmadi", status_code=404
@@ -119,16 +117,18 @@ async def carrier_products(
     )
     result: list[CarrierProductItem] = []
     for h, p, v in rows.all():
-        result.append(CarrierProductItem(
-            product_id=p.id,
-            variant_id=v.id,
-            barcode=p.barcode,
-            product_name=p.name,
-            category=p.category,
-            image_url=p.image_url,
-            size_label=v.size_label,
-            quantity=h.quantity,
-        ))
+        result.append(
+            CarrierProductItem(
+                product_id=p.id,
+                variant_id=v.id,
+                barcode=p.barcode,
+                product_name=p.name,
+                category=p.category,
+                image_url=p.image_url,
+                size_label=v.size_label,
+                quantity=h.quantity,
+            )
+        )
     return result
 
 

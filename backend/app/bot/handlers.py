@@ -102,8 +102,7 @@ async def reg_phone(message: Message, state: FSMContext) -> None:
     tg = message.from_user
     if contact.user_id != tg.id:
         await message.answer(
-            "⚠️ Iltimos, <b>o'z</b> raqamingizni ulashing.\n\n"
-            "Pastdagi tugmani bosing 👇",
+            "⚠️ Iltimos, <b>o'z</b> raqamingizni ulashing.\n\nPastdagi tugmani bosing 👇",
             reply_markup=_phone_keyboard(),
             parse_mode="HTML",
         )
@@ -174,8 +173,7 @@ async def cmd_ishchi(message: Message) -> None:
 
         if user is None:
             await message.answer(
-                "⚠️ Siz hali ro'yxatdan o'tmagansiz.\n\n"
-                "Boshlash uchun /start ni bosing.",
+                "⚠️ Siz hali ro'yxatdan o'tmagansiz.\n\nBoshlash uchun /start ni bosing.",
                 parse_mode="HTML",
             )
             return

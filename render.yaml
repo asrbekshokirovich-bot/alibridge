@@ -5,6 +5,9 @@ services:
   - type: web
     name: alibridge-backend
     runtime: python
+    # Region: Frankfurt — Supabase Postgres eu-central-1'da. Backend bazaga yaqin
+    # bo'lishi uchun (har query Atlantikani kesib o'tmasligi uchun) shu yerga qo'yiladi.
+    region: frankfurt
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
@@ -85,6 +88,9 @@ services:
   # ============================================
   - type: redis
     name: alibridge-redis
+    # Region: backend bilan BIR XIL bo'lishi SHART — fromService private network
+    # (REDIS_URL) faqat bitta regiondagi servislar orasida ishlaydi.
+    region: frankfurt
     plan: free
     maxmemoryPolicy: allkeys-lru
     ipAllowList: []

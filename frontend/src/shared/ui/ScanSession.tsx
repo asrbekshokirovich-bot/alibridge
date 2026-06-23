@@ -310,7 +310,7 @@ export function ScanSession({
               <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-sm font-bold">
                 {r.status === 'ok' && <span className="bg-emerald-100 text-emerald-600 w-full h-full rounded-full flex items-center justify-center"><IconCheck size={18} /></span>}
                 {r.status === 'pending' && <span className="w-4 h-4 border-2 border-slate-300 border-t-[var(--royal)] rounded-full animate-spin" />}
-                {r.status === 'error' && <span className="bg-red-100 text-red-500 w-full h-full rounded-full flex items-center justify-center">✕</span>}
+                {r.status === 'error' && <span className="bg-red-100 text-red-500 w-full h-full rounded-full flex items-center justify-center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></span>}
                 {r.status === 'choose' && <span className="bg-amber-100 text-amber-600 w-full h-full rounded-full flex items-center justify-center">?</span>}
               </div>
 
@@ -366,7 +366,7 @@ export function ScanSession({
       {validRows.length > 0 && (
         <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100">
           {hasChoose && (
-            <p className="text-xs text-amber-600 text-center mb-2">{t('⚠️ O\'lcham tanlanmagan yuklar tasdiqlanmaydi')}</p>
+            <p className="text-xs text-amber-600 text-center mb-2">{t('O\'lcham tanlanmagan yuklar tasdiqlanmaydi')}</p>
           )}
           {hasPending && (
             <p className="text-xs text-slate-500 text-center mb-2">{t('Ba\'zi yuklar hali tekshirilmoqda…')}</p>

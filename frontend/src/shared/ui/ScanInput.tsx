@@ -72,7 +72,7 @@ export function ScanInput({ value, onChange, onScan, loading, placeholder }: Pro
           {loading ? '...' : t('Skan')}
         </button>
       </div>
-      <p className="text-xs text-slate-400 mt-2 text-center">{t('📷 Pistoletcha bilan skanlang yoki qo\'lda kiriting')}</p>
+      <p className="text-xs text-slate-400 mt-2 text-center">{t('Pistoletcha bilan skanlang yoki qo\'lda kiriting')}</p>
     </form>
   )
 }

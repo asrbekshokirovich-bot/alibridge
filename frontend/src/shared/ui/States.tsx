@@ -27,7 +27,7 @@ export function EmptyState({ icon, title, description, action }: EmptyProps) {
   return (
     <div className="flex flex-col items-center justify-center px-8 py-14 text-center animate-fade-in">
       <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3.5"
-        style={{ background: '#EAEEF4', color: 'var(--muted3)' }}>
+        style={{ background: 'var(--surface2)', border: '1px solid var(--line)', color: 'var(--muted2)' }}>
         {icon ?? (
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.84z" />

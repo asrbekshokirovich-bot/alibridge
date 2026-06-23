@@ -40,8 +40,8 @@ export default function AirportHandover() {
           <div className="w-16 h-16 rounded-3xl flex items-center justify-center text-white mb-3" style={{ background: 'var(--brand-gradient)' }}>
             <IconPlane size={30} />
           </div>
-          <h2 className="text-lg font-bold text-slate-900">{t('Yo\'lovchi raqami')}</h2>
-          <p className="text-sm text-slate-500 text-center mt-1">{t('Yo\'lovchining tartib raqamini kiriting')}</p>
+          <h2 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>{t('Yo\'lovchi raqami')}</h2>
+          <p className="text-sm text-center mt-1" style={{ color: 'var(--muted)' }}>{t('Yo\'lovchining tartib raqamini kiriting')}</p>
         </div>
 
         <Input type="number" inputMode="numeric" autoFocus placeholder={t('Masalan: 47')} className="text-center text-lg font-bold"

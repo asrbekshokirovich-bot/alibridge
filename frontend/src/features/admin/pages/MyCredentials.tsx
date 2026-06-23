@@ -5,7 +5,7 @@ import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import { useAuthStore } from '@/shared/store/auth'
 import type { User } from '@/shared/types'
-import { Header } from '@/shared/ui'
+import { Header, Input, Button } from '@/shared/ui'
 
 // Admin (yoki xodim) o'ziga sayt orqali kirish uchun login + parol o'rnatadi.
 export default function MyCredentials() {
@@ -38,41 +38,39 @@ export default function MyCredentials() {
       <Header title={t('Sayt logini')} subtitle={t('Brauzer orqali kirish')} showBack />
 
       <div className="px-4 pt-4">
-        <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
-          <p className="text-sm text-slate-600 mb-3">
+        <div className="rounded-2xl p-4 border" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+          <p className="text-sm mb-3" style={{ color: 'var(--muted)' }}>
             {t('Saytga (brauzerda) kirish uchun o\'zingizga login va parol o\'rnating.')}
             {user?.username && (
-              <span className="block mt-1 text-emerald-600 font-medium">{t('Joriy login: {{username}}', { username: user.username })}</span>
+              <span className="block mt-1 font-semibold" style={{ color: 'var(--green)' }}>{t('Joriy login: {{username}}', { username: user.username })}</span>
             )}
           </p>
 
           <div className="flex flex-col gap-2.5">
-            <input
+            <Input
               type="text"
               autoComplete="username"
               placeholder={t('Login')}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="bg-slate-50 rounded-xl px-4 py-3 text-sm border border-slate-200 outline-none focus:border-slate-400"
             />
-            <input
+            <Input
               type="text"
               placeholder={t('Parol')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-slate-50 rounded-xl px-4 py-3 text-sm border border-slate-200 outline-none focus:border-slate-400"
             />
-            <button
-              onClick={() => save.mutate()}
-              disabled={!valid || save.isPending}
-              className="press py-3 rounded-xl text-sm font-bold text-white disabled:opacity-50 flex items-center justify-center gap-2"
-              style={{ background: 'var(--brand-gradient)' }}>
-              {save.isPending && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+            <Button
+              variant="primary"
+              fullWidth
+              loading={save.isPending}
+              disabled={!valid}
+              onClick={() => save.mutate()}>
               {user?.username ? t('Loginni yangilash') : t('Login o\'rnatish')}
-            </button>
+            </Button>
           </div>
 
-          <p className="text-xs text-slate-400 mt-3">
+          <p className="text-xs mt-3" style={{ color: 'var(--muted2)' }}>
             {t('Login kamida 3 belgi, parol kamida 4 belgi bo\'lishi kerak.')}
           </p>
         </div>

@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import client from '@/shared/api/client'
-import { productGroup, typeEmoji } from '@/shared/lib/product'
+import { productGroup } from '@/shared/lib/product'
 import { Header, ListSkeleton, EmptyState, StatusBadge, IconBox } from '@/shared/ui'
 import type { Product } from '@/shared/types'
 
-const CHIP = 'text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg'
-const CHIP_MUTED = 'text-xs font-medium text-slate-400 bg-slate-50 px-2 py-0.5 rounded-lg'
+const CHIP = 'text-xs font-semibold px-2 py-0.5 rounded-lg'
+const CHIP_STYLE: React.CSSProperties = { background: '#F1F4F8', color: 'var(--muted)' }
+const CHIP_MUTED = 'text-xs font-medium px-2 py-0.5 rounded-lg'
+const CHIP_MUTED_STYLE: React.CSSProperties = { background: 'var(--surface2)', color: 'var(--muted2)' }
 
 export default function Products() {
   const { t } = useTranslation()
@@ -46,22 +48,22 @@ export default function Products() {
               g !== 'piece' && totalKg >= 0.1 ? t('{{n}} kg', { n: totalKg.toFixed(1) }) : '',
             ].filter(Boolean)
             return (
-              <div key={p.id} className="bg-white rounded-2xl p-3.5 border border-slate-100 shadow-sm">
+              <div key={p.id} className="rounded-2xl p-3.5 border" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
                 <div className="flex items-stretch gap-3">
                   {/* Chap: katta rasm */}
-                  <div className="w-24 h-24 rounded-xl bg-slate-50 flex items-center justify-center text-3xl shrink-0 overflow-hidden self-start">
+                  <div className="w-24 h-24 rounded-xl flex items-center justify-center shrink-0 overflow-hidden self-start" style={{ background: '#EAEEF4', color: 'var(--muted3)' }}>
                     {p.image_url
                       ? <img src={p.image_url} alt="" className="w-full h-full object-cover" />
-                      : typeEmoji(p.type)}
+                      : <IconBox size={32} />}
                   </div>
 
                   {/* O'rta: nomi, barkod, status, o'lchamlar + narx, jami */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-slate-900 truncate flex-1">{p.name}</h3>
+                      <h3 className="font-bold truncate flex-1 text-[14.5px]" style={{ color: 'var(--ink)' }}>{p.name}</h3>
                       <StatusBadge tone={st.tone} dot>{st.label}</StatusBadge>
                     </div>
-                    <p className="text-xs font-mono text-slate-400 truncate">{p.barcode}</p>
+                    <p className="text-xs font-mono truncate" style={{ color: 'var(--muted2)' }}>{p.barcode}</p>
 
                     {realVariants.length > 0 ? (
                       <>
@@ -69,19 +71,19 @@ export default function Products() {
                           {realVariants.map((v) => (
                             <div key={v.id} className="flex items-center gap-2 flex-wrap text-xs">
                               {v.size_label && (
-                                <span className="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg">{v.size_label}</span>
+                                <span className="font-bold px-2 py-0.5 rounded-lg" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>{v.size_label}</span>
                               )}
-                              {v.quantity > 0 && <span className={CHIP}>{t('{{n}} dona', { n: v.quantity })}</span>}
-                              {g === 'boxed' && v.box_count != null && v.box_count > 0 && <span className={CHIP}>{t('{{n}} quti', { n: v.box_count })}</span>}
-                              {v.weight_kg > 0 && <span className={CHIP}>{t('{{n}} kg', { n: v.weight_kg })}</span>}
+                              {v.quantity > 0 && <span className={CHIP} style={CHIP_STYLE}>{t('{{n}} dona', { n: v.quantity })}</span>}
+                              {g === 'boxed' && v.box_count != null && v.box_count > 0 && <span className={CHIP} style={CHIP_STYLE}>{t('{{n}} quti', { n: v.box_count })}</span>}
+                              {v.weight_kg > 0 && <span className={CHIP} style={CHIP_STYLE}>{t('{{n}} kg', { n: v.weight_kg })}</span>}
                               {v.tare_kg != null && v.tare_kg > 0 && (
                                 <>
-                                  <span className={CHIP}>{t('{{n}} kg sof', { n: Math.max(0, v.weight_kg - v.tare_kg).toFixed(1) })}</span>
-                                  <span className={CHIP_MUTED}>{t('tara {{n}}', { n: v.tare_kg })}</span>
+                                  <span className={CHIP} style={CHIP_STYLE}>{t('{{n}} kg sof', { n: Math.max(0, v.weight_kg - v.tare_kg).toFixed(1) })}</span>
+                                  <span className={CHIP_MUTED} style={CHIP_MUTED_STYLE}>{t('tara {{n}}', { n: v.tare_kg })}</span>
                                 </>
                               )}
                               {v.cargo_price > 0 && (
-                                <span className="font-bold ml-auto" style={{ color: 'var(--brand)' }}>
+                                <span className="font-bold ml-auto tabular-nums" style={{ color: 'var(--royal)' }}>
                                   ${v.cargo_price}/{unit}
                                 </span>
                               )}
@@ -89,14 +91,14 @@ export default function Products() {
                           ))}
                         </div>
                         {jamiParts.length > 0 && (
-                          <p className="text-xs font-semibold text-slate-500 mt-1.5">{t('Jami:')} {jamiParts.join(' · ')}</p>
+                          <p className="text-xs font-semibold mt-1.5" style={{ color: 'var(--muted)' }}>{t('Jami:')} {jamiParts.join(' · ')}</p>
                         )}
                       </>
                     ) : (
                       <div className="flex items-center gap-2 mt-2 flex-wrap text-xs">
-                        <span className={CHIP}>{g === 'piece' ? t('{{n}} dona', { n: p.quantity }) : t('{{kg}} kg · {{n}} dona', { kg: p.weight_kg, n: p.quantity })}</span>
+                        <span className={CHIP} style={CHIP_STYLE}>{g === 'piece' ? t('{{n}} dona', { n: p.quantity }) : t('{{kg}} kg · {{n}} dona', { kg: p.weight_kg, n: p.quantity })}</span>
                         {p.cargo_price > 0 && (
-                          <span className="font-bold ml-auto" style={{ color: 'var(--brand)' }}>${p.cargo_price}/{unit}</span>
+                          <span className="font-bold ml-auto tabular-nums" style={{ color: 'var(--royal)' }}>${p.cargo_price}/{unit}</span>
                         )}
                       </div>
                     )}

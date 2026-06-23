@@ -5,14 +5,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import type { Product } from '@/shared/types'
 import { PRODUCT_STATUS } from '@/shared/lib/status'
-import { productGroup, typeEmoji, labelUrl, type ProductGroup } from '@/shared/lib/product'
+import { productGroup, labelUrl, type ProductGroup } from '@/shared/lib/product'
 import { useTelegram } from '@/shared/hooks/useTelegram'
-import { Header, ListSkeleton, EmptyState, StatusBadge, IconBox } from '@/shared/ui'
+import { Header, ListSkeleton, EmptyState, StatusBadge, IconBox, IconAlert, IconPencil, IconTrash } from '@/shared/ui'
 
 type Filter = 'all' | ProductGroup
 
-const CHIP = 'text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg'
-const CHIP_MUTED = 'text-xs font-medium text-slate-400 bg-slate-50 px-2 py-0.5 rounded-lg'
+const CHIP = 'text-xs font-semibold px-2 py-0.5 rounded-lg'
+const CHIP_STYLE = { background: '#F1F4F8', color: 'var(--muted)' } as const
+const CHIP_MUTED = 'text-xs font-medium px-2 py-0.5 rounded-lg'
+const CHIP_MUTED_STYLE = { background: 'var(--surface2)', color: 'var(--muted3)' } as const
 
 export default function Products() {
   const { t } = useTranslation()
@@ -61,13 +63,13 @@ export default function Products() {
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
-                className={`shrink-0 px-3.5 py-2 rounded-xl text-[13px] font-semibold transition-all flex items-center gap-1.5 ${
-                  active ? 'text-white shadow-sm' : 'bg-slate-100 text-slate-500'
-                }`}
-                style={active ? { background: 'var(--brand-gradient)' } : undefined}
+                className="shrink-0 px-3.5 py-2 rounded-full text-[13px] font-semibold transition-all flex items-center gap-1.5 border"
+                style={active
+                  ? { background: 'var(--royal)', color: '#fff', borderColor: 'transparent' }
+                  : { background: 'var(--surface)', color: 'var(--muted)', borderColor: 'var(--line)' }}
               >
                 {f.label}
-                <span className={`text-[11px] px-1.5 py-0.5 rounded-full ${active ? 'bg-white/25' : 'bg-white'}`}>{count(f.key)}</span>
+                <span className="text-[11px] px-1.5 py-0.5 rounded-full" style={active ? { background: 'rgba(255,255,255,0.22)' } : { background: 'var(--surface2)' }}>{count(f.key)}</span>
               </button>
             )
           })}
@@ -98,57 +100,57 @@ export default function Products() {
               g !== 'piece' && totalKg >= 0.1 ? t('{{n}} kg', { n: totalKg.toFixed(1) }) : '',
             ].filter(Boolean)
             return (
-              <div key={p.id} className={`bg-white rounded-2xl p-3.5 border shadow-sm ${incomplete ? 'border-amber-300' : 'border-slate-100'}`}>
+              <div key={p.id} className="rounded-2xl p-3.5 border" style={{ background: 'var(--surface)', borderColor: incomplete ? 'var(--amber)' : 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
                 <div className="flex items-stretch gap-3">
                   {/* Chap: katta rasm */}
-                  <div className="w-24 h-24 rounded-xl bg-slate-50 flex items-center justify-center text-3xl shrink-0 overflow-hidden self-start">
+                  <div className="w-24 h-24 rounded-xl flex items-center justify-center shrink-0 overflow-hidden self-start" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
                     {p.image_url
                       ? <img src={p.image_url} alt="" className="w-full h-full object-cover" />
-                      : typeEmoji(p.type)}
+                      : <IconBox size={34} />}
                   </div>
 
                   {/* O'rta: nomi, katalog, o'lchamlar + narx, jami */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-slate-900 truncate flex-1">{p.name}</h3>
+                      <h3 className="text-[14.5px] font-bold truncate flex-1" style={{ color: 'var(--ink)' }}>{p.name}</h3>
                       <StatusBadge tone={PRODUCT_STATUS[p.status].tone} dot>{PRODUCT_STATUS[p.status].text}</StatusBadge>
                     </div>
-                    <p className="text-xs text-slate-400 truncate">{p.category || '—'}</p>
+                    <p className="text-xs truncate" style={{ color: 'var(--muted)' }}>{p.category || '—'}</p>
 
                     {/* Omborda hozir qolgan miqdor (split custody — bir qism kuryerda) */}
                     {p.in_warehouse_qty != null && (
                       p.in_warehouse_qty > 0 ? (
-                        <span className="inline-block mt-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg">
+                        <span className="inline-block mt-1.5 text-xs font-bold px-2 py-0.5 rounded-lg" style={{ color: '#15803D', background: '#E9F6EE' }}>
                           {t('Omborda: {{n}} dona', { n: p.in_warehouse_qty })}
                         </span>
                       ) : (
-                        <span className="inline-block mt-1.5 text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-lg">
+                        <span className="inline-block mt-1.5 text-xs font-bold px-2 py-0.5 rounded-lg" style={{ color: 'var(--red)', background: '#FEF0F0' }}>
                           {t('Omborda qolmadi')}
                         </span>
                       )
                     )}
 
                     {incomplete ? (
-                      <p className="text-xs text-amber-600 font-medium mt-1.5">⚠️ {t("O'lcham qo'shilmagan — tahrirlang")}</p>
+                      <p className="text-xs font-semibold mt-1.5 flex items-center gap-1" style={{ color: 'var(--amber-d)' }}><IconAlert size={13} /> {t("O'lcham qo'shilmagan — tahrirlang")}</p>
                     ) : (
                       <>
                         <div className="mt-2 space-y-1">
                           {realVariants.map((v) => (
                             <div key={v.id} className="flex items-center gap-2 flex-wrap text-xs">
                               {v.size_label && (
-                                <span className="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg">{v.size_label}</span>
+                                <span className="font-bold px-2 py-0.5 rounded-lg" style={{ color: 'var(--ink)', background: '#F1F4F8' }}>{v.size_label}</span>
                               )}
-                              {v.quantity > 0 && <span className={CHIP}>{t('{{n}} dona', { n: v.quantity })}</span>}
-                              {g === 'boxed' && v.box_count != null && v.box_count > 0 && <span className={CHIP}>{t('{{n}} quti', { n: v.box_count })}</span>}
-                              {v.weight_kg > 0 && <span className={CHIP}>{t('{{n}} kg', { n: v.weight_kg })}</span>}
+                              {v.quantity > 0 && <span className={CHIP} style={CHIP_STYLE}>{t('{{n}} dona', { n: v.quantity })}</span>}
+                              {g === 'boxed' && v.box_count != null && v.box_count > 0 && <span className={CHIP} style={CHIP_STYLE}>{t('{{n}} quti', { n: v.box_count })}</span>}
+                              {v.weight_kg > 0 && <span className={CHIP} style={CHIP_STYLE}>{t('{{n}} kg', { n: v.weight_kg })}</span>}
                               {v.tare_kg != null && v.tare_kg > 0 && (
                                 <>
-                                  <span className={CHIP}>{t('{{n}} kg sof', { n: Math.max(0, v.weight_kg - v.tare_kg).toFixed(1) })}</span>
-                                  <span className={CHIP_MUTED}>{t('tara {{n}}', { n: v.tare_kg })}</span>
+                                  <span className={CHIP} style={CHIP_STYLE}>{t('{{n}} kg sof', { n: Math.max(0, v.weight_kg - v.tare_kg).toFixed(1) })}</span>
+                                  <span className={CHIP_MUTED} style={CHIP_MUTED_STYLE}>{t('tara {{n}}', { n: v.tare_kg })}</span>
                                 </>
                               )}
                               {v.cargo_price > 0 && (
-                                <span className="font-bold ml-auto" style={{ color: 'var(--brand)' }}>
+                                <span className="font-bold ml-auto tabular-nums" style={{ color: 'var(--royal)' }}>
                                   ${v.cargo_price}/{unit}
                                 </span>
                               )}
@@ -156,7 +158,7 @@ export default function Products() {
                           ))}
                         </div>
                         {jamiParts.length > 0 && (
-                          <p className="text-xs font-semibold text-slate-500 mt-1.5">
+                          <p className="text-xs font-semibold mt-1.5" style={{ color: 'var(--muted)' }}>
                             {t('Jami:')} {jamiParts.join(' · ')}
                           </p>
                         )}
@@ -168,18 +170,21 @@ export default function Products() {
                   <div className="flex flex-col gap-1.5 shrink-0 w-[88px]">
                     <button
                       onClick={() => openLink(labelUrl(p.barcode, new Date().toISOString().slice(0, 10)))}
-                      className="press py-2 rounded-xl text-[11px] font-semibold bg-slate-100 text-slate-700 flex flex-col items-center gap-0.5"
+                      className="press py-2 rounded-xl text-[11px] font-bold flex flex-col items-center gap-0.5 border"
+                      style={{ background: 'var(--surface2)', borderColor: 'var(--line2)', color: 'var(--ink)' }}
                     >
-                      <span>🖨️ {t('Barkod')}</span>
-                      <span className="text-[10px] text-slate-400 font-mono truncate w-full text-center">{p.barcode}</span>
+                      <span className="flex items-center gap-1"><IconBox size={13} /> {t('Barkod')}</span>
+                      <span className="text-[10px] font-mono truncate w-full text-center" style={{ color: 'var(--muted3)' }}>{p.barcode}</span>
                     </button>
                     {editable && (
                       <button
                         onClick={() => navigate(`/warehouse-uz/products/${p.id}/edit`)}
-                        className={`press py-2 rounded-xl text-[11px] font-semibold ${incomplete ? 'text-white' : 'bg-slate-100 text-slate-700'}`}
-                        style={incomplete ? { background: 'var(--brand-gradient)' } : undefined}
+                        className="press py-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 border"
+                        style={incomplete
+                          ? { background: 'var(--royal)', color: '#fff', borderColor: 'transparent' }
+                          : { background: 'var(--surface2)', color: 'var(--ink)', borderColor: 'var(--line2)' }}
                       >
-                        {incomplete ? t("To'ldirish") : `✏️ ${t('Tahrirlash')}`}
+                        {incomplete ? t("To'ldirish") : <><IconPencil size={13} /> {t('Tahrirlash')}</>}
                       </button>
                     )}
                     {editable && (
@@ -188,9 +193,10 @@ export default function Products() {
                           if (confirm(t('"{{name}}" o\'chirilsinmi? Bu amalni qaytarib bo\'lmaydi.', { name: p.name }))) remove.mutate(p.id)
                         }}
                         disabled={remove.isPending && remove.variables === p.id}
-                        className="press py-2 rounded-xl text-[11px] font-semibold bg-red-50 text-red-600 disabled:opacity-50"
+                        className="press py-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 disabled:opacity-50"
+                        style={{ background: '#FEF0F0', color: 'var(--red)' }}
                       >
-                        🗑️ {t("O'chirish")}
+                        <IconTrash size={13} /> {t("O'chirish")}
                       </button>
                     )}
                   </div>

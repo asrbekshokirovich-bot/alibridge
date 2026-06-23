@@ -4,7 +4,7 @@ import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import type { Product, ProductType, ProductVariant } from '@/shared/types'
 import { productGroup } from '@/shared/lib/product'
-import { Button, Input } from '@/shared/ui'
+import { Button, Input, IconBox, IconTrash, IconPlus } from '@/shared/ui'
 
 type WeightMode = 'unit' | 'total'
 
@@ -19,10 +19,10 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
   const { t } = useTranslation()
   const { notify, haptic } = useTelegram()
 
-  const TYPES: { key: ProductType; label: string; emoji: string }[] = [
-    { key: 'piece', label: t('Donali'), emoji: '📦' },
-    { key: 'boxed', label: t('Kiloli'), emoji: '🗳️' },
-    { key: 'textile', label: t('Tekstil'), emoji: '🧵' },
+  const TYPES: { key: ProductType; label: string }[] = [
+    { key: 'piece', label: t('Donali') },
+    { key: 'boxed', label: t('Kiloli') },
+    { key: 'textile', label: t('Tekstil') },
   ]
 
   const initType: ProductType = initial ? (productGroup(initial.type) as ProductType) : 'piece'
@@ -183,25 +183,25 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
       <div className="px-4 pt-5 space-y-4">
         {/* Rasm (ixtiyoriy) */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">
-            {t('Mahsulot rasmi')} <span className="text-slate-400 font-normal">{t('(ixtiyoriy)')}</span>
+          <label className="block text-sm font-bold mb-1.5" style={{ color: 'var(--muted)' }}>
+            {t('Mahsulot rasmi')} <span className="font-normal" style={{ color: 'var(--muted3)' }}>{t('(ixtiyoriy)')}</span>
           </label>
           <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={onPickImage} />
           {imageUrl || imagePreview ? (
             <button type="button" onClick={() => fileInputRef.current?.click()}
-              className="press relative w-full aspect-square max-h-64 rounded-2xl overflow-hidden border-2 border-slate-200 bg-slate-50">
+              className="press relative w-full aspect-square max-h-64 rounded-2xl overflow-hidden border-2" style={{ borderColor: 'var(--line2)', background: 'var(--surface2)' }}>
               <img src={imagePreview || imageUrl} alt="" className="w-full h-full object-cover" />
               {uploading && (
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                   <span className="text-white text-sm font-semibold">{t('Yuklanmoqda…')}</span>
                 </div>
               )}
-              <span className="absolute bottom-2 right-2 bg-white/90 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-lg">📷 {t("O'zgartirish")}</span>
+              <span className="absolute bottom-2 right-2 bg-white/90 text-xs font-semibold px-2.5 py-1 rounded-lg" style={{ color: 'var(--ink)' }}>{t("O'zgartirish")}</span>
             </button>
           ) : (
             <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
-              className="press w-full aspect-square max-h-64 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 flex flex-col items-center justify-center gap-2 text-slate-400">
-              <span className="text-4xl">📷</span>
+              className="press w-full aspect-square max-h-64 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2" style={{ borderColor: 'var(--line2)', background: 'var(--surface2)', color: 'var(--muted3)' }}>
+              <IconBox size={40} />
               <span className="text-sm font-semibold">{uploading ? t('Yuklanmoqda…') : t('Suratga olish')}</span>
             </button>
           )}
@@ -209,14 +209,15 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
 
         {/* Yuk turi */}
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('Yuk turi')}</label>
-          <div className="bg-slate-100 rounded-2xl p-1 grid grid-cols-3 gap-1">
+          <label className="block text-sm font-bold mb-1.5" style={{ color: 'var(--muted)' }}>{t('Yuk turi')}</label>
+          <div className="rounded-2xl p-1 grid grid-cols-3 gap-1" style={{ background: 'var(--surface2)', border: '1px solid var(--line)' }}>
             {TYPES.map((opt) => {
               const active = type === opt.key
               return (
                 <button key={opt.key} type="button" onClick={() => { haptic('light'); setType(opt.key) }}
-                  className={`py-2.5 rounded-xl text-[13px] font-semibold transition-all flex flex-col items-center gap-0.5 ${active ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>
-                  <span className="text-base leading-none">{opt.emoji}</span>
+                  className="py-2.5 rounded-xl text-[13px] font-semibold transition-all flex flex-col items-center gap-1"
+                  style={active ? { background: 'var(--royal)', color: '#fff' } : { color: 'var(--muted)' }}>
+                  <IconBox size={17} />
                   {opt.label}
                 </button>
               )
@@ -227,24 +228,24 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
         {/* Qo'shilgan o'lchamlar ro'yxati */}
         {variants.length > 0 && (
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-700">{t("Qo'shilgan o'lchamlar ({{count}})", { count: variants.length })}</label>
+            <label className="block text-sm font-bold" style={{ color: 'var(--muted)' }}>{t("Qo'shilgan o'lchamlar ({{count}})", { count: variants.length })}</label>
             {variants.map((v) => (
-              <div key={v.id} className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2.5">
-                <span className="w-10 h-10 rounded-lg bg-white flex items-center justify-center font-bold text-slate-700 shrink-0 text-sm">
+              <div key={v.id} className="flex items-center gap-3 rounded-xl px-3 py-2.5 border" style={{ background: '#E9F6EE', borderColor: '#BFE6CD' }}>
+                <span className="w-10 h-10 rounded-lg bg-white flex items-center justify-center font-bold shrink-0 text-sm" style={{ color: 'var(--ink)' }}>
                   {v.size_label || '—'}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-slate-500">{t("O'lcham:")} <b className="text-slate-800">{v.size_label || t("yo'q")}</b></p>
-                  <p className="text-[11px] text-slate-400">{variantSummary(v)}</p>
+                  <p className="text-xs" style={{ color: 'var(--muted)' }}>{t("O'lcham:")} <b style={{ color: 'var(--ink)' }}>{v.size_label || t("yo'q")}</b></p>
+                  <p className="text-[11px]" style={{ color: 'var(--muted2)' }}>{variantSummary(v)}</p>
                 </div>
-                <button type="button" onClick={() => removeVariant(v.id)} className="press text-red-500 text-xs font-semibold shrink-0">{t("O'chirish")}</button>
+                <button type="button" onClick={() => removeVariant(v.id)} className="press text-xs font-semibold shrink-0 flex items-center gap-1" style={{ color: 'var(--red)' }}><IconTrash size={14} /> {t("O'chirish")}</button>
               </div>
             ))}
           </div>
         )}
 
         {/* Joriy o'lcham kiritish */}
-        <div className="rounded-2xl border-2 border-slate-100 p-3.5 space-y-4">
+        <div className="rounded-2xl border p-3.5 space-y-4" style={{ borderColor: 'var(--line)' }}>
           <Input label={t("O'lcham (39, M, L...)")} placeholder={t("O'lchamni yozing")} value={size} onChange={(e) => setSize(e.target.value)} />
 
           {/* DONALI */}
@@ -252,10 +253,11 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
             <>
               <Input type="number" inputMode="numeric" label={t('Soni (dona)')} placeholder="600" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
               <div>
-                <div className="bg-slate-100 rounded-2xl p-1 grid grid-cols-2 gap-1 mb-2">
+                <div className="rounded-2xl p-1 grid grid-cols-2 gap-1 mb-2" style={{ background: 'var(--surface2)', border: '1px solid var(--line)' }}>
                   {([{ key: 'total' as const, label: t('Umumiy vazn') }, { key: 'unit' as const, label: t('1 dona vazni') }]).map((opt) => (
                     <button key={opt.key} type="button" onClick={() => { haptic('light'); setWeightMode(opt.key) }}
-                      className={`py-2.5 rounded-xl text-sm font-semibold transition-all ${weightMode === opt.key ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'}`}>
+                      className="py-2.5 rounded-xl text-sm font-semibold transition-all"
+                      style={weightMode === opt.key ? { background: 'var(--royal)', color: '#fff' } : { color: 'var(--muted)' }}>
                       {opt.label}
                     </button>
                   ))}
@@ -294,15 +296,15 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
             placeholder={t('Dollarda ($)')} value={cargoPrice} onChange={(e) => setCargoPrice(e.target.value)} />
 
           {/* + O'lcham qo'shish */}
-          <Button variant="ghost" fullWidth loading={adding} disabled={!currentFilled} onClick={addVariant}>
-            + {t("O'lcham qo'shish")}
+          <Button variant="secondary" fullWidth loading={adding} disabled={!currentFilled} onClick={addVariant}>
+            <IconPlus size={18} /> {t("O'lcham qo'shish")}
           </Button>
         </div>
 
         {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{error}</div>}
       </div>
 
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 bg-white/80 backdrop-blur-xl border-t" style={{ borderColor: 'var(--line)' }}>
         <Button fullWidth loading={loading} disabled={variants.length === 0 && !currentFilled} onClick={finish}>
           {submitLabel}
         </Button>

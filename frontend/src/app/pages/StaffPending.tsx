@@ -1,20 +1,31 @@
 import { useTranslation } from 'react-i18next'
+import { Card } from '@/shared/ui'
 
 export default function StaffPending() {
   const { t } = useTranslation()
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-8 text-center animate-scale-in">
-      <div className="w-24 h-24 rounded-full flex items-center justify-center mb-6" style={{ background: 'var(--brand-gradient-soft)' }}>
-        <div className="text-5xl">⏳</div>
-      </div>
-      <h2 className="text-xl font-bold text-slate-900 mb-2">{t('So\'rovingiz yuborildi')}</h2>
-      <p className="text-sm text-slate-500 max-w-[300px] leading-relaxed">
-        {t('Admin sizga rol tayinlagandan keyin tizimga avtomatik kirasiz. Iltimos, kuting.')}
-      </p>
-      <div className="mt-8 flex items-center gap-2 text-xs text-slate-400">
-        <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-        {t('Tasdiqlanishi kutilmoqda')}
-      </div>
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 animate-scale-in" style={{ background: 'var(--bg)' }}>
+      <Card className="w-full max-w-sm p-8 text-center">
+        <div
+          className="w-[64px] h-[64px] mx-auto rounded-[18px] flex items-center justify-center mb-5"
+          style={{ background: '#FEF1E0', color: 'var(--amber-d)' }}
+        >
+          {/* Clock / hourglass */}
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 7v5l3 2" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-extrabold mb-2" style={{ color: 'var(--ink)' }}>{t("So'rovingiz yuborildi")}</h2>
+        <p className="text-sm max-w-[300px] mx-auto leading-relaxed" style={{ color: 'var(--muted)' }}>
+          {t('Admin sizga rol tayinlagandan keyin tizimga avtomatik kirasiz. Iltimos, kuting.')}
+        </p>
+        <div className="mt-7 inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full"
+          style={{ background: '#FEF1E0', color: 'var(--amber-d)' }}>
+          <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--amber)' }} />
+          {t('Tasdiqlanishi kutilmoqda')}
+        </div>
+      </Card>
     </div>
   )
 }

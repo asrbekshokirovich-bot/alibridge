@@ -69,34 +69,37 @@ export default function AutoReceive() {
       ) : hasPending ? (
         <div className="px-4 pt-4 space-y-4">
           {/* Manzil + reys formi (barcha pendinglar uchun bitta) */}
-          <div className="rounded-2xl p-4 bg-white border border-slate-100 shadow-sm space-y-3">
-            <p className="text-sm font-bold text-slate-900">{t('Qabuldan oldin maʼlumotlarni kiriting')}</p>
+          <div className="rounded-2xl p-4 border space-y-3" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+            <p className="text-sm font-bold" style={{ color: 'var(--ink)' }}>{t('Qabuldan oldin maʼlumotlarni kiriting')}</p>
             <div>
-              <label className="text-xs font-semibold text-slate-500">{t('Turkiyadagi manzil')}</label>
+              <label className="text-xs font-semibold" style={{ color: 'var(--muted)' }}>{t('Turkiyadagi manzil')}</label>
               <input
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder={t('Yukni olib ketish manzili')}
-                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-slate-400"
+                className="mt-1 w-full rounded-xl px-3 py-2.5 text-sm outline-none"
+                style={{ background: 'var(--surface2)', border: '1px solid var(--line2)', color: 'var(--ink)' }}
               />
             </div>
             <div className="flex gap-3">
               <div className="flex-1">
-                <label className="text-xs font-semibold text-slate-500">{t('Reys raqami')}</label>
+                <label className="text-xs font-semibold" style={{ color: 'var(--muted)' }}>{t('Reys raqami')}</label>
                 <input
                   value={flightNumber}
                   onChange={(e) => setFlightNumber(e.target.value)}
                   placeholder="TK1234"
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-slate-400"
+                  className="mt-1 w-full rounded-xl px-3 py-2.5 text-sm outline-none"
+                  style={{ background: 'var(--surface2)', border: '1px solid var(--line2)', color: 'var(--ink)' }}
                 />
               </div>
               <div className="flex-1">
-                <label className="text-xs font-semibold text-slate-500">{t('Uchish sanasi')}</label>
+                <label className="text-xs font-semibold" style={{ color: 'var(--muted)' }}>{t('Uchish sanasi')}</label>
                 <input
                   type="date"
                   value={flightDate}
                   onChange={(e) => setFlightDate(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm outline-none focus:border-slate-400"
+                  className="mt-1 w-full rounded-xl px-3 py-2.5 text-sm outline-none"
+                  style={{ background: 'var(--surface2)', border: '1px solid var(--line2)', color: 'var(--ink)' }}
                 />
               </div>
             </div>
@@ -106,28 +109,27 @@ export default function AutoReceive() {
           {pendings!.map((p) => {
             const busy = confirm.isPending && confirm.variables === p.id
             return (
-              <div key={p.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-50">
+              <div key={p.id} className="rounded-2xl border overflow-hidden" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+                <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--line)' }}>
                   <div>
-                    <span className="text-sm font-bold text-slate-900">{t('Kuryer topshirmoqchi')}</span>
-                    {p.courier_name && <p className="text-xs text-slate-400 mt-0.5">{p.courier_name}</p>}
+                    <span className="text-sm font-bold" style={{ color: 'var(--ink)' }}>{t('Kuryer topshirmoqchi')}</span>
+                    {p.courier_name && <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>{p.courier_name}</p>}
                   </div>
-                  <span className="text-xs font-bold text-white px-2.5 py-0.5 rounded-full" style={{ background: 'var(--brand)' }}>
+                  <span className="text-xs font-bold text-white px-2.5 py-0.5 rounded-full" style={{ background: 'var(--royal)' }}>
                     {t('{{n}} ta', { n: p.total })}
                   </span>
                 </div>
 
-                <div className="divide-y divide-slate-50">
+                <div className="divide-y" style={{ borderColor: 'var(--line)' }}>
                   {p.items.map((it) => (
-                    <div key={`${it.barcode}:${it.size_label}`} className="flex items-center gap-3 px-4 py-2.5">
-                      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 overflow-hidden border"
-                        style={{ background: 'var(--card-2)', borderColor: 'var(--border)', color: 'var(--text-dim)' }}>
+                    <div key={`${it.barcode}:${it.size_label}`} className="flex items-center gap-3 px-4 py-2.5" style={{ borderColor: 'var(--line)' }}>
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 overflow-hidden" style={{ background: '#EAEEF4', color: 'var(--muted3)' }}>
                         {it.image_url ? <img src={it.image_url} alt="" className="w-full h-full object-cover" /> : <IconBox size={16} />}
                       </div>
-                      <span className="flex-1 text-sm text-slate-700 truncate">
+                      <span className="flex-1 text-sm truncate" style={{ color: 'var(--ink)' }}>
                         {it.product_name}{it.size_label ? ` · ${it.size_label}` : ''}
                       </span>
-                      <span className="text-xs text-slate-400 shrink-0">{t('{{n}} ta', { n: it.quantity })}</span>
+                      <span className="text-xs shrink-0 tabular-nums" style={{ color: 'var(--muted)' }}>{t('{{n}} ta', { n: it.quantity })}</span>
                     </div>
                   ))}
                 </div>
@@ -137,12 +139,12 @@ export default function AutoReceive() {
                     onClick={() => { haptic('medium'); setError(''); confirm.mutate(p.id) }}
                     disabled={busy || !valid}
                     className="press w-full py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
-                    style={{ background: 'var(--brand-gradient)' }}
+                    style={{ background: 'var(--royal)' }}
                   >
                     {busy ? t('Tasdiqlanmoqda…') : t('Qabul qildim')}
                   </button>
                   {!valid && (
-                    <p className="text-[11px] text-slate-400 text-center mt-2">
+                    <p className="text-[11px] text-center mt-2" style={{ color: 'var(--muted2)' }}>
                       {t('Avval manzil va reys raqamini kiriting')}
                     </p>
                   )}
@@ -152,16 +154,16 @@ export default function AutoReceive() {
           })}
 
           {error && (
-            <p className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{error}</p>
+            <p className="text-sm px-4 py-3 rounded-2xl" style={{ background: 'rgba(239,68,68,0.10)', color: 'var(--red)' }}>{error}</p>
           )}
         </div>
       ) : (
         <>
           {/* Info banner */}
           <div className="px-4 pt-4">
-            <div className="rounded-2xl p-4 flex gap-3 border" style={{ background: 'var(--brand-tint)', borderColor: 'var(--brand-tint-border)' }}>
-              <div className="shrink-0" style={{ color: 'var(--brand-light)' }}><IconHandshake size={22} /></div>
-              <p className="text-[13px] leading-snug" style={{ color: 'var(--text-2)' }}>
+            <div className="rounded-2xl p-4 flex gap-3" style={{ background: 'var(--brand-gradient-soft)', border: '1px solid var(--line)' }}>
+              <div className="shrink-0" style={{ color: 'var(--royal)' }}><IconHandshake size={22} /></div>
+              <p className="text-[13px] leading-snug" style={{ color: 'var(--muted)' }}>
                 {t('Aeroportда kuryerga quyidagi raqamingizni ayting. Kuryer barkodlarni skanlab, yuklaringizni sizga topshiradi.')}
               </p>
             </div>
@@ -171,19 +173,19 @@ export default function AutoReceive() {
           <div className="px-4 pt-8 flex flex-col items-center">
             {carrierNumber ? (
               <>
-                <p className="text-sm text-slate-500 mb-2">{t("Sizning yo'lovchi raqamingiz")}</p>
+                <p className="text-sm mb-2" style={{ color: 'var(--muted)' }}>{t("Sizning yo'lovchi raqamingiz")}</p>
                 <div
                   className="w-40 h-40 rounded-[2rem] flex items-center justify-center text-white shadow-[var(--shadow-brand)]"
                   style={{ background: 'var(--brand-gradient)' }}
                 >
-                  <span className="text-6xl font-extrabold tracking-tight">#{carrierNumber}</span>
+                  <span className="text-6xl font-extrabold tracking-tight tabular-nums">#{carrierNumber}</span>
                 </div>
-                <p className="text-[13px] text-slate-400 mt-5 text-center max-w-[260px]">
+                <p className="text-[13px] mt-5 text-center max-w-[260px]" style={{ color: 'var(--muted)' }}>
                   {t('Kuryer raqamingizni kiritib yuklarni skanlaydi. Keyin shu yerda manzil va reysni kiritib qabulni tasdiqlaysiz.')}
                 </p>
               </>
             ) : (
-              <p className="text-slate-500 text-sm text-center mt-10">
+              <p className="text-sm text-center mt-10" style={{ color: 'var(--muted)' }}>
                 {t("Yo'lovchi raqamingiz hali tayinlanmagan. Iltimos, qaytadan kiring.")}
               </p>
             )}

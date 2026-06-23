@@ -62,23 +62,27 @@ export function DailyReport({
 
       {/* Sana tanlash + jami */}
       <div className="px-4 pt-4">
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center justify-between gap-3">
+        <div
+          className="rounded-2xl border p-4 flex items-center justify-between gap-3"
+          style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}
+        >
           <div className="flex-1">
-            <label className="text-xs text-slate-400 block mb-1">{t('Sana')}</label>
+            <label className="text-xs block mb-1" style={{ color: 'var(--muted2)' }}>{t('Sana')}</label>
             <input
               type="date"
               value={date}
               max={todayStr()}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold text-slate-900"
+              className="w-full rounded-xl px-3 py-2 text-sm font-semibold"
+              style={{ background: 'var(--surface2)', border: '1px solid var(--line2)', color: 'var(--ink)' }}
             />
           </div>
           <div className="text-right shrink-0">
-            <p className="text-xs text-slate-400">{metricLabelText}</p>
-            <p className="text-2xl font-extrabold" style={{ color: 'var(--brand)' }}>
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.05em]" style={{ color: 'var(--muted2)' }}>{metricLabelText}</p>
+            <p className="text-[26px] font-extrabold tabular-nums leading-none mt-1" style={{ color: 'var(--royal)' }}>
               {data?.total ?? 0}
             </p>
-            <p className="text-[11px] text-slate-400">{t('ta')}</p>
+            <p className="text-[11px] mt-1" style={{ color: 'var(--muted3)' }}>{t('ta')}</p>
           </div>
         </div>
       </div>
@@ -87,28 +91,40 @@ export function DailyReport({
         <ListSkeleton />
       ) : isError ? (
         <div className="px-4 pt-4">
-          <p className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{extractErrorMessage(error)}</p>
+          <p className="text-sm px-4 py-3 rounded-2xl" style={{ background: 'rgba(239,68,68,0.10)', color: 'var(--red)', border: '1px solid rgba(239,68,68,0.25)' }}>{extractErrorMessage(error)}</p>
         </div>
       ) : !data?.items.length ? (
         <EmptyState icon={<IconBox size={30} />} title={emptyTitleText} description={emptyDescText} />
       ) : (
         <div className="px-4 pt-4 space-y-2 web-grid">
           {data.items.map((it, i) => (
-            <div key={i} className="bg-white rounded-2xl p-3.5 border border-slate-100 shadow-sm flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-lg shrink-0">📦</div>
+            <div
+              key={i}
+              className="rounded-2xl p-3.5 border flex items-center gap-3"
+              style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}
+            >
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: '#EBF1FA', color: 'var(--royal)' }}
+              >
+                <IconBox size={20} />
+              </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm text-slate-900 truncate">
+                <p className="font-semibold text-sm truncate" style={{ color: 'var(--ink)' }}>
                   {it.product_name}{it.size_label ? ` · ${it.size_label}` : ''}
                 </p>
-                <p className="text-[11px] font-mono text-slate-400">{it.barcode}</p>
-                <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500 flex-wrap">
-                  <span className="bg-slate-100 px-1.5 py-0.5 rounded">{it.from_label}</span>
-                  <span>→</span>
-                  <span className="bg-slate-100 px-1.5 py-0.5 rounded">{it.to_label}</span>
+                <p className="text-[11px] font-mono" style={{ color: 'var(--muted2)' }}>{it.barcode}</p>
+                <div className="flex items-center gap-1.5 mt-1 text-[11px] flex-wrap" style={{ color: 'var(--muted)' }}>
+                  <span className="px-1.5 py-0.5 rounded" style={{ background: 'var(--surface2)' }}>{it.from_label}</span>
+                  <span style={{ color: 'var(--muted3)' }}>→</span>
+                  <span className="px-1.5 py-0.5 rounded" style={{ background: 'var(--surface2)' }}>{it.to_label}</span>
                 </div>
               </div>
               <div className="text-right shrink-0">
-                <span className="text-base font-extrabold text-white px-2.5 py-1 rounded-lg" style={{ background: 'var(--brand)' }}>
+                <span
+                  className="text-base font-extrabold tabular-nums text-white px-2.5 py-1 rounded-lg"
+                  style={{ background: 'var(--royal)' }}
+                >
                   {t('{{n}} ta', { n: it.quantity })}
                 </span>
               </div>

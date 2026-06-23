@@ -18,37 +18,33 @@ export function BottomNav({ items }: Props) {
 
   return (
     <div className="tg-only fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-30">
-      {/* Pastdan yuqoriga so'nuvchi fon — pill suzayotgandek ko'rinadi */}
-      <div className="px-3.5 pb-3.5 pt-2"
-        style={{ background: 'linear-gradient(to top, var(--bg) 70%, transparent)' }}>
-        <div className="rounded-3xl border"
-          style={{ background: 'rgba(20,20,24,0.92)', borderColor: 'var(--border-strong)', backdropFilter: 'blur(24px)', boxShadow: 'var(--shadow-lg)' }}>
-          <div className="flex items-center justify-around px-1.5 py-2.5">
-            {items.map((item) => {
-              const active = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
-              return (
-                <button
-                  key={item.path}
-                  onClick={() => { haptic('light'); navigate(item.path) }}
-                  className="press relative flex flex-col items-center gap-1.5 px-3.5 py-1.5 rounded-2xl min-w-[58px] transition-all"
-                  style={active ? { background: 'var(--brand-tint)' } : undefined}
+      <div className="mx-3 mb-3 rounded-3xl border"
+        style={{ background: 'rgba(255,255,255,0.94)', borderColor: 'var(--line)', backdropFilter: 'blur(20px)', boxShadow: 'var(--shadow-lg)' }}>
+        <div className="flex items-center justify-around px-1 py-2">
+          {items.map((item) => {
+            const active = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
+            return (
+              <button
+                key={item.path}
+                onClick={() => { haptic('light'); navigate(item.path) }}
+                className="press relative flex flex-col items-center gap-1 px-3 py-1.5 rounded-2xl min-w-[60px] transition-all"
+                style={active ? { background: 'rgba(26,58,108,0.10)' } : undefined}
+              >
+                <div
+                  className="flex items-center justify-center transition-all"
+                  style={{ color: active ? 'var(--royal)' : 'var(--muted2)' }}
                 >
-                  <div
-                    className="flex items-center justify-center transition-all"
-                    style={{ color: active ? 'var(--brand)' : 'var(--text-muted)' }}
-                  >
-                    {item.icon}
-                  </div>
-                  <span
-                    className="text-[10px] transition-all"
-                    style={{ color: active ? 'var(--brand)' : 'var(--text-muted)', fontWeight: active ? 700 : 600 }}
-                  >
-                    {item.label}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
+                  {item.icon}
+                </div>
+                <span
+                  className="text-[10px] transition-all"
+                  style={{ color: active ? 'var(--royal)' : 'var(--muted2)', fontWeight: active ? 700 : 600 }}
+                >
+                  {item.label}
+                </span>
+              </button>
+            )
+          })}
         </div>
       </div>
     </div>

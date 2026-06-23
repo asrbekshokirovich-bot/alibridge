@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import { labelUrl } from '@/shared/lib/product'
-import { Header, Button, Input } from '@/shared/ui'
+import { Header, Button, Input, IconAlert, IconBox, IconCheck } from '@/shared/ui'
 import ProductDetailsForm from '../components/ProductDetailsForm'
 
 interface ReceiveResult {
@@ -81,26 +81,24 @@ export default function ReceiveGoods() {
               return (
                 <button key={c} type="button"
                   onClick={() => setCategory(active ? '' : c)}
-                  className={`press text-sm font-medium px-3 py-1.5 rounded-full border transition-colors ${
-                    active
-                      ? 'text-white border-transparent'
-                      : 'bg-white text-slate-600 border-slate-200'
-                  }`}
-                  style={active ? { background: 'var(--brand-gradient)' } : undefined}>
+                  className="press text-sm font-semibold px-3.5 py-1.5 rounded-full border transition-colors"
+                  style={active
+                    ? { background: 'var(--royal)', color: '#fff', borderColor: 'transparent' }
+                    : { background: 'var(--surface)', color: 'var(--muted)', borderColor: 'var(--line)' }}>
                   {t(c)}
                 </button>
               )
             })}
           </div>
-          <div className="rounded-2xl p-3 flex gap-2.5" style={{ background: 'var(--brand-gradient-soft)' }}>
-            <span className="text-base">ℹ️</span>
-            <p className="text-[12px] text-red-900/70 leading-snug">
+          <div className="rounded-2xl p-3.5 flex gap-2.5 border" style={{ background: '#EBF1FA', borderColor: 'var(--line)' }}>
+            <span className="shrink-0 mt-0.5" style={{ color: 'var(--royal)' }}><IconAlert size={18} /></span>
+            <p className="text-[12px] leading-snug" style={{ color: 'var(--muted)' }}>
               {t('Avval barkod yaratiladi va chop etiladi. Keyingi oynada yuk turi, soni va narxini kiritasiz.')}
             </p>
           </div>
           {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{error}</div>}
         </div>
-        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100">
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 bg-white/80 backdrop-blur-xl border-t" style={{ borderColor: 'var(--line)' }}>
           <Button fullWidth loading={loading} disabled={!name.trim()} onClick={createBarcode}>
             {t('Barkod yaratish')}
           </Button>
@@ -117,19 +115,19 @@ export default function ReceiveGoods() {
 
         {/* Yaratilgan barkod */}
         <div className="px-4 pt-4">
-          <div className="bg-white rounded-2xl border-2 border-dashed border-slate-300 p-4 text-center">
-            <p className="text-base font-bold text-slate-900 truncate">{created.name}</p>
-            <p className="text-xs text-slate-500 mb-2.5">{created.received_date}</p>
+          <div className="rounded-2xl border-2 border-dashed p-4 text-center" style={{ background: 'var(--surface)', borderColor: 'var(--line2)' }}>
+            <p className="text-base font-bold truncate" style={{ color: 'var(--ink)' }}>{created.name}</p>
+            <p className="text-xs mb-2.5" style={{ color: 'var(--muted)' }}>{created.received_date}</p>
             <div className="flex justify-center items-end gap-[2px] mb-1 h-10">
               {Array.from({ length: 36 }).map((_, i) => (
-                <div key={i} className="bg-slate-900" style={{ width: i % 4 === 0 ? 3 : i % 3 === 0 ? 1 : 2, height: '100%' }} />
+                <div key={i} style={{ width: i % 4 === 0 ? 3 : i % 3 === 0 ? 1 : 2, height: '100%', background: 'var(--ink)' }} />
               ))}
             </div>
-            <p className="font-mono text-sm font-bold tracking-widest text-slate-900">{created.barcode}</p>
+            <p className="font-mono text-sm font-bold tracking-widest tabular-nums" style={{ color: 'var(--ink)' }}>{created.barcode}</p>
             <button
               onClick={() => openLink(labelUrl(created.barcode, new Date().toISOString().slice(0, 10)))}
-              className="press inline-block mt-2.5 text-sm font-semibold px-4 py-2 rounded-xl text-white" style={{ background: 'var(--brand-gradient)' }}>
-              🖨️ {t('Barkod chiqarish')}
+              className="press inline-flex items-center gap-2 mt-2.5 text-sm font-bold px-4 py-2 rounded-xl text-white" style={{ background: 'var(--royal)' }}>
+              <IconBox size={16} /> {t('Barkod chiqarish')}
             </button>
           </div>
         </div>
@@ -148,18 +146,14 @@ export default function ReceiveGoods() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 animate-scale-in">
       <div className="w-20 h-20 rounded-full flex items-center justify-center mb-5"
-        style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)', boxShadow: '0 12px 32px rgba(34,197,94,0.4)' }}>
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-          <path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        style={{ background: 'rgba(22,163,74,0.12)', border: '1px solid rgba(22,163,74,0.3)', color: 'var(--green)' }}>
+        <IconCheck size={40} />
       </div>
-      <h2 className="text-xl font-bold text-slate-900 mb-1">{t('Yuk qabul qilindi!')}</h2>
-      <p className="text-sm text-slate-500 mb-6">{created?.name} — {created?.barcode}</p>
+      <h2 className="text-xl font-extrabold mb-1" style={{ color: 'var(--ink)' }}>{t('Yuk qabul qilindi!')}</h2>
+      <p className="text-sm mb-6" style={{ color: 'var(--muted)' }}>{created?.name} — {created?.barcode}</p>
 
-      <button onClick={reset} className="press w-full text-white rounded-2xl py-4 font-bold" style={{ background: 'var(--brand-gradient)' }}>
-        {t('Yangi yuk qabul qilish')}
-      </button>
-      <button onClick={() => navigate('/warehouse-uz')} className="press text-slate-400 text-sm font-medium mt-4">
+      <Button fullWidth onClick={reset}>{t('Yangi yuk qabul qilish')}</Button>
+      <button onClick={() => navigate('/warehouse-uz')} className="press text-sm font-semibold mt-4" style={{ color: 'var(--muted2)' }}>
         {t('Bosh sahifaga')}
       </button>
     </div>

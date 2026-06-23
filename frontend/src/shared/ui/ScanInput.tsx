@@ -50,7 +50,7 @@ export function ScanInput({ value, onChange, onScan, loading, placeholder }: Pro
   return (
     <form onSubmit={submit} className="p-4">
       <div className="relative">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-red-400 pointer-events-none">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--royal)' }}>
           <IconScan size={22} />
         </div>
         <input
@@ -60,7 +60,7 @@ export function ScanInput({ value, onChange, onScan, loading, placeholder }: Pro
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder ?? t('Barkodni skanlang')}
-          className="w-full pl-12 pr-24 py-4 bg-white border-2 border-slate-200 rounded-2xl font-mono text-[15px] focus:border-red-400 focus:outline-none transition-colors shadow-sm"
+          className="w-full pl-12 pr-24 py-4 bg-white border-2 border-slate-200 rounded-2xl font-mono text-[15px] focus:outline-none transition-colors shadow-sm"
           autoComplete="off"
         />
         <button
@@ -72,7 +72,7 @@ export function ScanInput({ value, onChange, onScan, loading, placeholder }: Pro
           {loading ? '...' : t('Skan')}
         </button>
       </div>
-      <p className="text-xs text-slate-400 mt-2 text-center">{t('📷 Pistoletcha bilan skanlang yoki qo\'lda kiriting')}</p>
+      <p className="text-xs text-slate-400 mt-2 text-center">{t('Pistoletcha bilan skanlang yoki qo\'lda kiriting')}</p>
     </form>
   )
 }

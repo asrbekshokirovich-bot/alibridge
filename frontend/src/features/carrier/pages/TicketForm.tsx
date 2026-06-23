@@ -41,15 +41,15 @@ export default function TicketForm() {
           <div className="w-16 h-16 rounded-3xl flex items-center justify-center text-white mb-3 shadow-[var(--shadow-brand)]" style={{ background: 'var(--brand-gradient)' }}>
             <IconPlane size={30} />
           </div>
-          <h2 className="text-lg font-bold text-slate-900">{t('Qachon uchasiz?')}</h2>
-          <p className="text-sm text-slate-500 text-center mt-1">{t('Uchish sanangizni kiriting')}</p>
+          <h2 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>{t('Qachon uchasiz?')}</h2>
+          <p className="text-sm text-center mt-1" style={{ color: 'var(--muted)' }}>{t('Uchish sanangizni kiriting')}</p>
         </div>
 
         <div>
           <Input type="date" label={t('Uchish sanasi')} min={today}
             value={flightDate} onChange={(e) => setFlightDate(e.target.value)} />
           {flightDate && !dateValid && (
-            <p className="text-xs text-red-500 mt-1.5">{t("Sana o'tmishda bo'lishi mumkin emas")}</p>
+            <p className="text-xs mt-1.5" style={{ color: 'var(--red)' }}>{t("Sana o'tmishda bo'lishi mumkin emas")}</p>
           )}
         </div>
 
@@ -57,7 +57,7 @@ export default function TicketForm() {
           <Input label={t('Reys raqami')} placeholder={t('Masalan: HY601')}
             value={flightNumber} onChange={(e) => setFlightNumber(e.target.value)}
             maxLength={32} />
-          <p className="text-xs text-slate-400 mt-1.5">{t('Ixtiyoriy')}</p>
+          <p className="text-xs mt-1.5" style={{ color: 'var(--muted)' }}>{t('Ixtiyoriy')}</p>
         </div>
 
         <Button fullWidth className="mt-6" disabled={!valid} onClick={handleSubmit}>

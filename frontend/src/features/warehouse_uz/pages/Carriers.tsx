@@ -4,8 +4,8 @@ import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
 import type { ProductType } from '@/shared/types'
 import { initials } from '@/shared/lib/format'
-import { isPiece, typeEmoji } from '@/shared/lib/product'
-import { Header, ListSkeleton, EmptyState, StatusBadge, Sheet, IconPlane } from '@/shared/ui'
+import { isPiece } from '@/shared/lib/product'
+import { Header, ListSkeleton, EmptyState, StatusBadge, Sheet, IconPlane, IconBox } from '@/shared/ui'
 
 interface Carrier {
   id: number; first_name: string; last_name: string; phone: string
@@ -48,27 +48,28 @@ export default function Carriers() {
               key={c.id}
               onClick={() => c.has_cargo && setOpen(c)}
               disabled={!c.has_cargo}
-              className="w-full bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3.5 text-left disabled:cursor-default"
+              className="w-full rounded-2xl p-4 border flex items-center gap-3.5 text-left disabled:cursor-default"
+              style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}
             >
               <div className="relative shrink-0">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ background: 'var(--brand-gradient)' }}>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ background: 'linear-gradient(135deg, #1A3A6C, #132A4D)' }}>
                   {initials(c.first_name, c.last_name)}
                 </div>
-                <span className="absolute -bottom-1 -right-1 bg-slate-900 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                <span className="absolute -bottom-1 -right-1 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--royal)' }}>
                   #{c.carrier_number}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-slate-900 truncate">{c.first_name} {c.last_name}</p>
-                <p className="text-xs text-slate-400">{c.phone}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{t('Jami reys: {{count}}', { count: c.total_trips })}</p>
+                <p className="text-[14.5px] font-bold truncate" style={{ color: 'var(--ink)' }}>{c.first_name} {c.last_name}</p>
+                <p className="text-xs" style={{ color: 'var(--muted)' }}>{c.phone}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--muted2)' }}>{t('Jami reys: {{count}}', { count: c.total_trips })}</p>
               </div>
               <div className="flex flex-col items-end gap-2 shrink-0">
                 <StatusBadge tone={c.has_cargo ? 'green' : 'gray'} dot>
                   {c.has_cargo ? t('Yuk bor') : t("Yuk yo'q")}
                 </StatusBadge>
                 {c.has_cargo && (
-                  <span className="text-[11px] text-slate-400">{t("Yuklarni ko'rish →")}</span>
+                  <span className="text-[11px]" style={{ color: 'var(--royal)' }}>{t("Yuklarni ko'rish")}</span>
                 )}
               </div>
             </button>
@@ -80,27 +81,27 @@ export default function Carriers() {
       <Sheet open={!!open} onClose={() => setOpen(null)}>
         {open && (
           <div className="px-5 pt-2">
-            <h3 className="font-bold text-slate-900 mb-1">{open.first_name} {open.last_name}</h3>
-            <p className="text-xs text-slate-400 mb-4">{t("Yo'lovchi #{{number}} olib ketayotgan yuklar", { number: open.carrier_number })}</p>
+            <h3 className="font-bold mb-1" style={{ color: 'var(--ink)' }}>{open.first_name} {open.last_name}</h3>
+            <p className="text-xs mb-4" style={{ color: 'var(--muted)' }}>{t("Yo'lovchi #{{number}} olib ketayotgan yuklar", { number: open.carrier_number })}</p>
 
             {cargoLoading ? (
               <ListSkeleton />
             ) : !cargo?.length ? (
-              <p className="text-sm text-slate-400 py-6 text-center">{t('Yuk topilmadi')}</p>
+              <p className="text-sm py-6 text-center" style={{ color: 'var(--muted3)' }}>{t('Yuk topilmadi')}</p>
             ) : (
               <div className="space-y-2.5 pb-2">
                 {cargo.map((p) => (
-                  <div key={`${p.product_id}:${p.size_label}`} className="flex items-center gap-3 bg-slate-50 rounded-xl p-3">
-                    <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center text-lg shrink-0">
-                      {typeEmoji(p.type)}
+                  <div key={`${p.product_id}:${p.size_label}`} className="flex items-center gap-3 rounded-xl p-3" style={{ background: 'var(--surface2)' }}>
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
+                      <IconBox size={18} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-900 truncate">
+                      <p className="text-[14.5px] font-bold truncate" style={{ color: 'var(--ink)' }}>
                         {p.product_name}{p.size_label ? ` · ${p.size_label}` : ''}
                       </p>
-                      <p className="text-xs text-slate-400 font-mono">{p.barcode}</p>
+                      <p className="text-xs font-mono" style={{ color: 'var(--muted3)' }}>{p.barcode}</p>
                     </div>
-                    <span className="text-xs font-bold text-white px-2 py-0.5 rounded-lg shrink-0" style={{ background: 'var(--brand)' }}>
+                    <span className="text-xs font-bold text-white px-2 py-0.5 rounded-lg shrink-0 tabular-nums" style={{ background: 'var(--royal)' }}>
                       {p.quantity} {isPiece(p.type) ? t('dona') : t('ta')}
                     </span>
                   </div>

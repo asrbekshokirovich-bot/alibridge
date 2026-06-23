@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useAuthStore } from '@/shared/store/auth'
 import type { User } from '@/shared/types'
-import { IconPlane } from '@/shared/ui'
+import { Button, Card, Input, IconPlane } from '@/shared/ui'
 import { ROLE_HOME } from '@/app/router'
 
 // Sayt (brauzer) orqali xodim/admin kirishi — login + parol.
@@ -38,51 +38,57 @@ export default function WebLogin() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-center px-6 animate-fade-in">
+    <div className="min-h-screen flex flex-col justify-center px-6 animate-fade-in" style={{ background: 'var(--bg)' }}>
       <div className="w-full max-w-sm mx-auto">
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto rounded-3xl flex items-center justify-center mb-5 shadow-[var(--shadow-brand)]"
-            style={{ background: 'var(--brand-gradient)' }}>
-            <IconPlane size={38} className="text-white" />
+        <Card className="p-7">
+          <div className="text-center mb-7">
+            <div
+              className="w-[60px] h-[60px] mx-auto rounded-[18px] flex items-center justify-center mb-4 text-white"
+              style={{ background: 'linear-gradient(135deg,#1A3A6C,#132A4D)', boxShadow: '0 8px 20px rgba(26,58,108,0.22)' }}
+            >
+              <IconPlane size={30} />
+            </div>
+            <h1 className="text-2xl font-extrabold tracking-[-0.02em]" style={{ color: 'var(--ink)' }}>Ali Bridge</h1>
+            <p className="text-sm mt-1.5" style={{ color: 'var(--muted)' }}>{t('Xodim kirishi')}</p>
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Ali Bridge</h1>
-          <p className="text-sm text-slate-500 mt-1.5">{t('Xodim kirishi')}</p>
-        </div>
 
-        <form onSubmit={submit} className="flex flex-col gap-3.5">
-          <input
-            type="text"
-            autoComplete="username"
-            inputMode="text"
-            placeholder={t('Login')}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="bg-white rounded-2xl px-4 py-3.5 border border-slate-200 outline-none focus:border-slate-400 text-slate-900"
-          />
-          <input
-            type="password"
-            autoComplete="current-password"
-            placeholder={t('Parol')}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="bg-white rounded-2xl px-4 py-3.5 border border-slate-200 outline-none focus:border-slate-400 text-slate-900"
-          />
+          <form onSubmit={submit} className="flex flex-col gap-3.5">
+            <Input
+              type="text"
+              autoComplete="username"
+              inputMode="text"
+              placeholder={t('Login')}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            <Input
+              type="password"
+              autoComplete="current-password"
+              placeholder={t('Parol')}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
 
-          {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{error}</div>}
+            {error && (
+              <div className="text-sm px-4 py-3 rounded-xl" style={{ background: 'rgba(239,68,68,0.10)', color: 'var(--red)', border: '1px solid rgba(239,68,68,0.25)' }}>
+                {error}
+              </div>
+            )}
 
-          <button
-            type="submit"
-            disabled={loading || username.trim().length < 3 || password.length < 4}
-            className="press w-full text-white rounded-2xl py-4 font-bold shadow-[var(--shadow-brand)] disabled:opacity-50 flex items-center justify-center gap-2"
-            style={{ background: 'var(--brand-gradient)' }}
-          >
-            {loading
-              ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              : t('Kirish')}
-          </button>
-        </form>
+            <Button
+              type="submit"
+              variant="primary"
+              fullWidth
+              loading={loading}
+              disabled={username.trim().length < 3 || password.length < 4}
+              className="mt-1"
+            >
+              {t('Kirish')}
+            </Button>
+          </form>
+        </Card>
 
-        <p className="text-center text-xs text-slate-400 mt-8">Ali Bridge © 2026</p>
+        <p className="text-center text-xs mt-7" style={{ color: 'var(--muted2)' }}>Ali Bridge © 2026</p>
       </div>
     </div>
   )

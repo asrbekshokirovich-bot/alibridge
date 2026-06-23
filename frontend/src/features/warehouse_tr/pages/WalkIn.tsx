@@ -31,7 +31,7 @@ export default function WalkIn() {
       <Header title={t('Telegramsiz mijoz')} subtitle={t("Qo'lda ro'yxatga olish")} showBack />
       <div className="px-4 pt-5 space-y-4">
         <div className="flex justify-center py-2">
-          <div className="w-16 h-16 rounded-3xl flex items-center justify-center text-white" style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}>
+          <div className="w-16 h-16 rounded-3xl flex items-center justify-center text-white" style={{ background: 'var(--brand-gradient)' }}>
             <IconUser size={30} />
           </div>
         </div>
@@ -41,9 +41,9 @@ export default function WalkIn() {
           value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
         <Textarea label={t('Izoh')} placeholder={t("Qo'shimcha ma'lumot")} rows={3}
           value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
-        {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{error}</div>}
+        {error && <div className="text-sm px-4 py-3 rounded-2xl" style={{ background: 'rgba(239,68,68,0.10)', color: 'var(--red)' }}>{error}</div>}
       </div>
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 backdrop-blur-xl border-t" style={{ background: 'rgba(255,255,255,0.85)', borderColor: 'var(--line)' }}>
         <Button fullWidth loading={mutation.isPending} disabled={!form.name || !form.phone}
           onClick={() => { setError(''); mutation.mutate() }}>{t('Saqlash')}</Button>
       </div>

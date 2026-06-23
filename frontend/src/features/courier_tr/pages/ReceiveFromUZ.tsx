@@ -142,8 +142,8 @@ export default function ReceiveFromUZ() {
             <div className="w-16 h-16 rounded-3xl flex items-center justify-center text-white mb-3" style={{ background: 'var(--brand-gradient)' }}>
               <IconPlane size={30} />
             </div>
-            <h2 className="text-lg font-bold text-slate-900">{t('Yo\'lovchi raqami')}</h2>
-            <p className="text-sm text-slate-500 text-center mt-1">{t('Yo\'lovchining tartib raqamini kiriting')}</p>
+            <h2 className="text-lg font-bold" style={{ color: 'var(--ink)' }}>{t('Yo\'lovchi raqami')}</h2>
+            <p className="text-sm text-center mt-1" style={{ color: 'var(--muted)' }}>{t('Yo\'lovchining tartib raqamini kiriting')}</p>
           </div>
           <Input type="number" inputMode="numeric" autoFocus placeholder={t('Masalan: 47')}
             className="text-center text-lg font-bold"
@@ -204,35 +204,37 @@ export default function ReceiveFromUZ() {
                   onClick={() => isRed && openDamage(r)}
                   className={`w-full text-left rounded-2xl p-3.5 border flex items-center gap-3 animate-scale-in ${border} ${isRed ? 'press' : ''}`}
                 >
-                  <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-xl shrink-0 overflow-hidden border border-slate-100">
-                    {r.image_url ? <img src={r.image_url} alt="" className="w-full h-full object-cover" /> : '📦'}
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 overflow-hidden border" style={{ background: '#EBF1FA', color: 'var(--royal)', borderColor: 'var(--line)' }}>
+                    {r.image_url ? <img src={r.image_url} alt="" className="w-full h-full object-cover" /> : <IconBox size={22} />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm text-slate-900 truncate">
+                    <p className="font-bold text-[14.5px] truncate" style={{ color: 'var(--ink)' }}>
                       {r.product_name}{r.size_label ? ` · ${r.size_label}` : ''}
                     </p>
-                    <p className="text-[11px] font-mono text-slate-400">{r.barcode}</p>
+                    <p className="text-[11px] font-mono" style={{ color: 'var(--muted2)' }}>{r.barcode}</p>
                     {r.damaged ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 mt-1">
+                      <span className="inline-flex items-center gap-1 text-xs font-semibold mt-1" style={{ color: 'var(--muted)' }}>
                         <IconAlert size={13} /> {t('Zarar — qabul qilinmadi')}
                       </span>
                     ) : isRed ? (
-                      <span className="text-xs text-red-500 font-medium mt-0.5 inline-block">
+                      <span className="text-xs font-medium mt-0.5 inline-block" style={{ color: 'var(--red)' }}>
                         {t('Skanlanmagan · zarar uchun bosing')}
                       </span>
                     ) : (
-                      <span className="text-xs text-emerald-600 font-semibold mt-0.5 inline-block">
+                      <span className="text-xs font-semibold mt-0.5 inline-block" style={{ color: 'var(--green)' }}>
                         {t('Skanlandi: {{n}} / {{q}}', { n: r.scanned, q: r.quantity })}
                       </span>
                     )}
                   </div>
                   <div className="shrink-0">
                     {r.damaged ? (
-                      <span className="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center">✕</span>
+                      <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--line2)', color: 'var(--muted)' }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>
+                      </span>
                     ) : fullyScanned ? (
-                      <span className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center"><IconCheck size={18} /></span>
+                      <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: '#E9F6EE', color: 'var(--green)' }}><IconCheck size={18} /></span>
                     ) : (
-                      <span className="text-xs font-bold text-white px-2 py-1 rounded-lg" style={{ background: 'var(--brand)' }}>
+                      <span className="text-xs font-bold text-white px-2 py-1 rounded-lg" style={{ background: 'var(--royal)' }}>
                         {t('{{n}} ta', { n: r.quantity })}
                       </span>
                     )}

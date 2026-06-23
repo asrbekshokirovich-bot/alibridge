@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import client from '@/shared/api/client'
-import { ScanSession, Header, ListSkeleton, EmptyState, IconTruck } from '@/shared/ui'
+import { ScanSession, Header, ListSkeleton, EmptyState, IconTruck, IconChevronRight } from '@/shared/ui'
 
 interface Courier {
   id: number
@@ -52,18 +52,17 @@ export default function HandoverCourier() {
             <button
               key={c.id}
               onClick={() => setCourier(c)}
-              className="press w-full text-left bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3"
+              className="press w-full text-left rounded-2xl p-4 border flex items-center gap-3"
+              style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}
             >
-              <div className="w-11 h-11 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
                 <IconTruck size={22} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-slate-900 truncate">{`${c.first_name} ${c.last_name}`.trim()}</p>
-                {c.phone && <p className="text-xs text-slate-400">{c.phone}</p>}
+                <p className="text-[14.5px] font-bold truncate" style={{ color: 'var(--ink)' }}>{`${c.first_name} ${c.last_name}`.trim()}</p>
+                {c.phone && <p className="text-xs" style={{ color: 'var(--muted)' }}>{c.phone}</p>}
               </div>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-slate-300 shrink-0">
-                <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <span className="shrink-0" style={{ color: 'var(--muted3)' }}><IconChevronRight size={18} /></span>
             </button>
           ))}
         </div>

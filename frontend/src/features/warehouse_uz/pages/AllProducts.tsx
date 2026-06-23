@@ -66,13 +66,13 @@ export default function AllProducts() {
               <button
                 key={f.key}
                 onClick={() => setFilter(f.key)}
-                className={`shrink-0 px-3.5 py-2 rounded-xl text-[13px] font-semibold transition-all flex items-center gap-1.5 ${
-                  isActive ? 'text-white shadow-sm' : 'bg-slate-100 text-slate-500'
-                }`}
-                style={isActive ? { background: 'var(--brand-gradient)' } : undefined}
+                className="shrink-0 px-3.5 py-2 rounded-full text-[13px] font-semibold transition-all flex items-center gap-1.5 border"
+                style={isActive
+                  ? { background: 'var(--royal)', color: '#fff', borderColor: 'transparent' }
+                  : { background: 'var(--surface)', color: 'var(--muted)', borderColor: 'var(--line)' }}
               >
                 {f.label}
-                <span className={`text-[11px] px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/25' : 'bg-white'}`}>{count(f)}</span>
+                <span className="text-[11px] px-1.5 py-0.5 rounded-full" style={isActive ? { background: 'rgba(255,255,255,0.22)' } : { background: 'var(--surface2)' }}>{count(f)}</span>
               </button>
             )
           })}
@@ -89,24 +89,24 @@ export default function AllProducts() {
             const st = STATUS_LABEL[p.status] ?? { label: p.status, tone: 'gray' as const }
             return (
               <button key={p.id} onClick={() => setOpenId(p.id)}
-                className="press w-full text-left bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+                className="press w-full text-left rounded-2xl p-4 border" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
                 <div className="flex items-start gap-3">
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0" style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)' }}>
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
                     <IconBox size={20} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-900 truncate">{p.name}</p>
-                    <p className="text-xs font-mono text-slate-400">{p.barcode}</p>
+                    <p className="text-[14.5px] font-bold truncate" style={{ color: 'var(--ink)' }}>{p.name}</p>
+                    <p className="text-xs font-mono" style={{ color: 'var(--muted3)' }}>{p.barcode}</p>
                     <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                       <StatusBadge tone={st.tone} dot>{st.label}</StatusBadge>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs" style={{ color: 'var(--muted)' }}>
                         {isPiece(p.type) ? t('{{quantity}} dona', { quantity: p.quantity }) : t('{{weight}} kg · {{quantity}} dona', { weight: p.weight_kg, quantity: p.quantity })}
                       </span>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-sm font-bold text-slate-900">{money(p.cargo_price)}</p>
-                    <p className="text-[11px] text-slate-400">${p.cargo_price}/{unitWord(p.type)}</p>
+                    <p className="text-sm font-bold tabular-nums" style={{ color: 'var(--royal)' }}>{money(p.cargo_price)}</p>
+                    <p className="text-[11px] tabular-nums" style={{ color: 'var(--muted3)' }}>${p.cargo_price}/{unitWord(p.type)}</p>
                   </div>
                 </div>
               </button>
@@ -119,16 +119,16 @@ export default function AllProducts() {
       <Sheet open={openId !== null} onClose={() => setOpenId(null)}>
         {dist && (
           <div className="px-5 pt-2">
-            <h3 className="font-bold text-slate-900 mb-1">{dist.product_name}</h3>
-            <p className="text-xs text-slate-400 font-mono mb-4">{dist.barcode} · {t('jami {{total}} ta', { total: dist.total })}</p>
+            <h3 className="font-bold mb-1" style={{ color: 'var(--ink)' }}>{dist.product_name}</h3>
+            <p className="text-xs font-mono mb-4" style={{ color: 'var(--muted3)' }}>{dist.barcode} · {t('jami {{total}} ta', { total: dist.total })}</p>
             {dist.stages.length === 0 ? (
-              <p className="text-sm text-slate-400 py-6 text-center">{t('Hali taqsimlanmagan')}</p>
+              <p className="text-sm py-6 text-center" style={{ color: 'var(--muted3)' }}>{t('Hali taqsimlanmagan')}</p>
             ) : (
               <div className="space-y-2 pb-2">
                 {dist.stages.map((s) => (
-                  <div key={s.holder_type} className="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3">
-                    <span className="text-sm font-semibold text-slate-700">{s.label}</span>
-                    <span className="text-sm font-bold text-white px-2.5 py-0.5 rounded-lg" style={{ background: 'var(--brand)' }}>
+                  <div key={s.holder_type} className="flex items-center justify-between rounded-xl px-4 py-3" style={{ background: 'var(--surface2)' }}>
+                    <span className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>{s.label}</span>
+                    <span className="text-sm font-bold text-white px-2.5 py-0.5 rounded-lg tabular-nums" style={{ background: 'var(--royal)' }}>
                       {t('{{quantity}} ta', { quantity: s.quantity })}
                     </span>
                   </div>

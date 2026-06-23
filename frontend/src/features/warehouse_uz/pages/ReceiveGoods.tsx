@@ -90,15 +90,15 @@ export default function ReceiveGoods() {
               )
             })}
           </div>
-          <div className="rounded-2xl p-3.5 flex gap-2.5 border" style={{ background: '#EBF1FA', borderColor: 'var(--line)' }}>
-            <span className="shrink-0 mt-0.5" style={{ color: 'var(--royal)' }}><IconAlert size={18} /></span>
+          <div className="rounded-2xl p-3.5 flex gap-2.5 border" style={{ background: 'rgba(106,163,255,0.10)', borderColor: 'rgba(106,163,255,0.22)' }}>
+            <span className="shrink-0 mt-0.5" style={{ color: '#6aa3ff' }}><IconAlert size={18} /></span>
             <p className="text-[12px] leading-snug" style={{ color: 'var(--muted)' }}>
               {t('Avval barkod yaratiladi va chop etiladi. Keyingi oynada yuk turi, soni va narxini kiritasiz.')}
             </p>
           </div>
-          {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{error}</div>}
+          {error && <div className="text-sm px-4 py-3 rounded-2xl" style={{ background: 'rgba(255,107,107,0.12)', color: 'var(--red)' }}>{error}</div>}
         </div>
-        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 bg-white/80 backdrop-blur-xl border-t" style={{ borderColor: 'var(--line)' }}>
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 backdrop-blur-xl border-t" style={{ background: 'rgba(10,16,32,0.80)', borderColor: 'var(--line)' }}>
           <Button fullWidth loading={loading} disabled={!name.trim()} onClick={createBarcode}>
             {t('Barkod yaratish')}
           </Button>

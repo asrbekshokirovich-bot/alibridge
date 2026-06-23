@@ -92,7 +92,7 @@ export default function Staff() {
                   <div className="flex-1 min-w-0">
                     <p className="font-bold truncate text-[14.5px]" style={{ color: 'var(--ink)' }}>{s.first_name} {s.last_name}</p>
                     <p className="text-xs" style={{ color: 'var(--muted)' }}>{s.phone}</p>
-                    <p className="text-xs font-semibold mt-0.5" style={{ color: 'var(--royal)' }}>
+                    <p className="text-xs font-semibold mt-0.5" style={{ color: 'var(--brand-light)' }}>
                       {ROLE_LABELS[s.role] ?? s.role}
                     </p>
                   </div>
@@ -114,10 +114,10 @@ export default function Staff() {
                             disabled={busy || current}
                             className="press py-2.5 px-3 rounded-xl text-xs font-semibold disabled:opacity-50 flex items-center justify-center gap-1.5 border"
                             style={current
-                              ? { background: '#EBF1FA', color: 'var(--royal)', borderColor: 'transparent' }
+                              ? { background: 'rgba(106,163,255,0.14)', color: 'var(--brand-light)', borderColor: 'rgba(106,163,255,0.30)' }
                               : { background: 'var(--surface2)', color: 'var(--ink)', borderColor: 'var(--line2)' }}>
                             {picking && (
-                              <span className="w-3 h-3 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--line2)', borderTopColor: 'var(--royal)' }} />
+                              <span className="w-3 h-3 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--line2)', borderTopColor: 'var(--brand-light)' }} />
                             )}
                             {r.label}
                           </button>

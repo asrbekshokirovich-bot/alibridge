@@ -77,14 +77,14 @@ export default function Profile() {
         {/* Statistika (mock) */}
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-2xl border p-4 text-center" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mx-auto mb-2" style={{ background: '#E9F6EE', color: 'var(--green)' }}>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mx-auto mb-2" style={{ background: 'rgba(52,211,153,0.14)', color: 'var(--green)' }}>
               <IconCheck size={18} />
             </div>
             <p className="text-2xl font-extrabold tabular-nums" style={{ color: 'var(--ink)' }}>0</p>
             <p className="text-xs" style={{ color: 'var(--muted)' }}>{t('Yetkazilgan')}</p>
           </div>
           <div className="rounded-2xl border p-4 text-center" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mx-auto mb-2" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center mx-auto mb-2" style={{ background: 'rgba(106,163,255,0.14)', color: 'var(--brand-light)' }}>
               <IconBag size={18} />
             </div>
             <p className="text-2xl font-extrabold tabular-nums" style={{ color: 'var(--ink)' }}>0</p>

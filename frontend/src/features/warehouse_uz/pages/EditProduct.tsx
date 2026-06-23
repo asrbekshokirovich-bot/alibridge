@@ -32,7 +32,7 @@ export default function EditProduct() {
         <>
           <div className="px-4 pt-4">
             <div className="rounded-2xl border p-3.5 flex items-center gap-3" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EBF1FA', color: 'var(--royal)' }}><IconBox size={20} /></div>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(106,163,255,0.14)', color: '#6aa3ff' }}><IconBox size={20} /></div>
               <div className="min-w-0">
                 <p className="font-bold truncate" style={{ color: 'var(--ink)' }}>{product.name}</p>
                 <p className="text-xs font-mono" style={{ color: 'var(--muted3)' }}>{product.barcode}</p>

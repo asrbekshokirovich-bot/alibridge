@@ -39,7 +39,7 @@ export default function MyOrders() {
           <div className="rounded-2xl border divide-y" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
             {received!.map((p) => (
               <div key={`${p.product_id}-${p.size_label}`} className="flex items-center gap-3 p-3.5" style={{ borderColor: 'var(--line)' }}>
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center overflow-hidden shrink-0" style={{ background: '#EAEEF4', color: 'var(--muted3)' }}>
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center overflow-hidden shrink-0" style={{ background: 'var(--surface2)', color: 'var(--muted3)' }}>
                   {p.image_url
                     ? <img src={p.image_url} alt="" className="w-full h-full object-cover" />
                     : <IconBox size={20} />}
@@ -93,7 +93,7 @@ export default function MyOrders() {
                   {(order.items ?? []).length > 0 ? (
                     order.items!.map((it) => (
                       <div key={it.variant_id ?? it.product_id} className="flex items-center gap-3 px-4 py-2.5" style={{ borderColor: 'var(--line)' }}>
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#EAEEF4', color: 'var(--muted3)' }}>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--surface2)', color: 'var(--muted3)' }}>
                           <IconBox size={15} />
                         </div>
                         <span className="flex-1 text-sm truncate" style={{ color: 'var(--ink)' }}>
@@ -111,7 +111,7 @@ export default function MyOrders() {
                   ) : (
                     order.products.map((p) => (
                       <div key={p.id} className="flex items-center gap-3 px-4 py-2.5" style={{ borderColor: 'var(--line)' }}>
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#EAEEF4', color: 'var(--muted3)' }}>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--surface2)', color: 'var(--muted3)' }}>
                           <IconBox size={15} />
                         </div>
                         <span className="flex-1 text-sm truncate" style={{ color: 'var(--ink)' }}>{p.name}</span>

@@ -123,7 +123,7 @@ export default function AutoReceive() {
                 <div className="divide-y" style={{ borderColor: 'var(--line)' }}>
                   {p.items.map((it) => (
                     <div key={`${it.barcode}:${it.size_label}`} className="flex items-center gap-3 px-4 py-2.5" style={{ borderColor: 'var(--line)' }}>
-                      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 overflow-hidden" style={{ background: '#EAEEF4', color: 'var(--muted3)' }}>
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 overflow-hidden" style={{ background: 'var(--surface2)', color: 'var(--muted3)' }}>
                         {it.image_url ? <img src={it.image_url} alt="" className="w-full h-full object-cover" /> : <IconBox size={16} />}
                       </div>
                       <span className="flex-1 text-sm truncate" style={{ color: 'var(--ink)' }}>
@@ -162,7 +162,7 @@ export default function AutoReceive() {
           {/* Info banner */}
           <div className="px-4 pt-4">
             <div className="rounded-2xl p-4 flex gap-3" style={{ background: 'var(--brand-gradient-soft)', border: '1px solid var(--line)' }}>
-              <div className="shrink-0" style={{ color: 'var(--royal)' }}><IconHandshake size={22} /></div>
+              <div className="shrink-0" style={{ color: 'var(--brand-light)' }}><IconHandshake size={22} /></div>
               <p className="text-[13px] leading-snug" style={{ color: 'var(--muted)' }}>
                 {t('Aeroportда kuryerga quyidagi raqamingizni ayting. Kuryer barkodlarni skanlab, yuklaringizni sizga topshiradi.')}
               </p>

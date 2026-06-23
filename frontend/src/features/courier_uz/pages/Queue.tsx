@@ -102,11 +102,11 @@ export default function CourierUzQueue() {
                   {item.products.map((p) => (
                     <div key={p.barcode} className="flex items-center gap-3 px-4 py-3">
                       {p.picked_up ? (
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: '#E9F6EE', color: 'var(--green)' }}>
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(52,211,153,0.14)', color: '#34d399' }}>
                           <IconCheck size={18} />
                         </div>
                       ) : (
-                        <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
+                        <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(106,163,255,0.14)', color: '#6aa3ff' }}>
                           <IconBox size={18} />
                         </div>
                       )}
@@ -122,7 +122,7 @@ export default function CourierUzQueue() {
 
                 {/* Footer: tugma yoki tasdiqlangan */}
                 {done ? (
-                  <div className="px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5" style={{ background: '#E9F6EE', color: 'var(--green)' }}>
+                  <div className="px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5" style={{ background: 'rgba(52,211,153,0.14)', color: '#34d399' }}>
                     <IconCheck size={14} /> {item.confirmed_by_name ? t('{{name}} tasdiqladi', { name: item.confirmed_by_name }) : t('Olib ketildi')}
                   </div>
                 ) : (
@@ -145,7 +145,7 @@ export default function CourierUzQueue() {
 
       {error && (
         <div className="px-4 pt-3">
-          <p className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{error}</p>
+          <p className="text-sm px-4 py-3 rounded-2xl" style={{ background: 'rgba(255,107,107,0.12)', color: '#ff6b6b' }}>{error}</p>
         </div>
       )}
     </div>

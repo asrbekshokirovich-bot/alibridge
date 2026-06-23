@@ -26,7 +26,7 @@ export default function UzProducts() {
           {products.map((p) => (
             <div key={p.id} className="rounded-2xl p-4 border" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
               <div className="flex items-start gap-3">
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 overflow-hidden" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 overflow-hidden" style={{ background: 'rgba(106,163,255,0.14)', color: '#6aa3ff' }}>
                   {p.image_url
                     ? <img src={p.image_url} alt="" className="w-full h-full object-cover" />
                     : <IconBox size={22} />}
@@ -38,11 +38,11 @@ export default function UzProducts() {
                   </div>
                   <p className="text-xs" style={{ color: 'var(--muted2)' }}>{p.category}</p>
                   <div className="flex items-center gap-2 mt-1.5">
-                    <span className="text-xs font-medium px-2 py-0.5 rounded-lg" style={{ background: '#F1F4F8', color: 'var(--muted)' }}>
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--muted)' }}>
                       {isPiece(p.type) ? t('{{count}} dona', { count: p.quantity }) : t('{{weight}} kg', { weight: p.weight_kg })}
                     </span>
                     {p.box_weight_kg ? (
-                      <span className="text-xs font-medium px-2 py-0.5 rounded-lg" style={{ background: '#FEF1E0', color: 'var(--amber-d)' }}>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-lg" style={{ background: 'rgba(251,191,36,0.14)', color: '#fbbf24' }}>
                         {t('Kartonka: {{weight}} kg', { weight: p.box_weight_kg })}
                       </span>
                     ) : null}

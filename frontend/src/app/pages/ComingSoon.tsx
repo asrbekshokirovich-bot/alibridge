@@ -23,7 +23,7 @@ export default function ComingSoon({ title, subtitle }: Props) {
     <div className="min-h-screen flex flex-col items-center justify-center px-8 text-center animate-scale-in" style={{ background: 'var(--bg)' }}>
       <div
         className="w-[72px] h-[72px] rounded-[20px] flex items-center justify-center mb-6"
-        style={{ background: '#EBF1FA', color: 'var(--royal)' }}
+        style={{ background: 'rgba(106,163,255,0.14)', border: '1px solid var(--line)', color: '#6aa3ff' }}
       >
         {/* Tools / construction line icon */}
         <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">

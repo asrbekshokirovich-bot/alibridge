@@ -91,7 +91,7 @@ export default function AllProducts() {
               <button key={p.id} onClick={() => setOpenId(p.id)}
                 className="press w-full text-left rounded-2xl p-4 border" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
                 <div className="flex items-start gap-3">
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(106,163,255,0.14)', color: '#6aa3ff' }}>
                     <IconBox size={20} />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -105,7 +105,7 @@ export default function AllProducts() {
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-sm font-bold tabular-nums" style={{ color: 'var(--royal)' }}>{money(p.cargo_price)}</p>
+                    <p className="text-sm font-bold tabular-nums" style={{ color: 'var(--brand-light)' }}>{money(p.cargo_price)}</p>
                     <p className="text-[11px] tabular-nums" style={{ color: 'var(--muted3)' }}>${p.cargo_price}/{unitWord(p.type)}</p>
                   </div>
                 </div>

@@ -71,7 +71,7 @@ export default function StaffApproval() {
             return (
               <div key={req.id} className="rounded-2xl border overflow-hidden transition-colors"
                 style={done
-                  ? { background: '#E9F6EE', borderColor: 'rgba(22,163,74,0.3)', boxShadow: 'var(--shadow-md)' }
+                  ? { background: 'rgba(52,211,153,0.10)', borderColor: 'rgba(52,211,153,0.30)', boxShadow: 'var(--shadow-md)' }
                   : { background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
                 <button onClick={() => setExpanded(open ? null : req.id)}
                   className="w-full p-4 flex items-center gap-3 text-left">
@@ -93,7 +93,7 @@ export default function StaffApproval() {
                   <div className="px-4 pb-4 animate-fade-in">
                     {approvedRole[req.id] ? (
                       // Tasdiqlandi — tanlangan vazifa yashil
-                      <div className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold" style={{ background: '#E9F6EE', color: 'var(--green)' }}>
+                      <div className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold" style={{ background: 'rgba(52,211,153,0.14)', color: 'var(--green)' }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                           <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
@@ -111,7 +111,7 @@ export default function StaffApproval() {
                                 disabled={approve.isPending}
                                 className="press py-2.5 px-3 rounded-xl text-xs font-semibold disabled:opacity-50 flex items-center justify-center gap-1.5 border"
                                 style={isPicking
-                                  ? { background: '#E9F6EE', color: 'var(--green)', borderColor: 'transparent' }
+                                  ? { background: 'rgba(52,211,153,0.14)', color: 'var(--green)', borderColor: 'rgba(52,211,153,0.30)' }
                                   : { background: 'var(--surface2)', color: 'var(--ink)', borderColor: 'var(--line2)' }}>
                                 {isPicking && (
                                   <span className="w-3 h-3 border-2 rounded-full animate-spin" style={{ borderColor: 'rgba(22,163,74,0.4)', borderTopColor: 'var(--green)' }} />

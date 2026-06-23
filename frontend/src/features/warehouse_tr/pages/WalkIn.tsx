@@ -43,7 +43,7 @@ export default function WalkIn() {
           value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
         {error && <div className="text-sm px-4 py-3 rounded-2xl" style={{ background: 'rgba(239,68,68,0.10)', color: 'var(--red)' }}>{error}</div>}
       </div>
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 backdrop-blur-xl border-t" style={{ background: 'rgba(255,255,255,0.85)', borderColor: 'var(--line)' }}>
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 backdrop-blur-xl border-t" style={{ background: 'rgba(10,16,32,0.85)', borderColor: 'var(--line)' }}>
         <Button fullWidth loading={mutation.isPending} disabled={!form.name || !form.phone}
           onClick={() => { setError(''); mutation.mutate() }}>{t('Saqlash')}</Button>
       </div>

@@ -163,14 +163,14 @@ export default function ReceiveFromUZ() {
       <ScanInput value={barcode} onChange={setBarcode} onScan={handleScan} />
 
       {error && (
-        <div className="mx-4 -mt-1 mb-2 bg-red-50 text-red-600 text-sm px-4 py-2.5 rounded-xl animate-fade-in">{error}</div>
+        <div className="mx-4 -mt-1 mb-2 text-sm px-4 py-2.5 rounded-xl animate-fade-in" style={{ background: 'rgba(255,107,107,0.12)', color: '#ff6b6b' }}>{error}</div>
       )}
 
       {isLoading ? (
         <ListSkeleton />
       ) : isError ? (
         <div className="px-4 pt-2">
-          <p className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{extractErrorMessage(loadError)}</p>
+          <p className="text-sm px-4 py-3 rounded-2xl" style={{ background: 'rgba(255,107,107,0.12)', color: '#ff6b6b' }}>{extractErrorMessage(loadError)}</p>
         </div>
       ) : rows.length === 0 ? (
         <EmptyState icon={<IconBox size={30} />} title={t('Yuk yo\'q')}
@@ -179,7 +179,7 @@ export default function ReceiveFromUZ() {
         <>
           {/* Sanagich */}
           <div className="px-4 pb-2 flex items-center justify-between">
-            <span className="text-sm font-bold text-slate-700">{t('Skanlandi')}</span>
+            <span className="text-sm font-bold" style={{ color: 'var(--muted)' }}>{t('Skanlandi')}</span>
             <span className="text-sm font-bold px-2.5 py-0.5 rounded-full text-white" style={{ background: 'var(--brand-gradient)' }}>
               {t('{{n}} / {{total}}', { n: totalOk, total: rows.reduce((s, r) => s + r.quantity, 0) })}
             </span>
@@ -189,22 +189,23 @@ export default function ReceiveFromUZ() {
             {rows.map((r) => {
               const fullyScanned = r.scanned >= r.quantity && !r.damaged
               const isRed = r.scanned === 0 && !r.damaged
-              const border = r.damaged
-                ? 'border-slate-200 bg-slate-50 opacity-60'
+              const tile = r.damaged
+                ? { background: 'var(--surface)', borderColor: 'var(--line)', opacity: 0.6 }
                 : fullyScanned
-                ? 'border-emerald-300 bg-emerald-50/50'
+                ? { background: 'rgba(52,211,153,0.10)', borderColor: 'rgba(52,211,153,0.35)' }
                 : isRed
-                ? 'border-red-200 bg-red-50/50'
-                : 'border-amber-200 bg-amber-50/40'
+                ? { background: 'rgba(255,107,107,0.10)', borderColor: 'rgba(255,107,107,0.30)' }
+                : { background: 'rgba(251,191,36,0.10)', borderColor: 'rgba(251,191,36,0.30)' }
               return (
                 <button
                   key={keyOf(r)}
                   type="button"
                   disabled={r.damaged || !isRed}
                   onClick={() => isRed && openDamage(r)}
-                  className={`w-full text-left rounded-2xl p-3.5 border flex items-center gap-3 animate-scale-in ${border} ${isRed ? 'press' : ''}`}
+                  className={`w-full text-left rounded-2xl p-3.5 border flex items-center gap-3 animate-scale-in ${isRed ? 'press' : ''}`}
+                  style={tile}
                 >
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 overflow-hidden border" style={{ background: '#EBF1FA', color: 'var(--royal)', borderColor: 'var(--line)' }}>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 overflow-hidden border" style={{ background: 'rgba(106,163,255,0.14)', color: '#6aa3ff', borderColor: 'var(--line)' }}>
                     {r.image_url ? <img src={r.image_url} alt="" className="w-full h-full object-cover" /> : <IconBox size={22} />}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -232,7 +233,7 @@ export default function ReceiveFromUZ() {
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>
                       </span>
                     ) : fullyScanned ? (
-                      <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: '#E9F6EE', color: 'var(--green)' }}><IconCheck size={18} /></span>
+                      <span className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(52,211,153,0.14)', color: '#34d399' }}><IconCheck size={18} /></span>
                     ) : (
                       <span className="text-xs font-bold text-white px-2 py-1 rounded-lg" style={{ background: 'var(--royal)' }}>
                         {t('{{n}} ta', { n: r.quantity })}
@@ -248,7 +249,7 @@ export default function ReceiveFromUZ() {
 
       {/* Tasdiqlash */}
       {okRows.length > 0 && (
-        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100">
+        <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 backdrop-blur-xl border-t" style={{ background: 'rgba(10,16,32,0.80)', borderColor: 'var(--line)' }}>
           <button onClick={() => confirm.mutate()} disabled={confirm.isPending}
             style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' }}
             className="press w-full text-white rounded-2xl py-4 font-bold shadow-[0_8px_24px_rgba(34,197,94,0.35)] disabled:opacity-50">
@@ -262,13 +263,13 @@ export default function ReceiveFromUZ() {
         {damageRow && (
           <div className="px-5 pb-2">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-11 h-11 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center"><IconAlert size={22} /></div>
+              <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(255,107,107,0.14)', color: '#ff6b6b' }}><IconAlert size={22} /></div>
               <div>
-                <h3 className="font-bold text-slate-900">{t('Zarar yetgan yuk')}</h3>
-                <p className="text-xs text-slate-400 font-mono">{damageRow.barcode}</p>
+                <h3 className="font-bold" style={{ color: 'var(--ink)' }}>{t('Zarar yetgan yuk')}</h3>
+                <p className="text-xs font-mono" style={{ color: 'var(--muted2)' }}>{damageRow.barcode}</p>
               </div>
             </div>
-            <p className="text-sm text-slate-600 mb-3">
+            <p className="text-sm mb-3" style={{ color: 'var(--muted)' }}>
               {damageRow.product_name}{damageRow.size_label ? ` · ${damageRow.size_label}` : ''}
             </p>
             <Textarea label={t('Izoh (report)')} placeholder={t('Nima bo\'lgani haqida')} rows={3}

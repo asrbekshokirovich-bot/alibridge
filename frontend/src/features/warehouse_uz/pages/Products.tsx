@@ -12,7 +12,7 @@ import { Header, ListSkeleton, EmptyState, StatusBadge, IconBox, IconAlert, Icon
 type Filter = 'all' | ProductGroup
 
 const CHIP = 'text-xs font-semibold px-2 py-0.5 rounded-lg'
-const CHIP_STYLE = { background: '#F1F4F8', color: 'var(--muted)' } as const
+const CHIP_STYLE = { background: 'rgba(255,255,255,0.06)', color: 'var(--muted)' } as const
 const CHIP_MUTED = 'text-xs font-medium px-2 py-0.5 rounded-lg'
 const CHIP_MUTED_STYLE = { background: 'var(--surface2)', color: 'var(--muted3)' } as const
 
@@ -103,7 +103,7 @@ export default function Products() {
               <div key={p.id} className="rounded-2xl p-3.5 border" style={{ background: 'var(--surface)', borderColor: incomplete ? 'var(--amber)' : 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
                 <div className="flex items-stretch gap-3">
                   {/* Chap: katta rasm */}
-                  <div className="w-24 h-24 rounded-xl flex items-center justify-center shrink-0 overflow-hidden self-start" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
+                  <div className="w-24 h-24 rounded-xl flex items-center justify-center shrink-0 overflow-hidden self-start" style={{ background: 'rgba(106,163,255,0.14)', color: '#6aa3ff' }}>
                     {p.image_url
                       ? <img src={p.image_url} alt="" className="w-full h-full object-cover" />
                       : <IconBox size={34} />}
@@ -120,11 +120,11 @@ export default function Products() {
                     {/* Omborda hozir qolgan miqdor (split custody — bir qism kuryerda) */}
                     {p.in_warehouse_qty != null && (
                       p.in_warehouse_qty > 0 ? (
-                        <span className="inline-block mt-1.5 text-xs font-bold px-2 py-0.5 rounded-lg" style={{ color: '#15803D', background: '#E9F6EE' }}>
+                        <span className="inline-block mt-1.5 text-xs font-bold px-2 py-0.5 rounded-lg" style={{ color: 'var(--green)', background: 'rgba(52,211,153,0.14)' }}>
                           {t('Omborda: {{n}} dona', { n: p.in_warehouse_qty })}
                         </span>
                       ) : (
-                        <span className="inline-block mt-1.5 text-xs font-bold px-2 py-0.5 rounded-lg" style={{ color: 'var(--red)', background: '#FEF0F0' }}>
+                        <span className="inline-block mt-1.5 text-xs font-bold px-2 py-0.5 rounded-lg" style={{ color: 'var(--red)', background: 'rgba(255,107,107,0.14)' }}>
                           {t('Omborda qolmadi')}
                         </span>
                       )
@@ -138,7 +138,7 @@ export default function Products() {
                           {realVariants.map((v) => (
                             <div key={v.id} className="flex items-center gap-2 flex-wrap text-xs">
                               {v.size_label && (
-                                <span className="font-bold px-2 py-0.5 rounded-lg" style={{ color: 'var(--ink)', background: '#F1F4F8' }}>{v.size_label}</span>
+                                <span className="font-bold px-2 py-0.5 rounded-lg" style={{ color: 'var(--ink)', background: 'rgba(255,255,255,0.06)' }}>{v.size_label}</span>
                               )}
                               {v.quantity > 0 && <span className={CHIP} style={CHIP_STYLE}>{t('{{n}} dona', { n: v.quantity })}</span>}
                               {g === 'boxed' && v.box_count != null && v.box_count > 0 && <span className={CHIP} style={CHIP_STYLE}>{t('{{n}} quti', { n: v.box_count })}</span>}
@@ -150,7 +150,7 @@ export default function Products() {
                                 </>
                               )}
                               {v.cargo_price > 0 && (
-                                <span className="font-bold ml-auto tabular-nums" style={{ color: 'var(--royal)' }}>
+                                <span className="font-bold ml-auto tabular-nums" style={{ color: 'var(--brand-light)' }}>
                                   ${v.cargo_price}/{unit}
                                 </span>
                               )}
@@ -194,7 +194,7 @@ export default function Products() {
                         }}
                         disabled={remove.isPending && remove.variables === p.id}
                         className="press py-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1 disabled:opacity-50"
-                        style={{ background: '#FEF0F0', color: 'var(--red)' }}
+                        style={{ background: 'rgba(255,107,107,0.14)', color: 'var(--red)' }}
                       >
                         <IconTrash size={13} /> {t("O'chirish")}
                       </button>

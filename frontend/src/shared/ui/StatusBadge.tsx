@@ -6,28 +6,25 @@ interface Props {
   dot?: boolean
 }
 
-const tones: Record<Tone, string> = {
-  yellow: 'bg-amber-50 text-amber-700',
-  blue: 'bg-blue-50 text-blue-700',
-  green: 'bg-emerald-50 text-emerald-700',
-  red: 'bg-red-50 text-red-600',
-  gray: 'bg-slate-100 text-slate-600',
-  purple: 'bg-purple-50 text-purple-700',
-}
-
-const dots: Record<Tone, string> = {
-  yellow: 'bg-amber-500',
-  blue: 'bg-blue-500',
-  green: 'bg-emerald-500',
-  red: 'bg-red-500',
-  gray: 'bg-slate-400',
-  purple: 'bg-purple-500',
+// Dark glass'ga uyg'un status piллари — rang + mos yarim-shaffof fon.
+// green=Tugadi, red/coral=aktiv "Hozir"/Yo'lovchida, blue/purple=jarayonda, amber=kutilmoqda.
+const tones: Record<Tone, { color: string; bg: string; border: string }> = {
+  green:  { color: '#34d399', bg: 'rgba(52,211,153,0.14)', border: 'rgba(52,211,153,0.28)' },
+  red:    { color: '#ff8a8a', bg: 'rgba(255,107,107,0.14)', border: 'rgba(255,107,107,0.30)' },
+  blue:   { color: '#6aa3ff', bg: 'rgba(106,163,255,0.14)', border: 'rgba(106,163,255,0.28)' },
+  purple: { color: '#c4b5fd', bg: 'rgba(167,139,250,0.14)', border: 'rgba(167,139,250,0.28)' },
+  yellow: { color: '#fbbf24', bg: 'rgba(251,191,36,0.14)', border: 'rgba(251,191,36,0.28)' },
+  gray:   { color: '#8ba0c4', bg: 'rgba(255,255,255,0.06)', border: 'rgba(255,255,255,0.12)' },
 }
 
 export function StatusBadge({ tone, children, dot }: Props) {
+  const s = tones[tone]
   return (
-    <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${tones[tone]}`}>
-      {dot && <span className={`w-1.5 h-1.5 rounded-full ${dots[tone]}`} />}
+    <span
+      className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
+      style={{ color: s.color, background: s.bg, border: `1px solid ${s.border}` }}
+    >
+      {dot && <span className="w-1.5 h-1.5 rounded-full" style={{ background: s.color }} />}
       {children}
     </span>
   )

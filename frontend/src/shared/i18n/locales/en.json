@@ -447,5 +447,22 @@
   "Salom": "Hello",
   "Panel": "Panel",
   "Jami mahsulot": "Total products",
-  "Faol yo'lovchi": "Active carriers"
+  "Faol yo'lovchi": "Active carriers",
+  "Faol jo'natma": "Active shipment",
+  "Kuzatish": "Track",
+  "Buyurtmalarim": "My orders",
+  "Xaridda": "Purchasing",
+  "Turkiya omborida": "At Turkey warehouse",
+  "Yetkazildi": "Delivered",
+  "Yo'l xaritasi": "Route map",
+  "Yetkazib berish kodi": "Delivery code",
+  "Yukni olayotganda kuryerga shu kodni ayting": "Tell this code to the courier when receiving",
+  "Xitoyda sotib olindi": "Purchased in China",
+  "Toshkent omborida qabul qilindi": "Received at Tashkent warehouse",
+  "Sizga yetkazildi": "Delivered to you",
+  "Hozir": "Now",
+  "Bajarildi": "Done",
+  "Toshkent": "Tashkent",
+  "Istanbul": "Istanbul",
+  "Reys": "Flight"
 }

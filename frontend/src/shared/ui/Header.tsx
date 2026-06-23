@@ -23,9 +23,10 @@ export function Header({ title, subtitle, showBack, onBack, right }: Props) {
     <div
       className="sticky top-0 z-20 border-b"
       style={{
-        background: 'rgba(255,255,255,0.85)',
+        background: 'rgba(11,20,38,0.72)',
         borderColor: 'var(--line)',
-        backdropFilter: 'blur(20px)',
+        backdropFilter: 'blur(20px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(140%)',
       }}
     >
       <div className="flex items-center gap-3 px-4 h-14">

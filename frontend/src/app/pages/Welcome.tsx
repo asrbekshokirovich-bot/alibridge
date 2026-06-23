@@ -141,7 +141,7 @@ export default function Welcome() {
           <div className="shrink-0">
             {loading === 'carrier'
               ? <span className="w-5 h-5 border-2 rounded-full animate-spin block"
-                  style={{ borderColor: 'var(--line2)', borderTopColor: 'var(--royal)' }} />
+                  style={{ borderColor: 'var(--line2)', borderTopColor: 'var(--brand-light)' }} />
               : <IconChevronRight size={20} className="text-[var(--muted2)]" />
             }
           </div>
@@ -171,7 +171,7 @@ export default function Welcome() {
           <div className="shrink-0">
             {loading === 'orderer'
               ? <span className="w-5 h-5 border-2 rounded-full animate-spin block"
-                  style={{ borderColor: 'var(--line2)', borderTopColor: 'var(--royal)' }} />
+                  style={{ borderColor: 'var(--line2)', borderTopColor: 'var(--brand-light)' }} />
               : <IconChevronRight size={20} className="text-[var(--muted2)]" />
             }
           </div>
@@ -181,7 +181,7 @@ export default function Welcome() {
         <button
           onClick={() => navigate('/web-login')}
           className="press mt-1 py-3 rounded-2xl text-sm font-semibold transition-colors"
-          style={{ color: 'var(--royal)' }}
+          style={{ color: 'var(--brand-light)' }}
         >
           {t('Xodim sifatida kirish')} →
         </button>

@@ -61,7 +61,7 @@ export default function Checkout() {
         <div className="rounded-2xl border divide-y" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
           {cart.map((c) => (
             <div key={c.variant.id} className="flex items-center gap-3 p-3.5" style={{ borderColor: 'var(--line)' }}>
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EAEEF4', color: 'var(--muted3)' }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface2)', color: 'var(--muted3)' }}>
                 <IconBox size={18} />
               </div>
               <div className="flex-1 min-w-0">
@@ -80,7 +80,7 @@ export default function Checkout() {
           {/* Jami */}
           <div className="flex items-center justify-between p-3.5" style={{ background: 'var(--surface2)', borderColor: 'var(--line)' }}>
             <span className="text-sm font-bold" style={{ color: 'var(--ink)' }}>{t('Jami')}</span>
-            <span className="text-[17px] font-extrabold tabular-nums" style={{ color: 'var(--lime-d)' }}>{money(totalPrice)} <span className="text-xs font-semibold" style={{ color: 'var(--muted3)' }}>so'm</span></span>
+            <span className="text-[17px] font-extrabold tabular-nums" style={{ color: 'var(--lime)' }}>{money(totalPrice)} <span className="text-xs font-semibold" style={{ color: 'var(--muted3)' }}>so'm</span></span>
           </div>
         </div>
 
@@ -98,11 +98,11 @@ export default function Checkout() {
                   onClick={() => { haptic('light'); setPickupType(opt.key) }}
                   className="press rounded-2xl p-4 border text-left transition-all"
                   style={{
-                    background: active ? 'rgba(26,58,108,0.06)' : 'var(--surface)',
-                    borderColor: active ? 'var(--royal)' : 'var(--line)',
+                    background: active ? 'rgba(106,163,255,0.14)' : 'var(--surface)',
+                    borderColor: active ? 'var(--brand-light)' : 'var(--line)',
                     boxShadow: 'var(--shadow-md)',
                   }}>
-                  <div style={{ color: active ? 'var(--royal)' : 'var(--muted3)' }}>{opt.icon}</div>
+                  <div style={{ color: active ? 'var(--brand-light)' : 'var(--muted3)' }}>{opt.icon}</div>
                   <p className="font-bold text-sm mt-2" style={{ color: 'var(--ink)' }}>{opt.title}</p>
                   <p className="text-xs" style={{ color: 'var(--muted)' }}>{opt.desc}</p>
                 </button>
@@ -128,7 +128,7 @@ export default function Checkout() {
         {error && <div className="text-sm px-4 py-3 rounded-2xl" style={{ background: 'rgba(239,68,68,0.10)', color: 'var(--red)' }}>{error}</div>}
       </form>
 
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 border-t" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', borderColor: 'var(--line)' }}>
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 border-t" style={{ background: 'rgba(10,16,32,0.85)', backdropFilter: 'blur(20px)', borderColor: 'var(--line)' }}>
         <Button fullWidth loading={loading} onClick={handleSubmit}>{t('Yuborish')}</Button>
       </div>
     </div>

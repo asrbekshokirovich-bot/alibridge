@@ -19,6 +19,7 @@ import WarehouseTrRoutes from '@/features/warehouse_tr/routes'
 import CourierUzRoutes from '@/features/courier_uz/routes'
 import CourierTrRoutes from '@/features/courier_tr/routes'
 import AdminRoutes from '@/features/admin/routes'
+import OrdererRoutes from '@/features/orderer/routes'
 
 // Har bir rol o'z paneliga yo'naltiriladi — Mini App oxirgi holatda ochiladi.
 // pending (xodim so'rovi kutilmoqda) -> StaffPending, aks holda Welcome (rol tanlash).
@@ -93,10 +94,11 @@ function AppRoutes() {
         <RoleGuard role="admin"><AdminRoutes /></RoleGuard>
       } />
 
-      {/* Orderer va China worker — hali ishlab chiqilmoqda */}
+      {/* Buyurtmachi (orderer) paneli */}
       <Route path="/orderer/*" element={
-        <RoleGuard role="orderer"><ComingSoon title="Buyurtmachi paneli" /></RoleGuard>
+        <RoleGuard role="orderer"><OrdererRoutes /></RoleGuard>
       } />
+      {/* China worker — hali ishlab chiqilmoqda */}
       <Route path="/china-worker/*" element={
         <RoleGuard role="china_worker"><ComingSoon title="Xitoy ishchisi paneli" /></RoleGuard>
       } />

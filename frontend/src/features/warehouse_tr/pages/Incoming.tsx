@@ -126,7 +126,7 @@ export default function Incoming() {
             <div key={g.stage} className="px-4 pt-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-bold" style={{ color: 'var(--ink)' }}>{g.stage}</h3>
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full tabular-nums" style={{ background: '#F1F4F8', color: 'var(--muted)' }}>{t('{{n}} ta', { n: g.total })}</span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full tabular-nums" style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--muted)' }}>{t('{{n}} ta', { n: g.total })}</span>
               </div>
 
               <div className="space-y-2">
@@ -148,7 +148,7 @@ export default function Incoming() {
                             <IconUser size={20} />
                           </button>
                         ) : (
-                          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(106,163,255,0.14)', color: '#6aa3ff' }}>
                             <IconUser size={20} />
                           </div>
                         )}
@@ -159,7 +159,7 @@ export default function Incoming() {
                               type="button"
                               onClick={openProfile}
                               className="font-bold text-[14.5px] truncate block text-left hover:underline"
-                              style={{ color: 'var(--royal)' }}
+                              style={{ color: 'var(--brand-light)' }}
                             >
                               {h.holder_name || t('Nomalum')}
                             </button>
@@ -214,7 +214,7 @@ export default function Incoming() {
                         <div className="border-t" style={{ borderColor: 'var(--line)' }}>
                           {h.items.map((p) => (
                             <div key={`${p.product_id}:${p.size_label}`} className="flex items-center gap-3 p-3.5 pl-4 border-t first:border-t-0" style={{ borderColor: 'var(--line)' }}>
-                              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
+                              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(106,163,255,0.14)', color: '#6aa3ff' }}>
                                 <IconBox size={18} />
                               </div>
                               <div className="flex-1 min-w-0">
@@ -223,7 +223,7 @@ export default function Incoming() {
                                 </p>
                                 <p className="text-[11px] font-mono" style={{ color: 'var(--muted2)' }}>{p.barcode}</p>
                               </div>
-                              <span className="text-xs font-bold px-2 py-0.5 rounded-lg shrink-0 tabular-nums" style={{ background: '#F1F4F8', color: 'var(--muted)' }}>
+                              <span className="text-xs font-bold px-2 py-0.5 rounded-lg shrink-0 tabular-nums" style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--muted)' }}>
                                 {t('{{n}} ta', { n: p.quantity })}
                               </span>
                             </div>

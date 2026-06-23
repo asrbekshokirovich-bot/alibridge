@@ -55,7 +55,7 @@ export default function HandoverCourier() {
               className="press w-full text-left rounded-2xl p-4 border flex items-center gap-3"
               style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}
             >
-              <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
+              <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(106,163,255,0.14)', color: '#6aa3ff' }}>
                 <IconTruck size={22} />
               </div>
               <div className="flex-1 min-w-0">

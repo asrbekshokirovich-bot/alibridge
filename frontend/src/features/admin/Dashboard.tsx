@@ -50,12 +50,12 @@ export default function AdminDashboard() {
             className="ab-card text-left p-4 cursor-pointer"
           >
             <div className="flex items-center gap-2.5 mb-3">
-              <span className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
+              <span className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center" style={{ background: 'rgba(106,163,255,0.14)', color: 'var(--brand-light)' }}>
                 <IconBox size={18} />
               </span>
               <span className="text-[10.5px] font-bold uppercase tracking-[0.05em]" style={{ color: 'var(--muted2)' }}>{t('Jami mahsulot')}</span>
             </div>
-            <p className="text-[26px] font-extrabold leading-none tabular-nums" style={{ color: 'var(--royal)' }}>{stats?.total_products ?? 0}</p>
+            <p className="text-[26px] font-extrabold leading-none tabular-nums" style={{ color: 'var(--brand-light)' }}>{stats?.total_products ?? 0}</p>
           </button>
 
           <button
@@ -63,7 +63,7 @@ export default function AdminDashboard() {
             className="ab-card text-left p-4 cursor-pointer"
           >
             <div className="flex items-center gap-2.5 mb-3">
-              <span className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center" style={{ background: '#E9F6EE', color: 'var(--green)' }}>
+              <span className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center" style={{ background: 'rgba(52,211,153,0.14)', color: 'var(--green)' }}>
                 <IconPlane size={18} />
               </span>
               <span className="text-[10.5px] font-bold uppercase tracking-[0.05em]" style={{ color: 'var(--muted2)' }}>{t('Faol yo\'lovchi')}</span>

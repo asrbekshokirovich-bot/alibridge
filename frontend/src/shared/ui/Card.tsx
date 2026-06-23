@@ -11,6 +11,8 @@ export function Card({ interactive, glow, className = '', children, ...rest }: P
       style={{
         background: 'var(--surface)',
         borderColor: 'var(--line)',
+        backdropFilter: 'var(--glass-blur)',
+        WebkitBackdropFilter: 'var(--glass-blur)',
         boxShadow: glow ? 'var(--shadow-brand)' : 'var(--shadow-md)',
         ...(rest.style ?? {}),
       }}

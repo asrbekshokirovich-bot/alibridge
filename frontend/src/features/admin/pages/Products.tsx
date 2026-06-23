@@ -6,7 +6,7 @@ import { Header, ListSkeleton, EmptyState, StatusBadge, IconBox } from '@/shared
 import type { Product } from '@/shared/types'
 
 const CHIP = 'text-xs font-semibold px-2 py-0.5 rounded-lg'
-const CHIP_STYLE: React.CSSProperties = { background: '#F1F4F8', color: 'var(--muted)' }
+const CHIP_STYLE: React.CSSProperties = { background: 'rgba(255,255,255,0.06)', color: 'var(--muted)' }
 const CHIP_MUTED = 'text-xs font-medium px-2 py-0.5 rounded-lg'
 const CHIP_MUTED_STYLE: React.CSSProperties = { background: 'var(--surface2)', color: 'var(--muted2)' }
 
@@ -51,7 +51,7 @@ export default function Products() {
               <div key={p.id} className="rounded-2xl p-3.5 border" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
                 <div className="flex items-stretch gap-3">
                   {/* Chap: katta rasm */}
-                  <div className="w-24 h-24 rounded-xl flex items-center justify-center shrink-0 overflow-hidden self-start" style={{ background: '#EAEEF4', color: 'var(--muted3)' }}>
+                  <div className="w-24 h-24 rounded-xl flex items-center justify-center shrink-0 overflow-hidden self-start" style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--muted3)' }}>
                     {p.image_url
                       ? <img src={p.image_url} alt="" className="w-full h-full object-cover" />
                       : <IconBox size={32} />}
@@ -71,7 +71,7 @@ export default function Products() {
                           {realVariants.map((v) => (
                             <div key={v.id} className="flex items-center gap-2 flex-wrap text-xs">
                               {v.size_label && (
-                                <span className="font-bold px-2 py-0.5 rounded-lg" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>{v.size_label}</span>
+                                <span className="font-bold px-2 py-0.5 rounded-lg" style={{ background: 'rgba(106,163,255,0.14)', color: 'var(--brand-light)' }}>{v.size_label}</span>
                               )}
                               {v.quantity > 0 && <span className={CHIP} style={CHIP_STYLE}>{t('{{n}} dona', { n: v.quantity })}</span>}
                               {g === 'boxed' && v.box_count != null && v.box_count > 0 && <span className={CHIP} style={CHIP_STYLE}>{t('{{n}} quti', { n: v.box_count })}</span>}
@@ -83,7 +83,7 @@ export default function Products() {
                                 </>
                               )}
                               {v.cargo_price > 0 && (
-                                <span className="font-bold ml-auto tabular-nums" style={{ color: 'var(--royal)' }}>
+                                <span className="font-bold ml-auto tabular-nums" style={{ color: 'var(--lime)' }}>
                                   ${v.cargo_price}/{unit}
                                 </span>
                               )}
@@ -98,7 +98,7 @@ export default function Products() {
                       <div className="flex items-center gap-2 mt-2 flex-wrap text-xs">
                         <span className={CHIP} style={CHIP_STYLE}>{g === 'piece' ? t('{{n}} dona', { n: p.quantity }) : t('{{kg}} kg · {{n}} dona', { kg: p.weight_kg, n: p.quantity })}</span>
                         {p.cargo_price > 0 && (
-                          <span className="font-bold ml-auto tabular-nums" style={{ color: 'var(--royal)' }}>${p.cargo_price}/{unit}</span>
+                          <span className="font-bold ml-auto tabular-nums" style={{ color: 'var(--lime)' }}>${p.cargo_price}/{unit}</span>
                         )}
                       </div>
                     )}

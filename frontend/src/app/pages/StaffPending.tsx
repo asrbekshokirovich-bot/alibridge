@@ -8,7 +8,7 @@ export default function StaffPending() {
       <Card className="w-full max-w-sm p-8 text-center">
         <div
           className="w-[64px] h-[64px] mx-auto rounded-[18px] flex items-center justify-center mb-5"
-          style={{ background: '#FEF1E0', color: 'var(--amber-d)' }}
+          style={{ background: 'rgba(251,191,36,0.14)', color: '#fbbf24' }}
         >
           {/* Clock / hourglass */}
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -21,7 +21,7 @@ export default function StaffPending() {
           {t('Admin sizga rol tayinlagandan keyin tizimga avtomatik kirasiz. Iltimos, kuting.')}
         </p>
         <div className="mt-7 inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full"
-          style={{ background: '#FEF1E0', color: 'var(--amber-d)' }}>
+          style={{ background: 'rgba(251,191,36,0.14)', color: '#fbbf24', border: '1px solid var(--line)' }}>
           <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: 'var(--amber)' }} />
           {t('Tasdiqlanishi kutilmoqda')}
         </div>

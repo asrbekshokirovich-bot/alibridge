@@ -69,7 +69,7 @@ export default function Carriers() {
                   {c.has_cargo ? t('Yuk bor') : t("Yuk yo'q")}
                 </StatusBadge>
                 {c.has_cargo && (
-                  <span className="text-[11px]" style={{ color: 'var(--royal)' }}>{t("Yuklarni ko'rish")}</span>
+                  <span className="text-[11px]" style={{ color: 'var(--brand-light)' }}>{t("Yuklarni ko'rish")}</span>
                 )}
               </div>
             </button>
@@ -92,7 +92,7 @@ export default function Carriers() {
               <div className="space-y-2.5 pb-2">
                 {cargo.map((p) => (
                   <div key={`${p.product_id}:${p.size_label}`} className="flex items-center gap-3 rounded-xl p-3" style={{ background: 'var(--surface2)' }}>
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(106,163,255,0.14)', color: '#6aa3ff' }}>
                       <IconBox size={18} />
                     </div>
                     <div className="flex-1 min-w-0">

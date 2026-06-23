@@ -196,7 +196,7 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
                   <span className="text-white text-sm font-semibold">{t('Yuklanmoqda…')}</span>
                 </div>
               )}
-              <span className="absolute bottom-2 right-2 bg-white/90 text-xs font-semibold px-2.5 py-1 rounded-lg" style={{ color: 'var(--ink)' }}>{t("O'zgartirish")}</span>
+              <span className="absolute bottom-2 right-2 text-xs font-semibold px-2.5 py-1 rounded-lg backdrop-blur-md" style={{ background: 'rgba(10,16,32,0.70)', color: 'var(--ink)', border: '1px solid var(--line)' }}>{t("O'zgartirish")}</span>
             </button>
           ) : (
             <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}
@@ -230,8 +230,8 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
           <div className="space-y-2">
             <label className="block text-sm font-bold" style={{ color: 'var(--muted)' }}>{t("Qo'shilgan o'lchamlar ({{count}})", { count: variants.length })}</label>
             {variants.map((v) => (
-              <div key={v.id} className="flex items-center gap-3 rounded-xl px-3 py-2.5 border" style={{ background: '#E9F6EE', borderColor: '#BFE6CD' }}>
-                <span className="w-10 h-10 rounded-lg bg-white flex items-center justify-center font-bold shrink-0 text-sm" style={{ color: 'var(--ink)' }}>
+              <div key={v.id} className="flex items-center gap-3 rounded-xl px-3 py-2.5 border" style={{ background: 'rgba(52,211,153,0.10)', borderColor: 'rgba(52,211,153,0.28)' }}>
+                <span className="w-10 h-10 rounded-lg flex items-center justify-center font-bold shrink-0 text-sm" style={{ background: 'var(--surface2)', color: 'var(--ink)' }}>
                   {v.size_label || '—'}
                 </span>
                 <div className="flex-1 min-w-0">
@@ -301,10 +301,10 @@ export default function ProductDetailsForm({ productId, initial, submitLabel, on
           </Button>
         </div>
 
-        {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{error}</div>}
+        {error && <div className="text-sm px-4 py-3 rounded-2xl" style={{ background: 'rgba(255,107,107,0.12)', color: 'var(--red)' }}>{error}</div>}
       </div>
 
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 bg-white/80 backdrop-blur-xl border-t" style={{ borderColor: 'var(--line)' }}>
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 backdrop-blur-xl border-t" style={{ background: 'rgba(10,16,32,0.80)', borderColor: 'var(--line)' }}>
         <Button fullWidth loading={loading} disabled={variants.length === 0 && !currentFilled} onClick={finish}>
           {submitLabel}
         </Button>

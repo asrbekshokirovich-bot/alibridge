@@ -86,7 +86,7 @@ export default function Orders() {
             const done = o.items.filter((i) => i.confirmed).length
             const allDone = o.all_confirmed || done === o.items.length
             return (
-              <div key={o.order_id} className="rounded-2xl border overflow-hidden" style={allDone ? { background: '#E9F6EE', borderColor: '#BFE6CD', boxShadow: 'var(--shadow-md)' } : { background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+              <div key={o.order_id} className="rounded-2xl border overflow-hidden" style={allDone ? { background: 'rgba(52,211,153,0.10)', borderColor: 'rgba(52,211,153,0.30)', boxShadow: 'var(--shadow-md)' } : { background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
                 {/* Header */}
                 <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--line)' }}>
                   <div className="flex items-center justify-between mb-0.5">
@@ -108,11 +108,11 @@ export default function Orders() {
                       className="w-full flex items-center gap-3 px-4 py-3 text-left disabled:cursor-default"
                     >
                       {it.confirmed ? (
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: '#E9F6EE', color: 'var(--green)' }}>
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(52,211,153,0.14)', color: 'var(--green)' }}>
                           <IconCheck size={18} />
                         </div>
                       ) : (
-                        <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
+                        <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(106,163,255,0.14)', color: '#6aa3ff' }}>
                           <IconBox size={18} />
                         </div>
                       )}
@@ -140,7 +140,7 @@ export default function Orders() {
                 </div>
 
                 {/* Footer: progress */}
-                <div className="px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5" style={allDone ? { background: '#E0F2E7', color: '#15803D' } : { background: 'var(--surface2)', color: 'var(--muted)' }}>
+                <div className="px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5" style={allDone ? { background: 'rgba(52,211,153,0.12)', color: 'var(--green)' } : { background: 'var(--surface2)', color: 'var(--muted)' }}>
                   {allDone ? <><IconCheck size={14} /> {t('Tasdiqlandi')}</> : t('{{done}}/{{total}} tasdiqlandi', { done, total: o.items.length })}
                 </div>
               </div>
@@ -154,7 +154,7 @@ export default function Orders() {
         {sheet && (
           <div className="px-5 pt-2 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(106,163,255,0.14)', color: '#6aa3ff' }}>
                 <IconBox size={22} />
               </div>
               <div className="min-w-0">

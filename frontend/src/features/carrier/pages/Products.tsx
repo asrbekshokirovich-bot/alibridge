@@ -92,18 +92,18 @@ export default function Products() {
                   boxShadow: selectedCount > 0 ? '0 0 0 1px var(--royal), var(--shadow-md)' : 'var(--shadow-md)',
                 }}>
                 {/* Rasm */}
-                <div className="aspect-square flex items-center justify-center overflow-hidden relative" style={{ background: '#EAEEF4' }}>
+                <div className="aspect-square flex items-center justify-center overflow-hidden relative" style={{ background: 'var(--surface2)' }}>
                   {p.image_url
                     ? <img src={p.image_url} alt="" className="w-full h-full object-cover" />
                     : <span style={{ color: 'var(--muted3)' }}><IconBox size={44} /></span>}
                   {/* Kategoriya pill (top-left) */}
                   <span className="absolute top-2.5 left-2.5 text-[10.5px] font-bold px-2.5 py-1 rounded-full"
-                    style={{ background: 'rgba(255,255,255,0.94)', color: 'var(--royal)', boxShadow: '0 1px 4px rgba(10,26,52,0.12)' }}>
+                    style={{ background: 'rgba(106,163,255,0.14)', color: 'var(--brand-light)', boxShadow: '0 1px 4px rgba(0,0,0,0.25)' }}>
                     {typeLabel(p.type)}
                   </span>
                   {selectedCount > 0 && (
                     <span className="absolute top-2.5 right-2.5 text-white text-[10.5px] font-bold px-2.5 py-1 rounded-full"
-                      style={{ background: 'var(--royal)', boxShadow: '0 1px 4px rgba(10,26,52,0.18)' }}>
+                      style={{ background: 'var(--royal)', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}>
                       {t("{{count}} o'lcham", { count: selectedCount })}
                     </span>
                   )}
@@ -112,7 +112,7 @@ export default function Products() {
                 <div className="p-3 flex flex-col gap-1.5 flex-1">
                   <h3 className="text-[14.5px] font-bold leading-tight line-clamp-2 tracking-[-0.01em]" style={{ color: 'var(--ink)' }}>{p.category || p.name}</h3>
                   {pr && (
-                    <div className="text-[18.5px] font-extrabold leading-none tabular-nums tracking-[-0.02em]" style={{ color: 'var(--royal)' }}>
+                    <div className="text-[18.5px] font-extrabold leading-none tabular-nums tracking-[-0.02em]" style={{ color: 'var(--lime)' }}>
                       {pr}<span className="text-[11px] font-semibold ml-1" style={{ color: 'var(--muted3)' }}>so'm/{unit}</span>
                     </div>
                   )}
@@ -129,7 +129,7 @@ export default function Products() {
         {open && (
           <div className="px-5 pt-2 pb-2">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden shrink-0" style={{ background: '#EAEEF4', color: 'var(--muted3)' }}>
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden shrink-0" style={{ background: 'var(--surface2)', color: 'var(--muted3)' }}>
                 {open.image_url
                   ? <img src={open.image_url} alt="" className="w-full h-full object-cover" />
                   : <IconBox size={26} />}
@@ -152,7 +152,7 @@ export default function Products() {
                       {v.size_label || '—'}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-extrabold tabular-nums" style={{ color: 'var(--royal)' }}>
+                      <p className="text-sm font-extrabold tabular-nums" style={{ color: 'var(--lime)' }}>
                         {money(v.cargo_price)}<span className="text-xs font-medium ml-0.5" style={{ color: 'var(--muted3)' }}>so'm/{unit}</span>
                       </p>
                       <p className="text-[11px]" style={{ color: 'var(--muted2)' }}>{t('{{count}} {{unit}} mavjud', { count: max, unit })}</p>

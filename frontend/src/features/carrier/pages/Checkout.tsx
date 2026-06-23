@@ -6,7 +6,7 @@ import { useTelegram } from '@/shared/hooks/useTelegram'
 import { useCarrierStore } from '../store'
 import type { CartItem } from '@/shared/types'
 import { money } from '@/shared/lib/format'
-import { isPiece, typeEmoji, unitWord } from '@/shared/lib/product'
+import { isPiece, unitWord } from '@/shared/lib/product'
 import { Header, Button, Input, Textarea, IconBox, IconTruck } from '@/shared/ui'
 
 interface LocationState { cart: CartItem[] }
@@ -58,35 +58,36 @@ export default function Checkout() {
 
       <form onSubmit={handleSubmit} className="px-4 pt-5 space-y-6">
         {/* Yuk ro'yxati */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm divide-y divide-slate-50">
+        <div className="rounded-[18px] border divide-y" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
           {cart.map((c) => (
-            <div key={c.variant.id} className="flex items-center gap-3 p-3.5">
-              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-lg shrink-0">
-                {typeEmoji(c.product.type)}
+            <div key={c.variant.id} className="flex items-center gap-3 p-3.5" style={{ borderColor: 'var(--border-soft)' }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border"
+                style={{ background: 'var(--card-2)', borderColor: 'var(--border)', color: 'var(--text-dim)' }}>
+                <IconBox size={18} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm text-slate-900 truncate">
+                <p className="font-semibold text-sm truncate" style={{ color: 'var(--text)' }}>
                   {c.product.category || c.product.name}
-                  {c.variant.size_label && <span className="text-slate-400 font-normal"> · {c.variant.size_label}</span>}
+                  {c.variant.size_label && <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}> · {c.variant.size_label}</span>}
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                   {c.amount} {unitWord(c.product.type)}
                   {isPiece(c.product.type) && ` · ~${c.weight.toFixed(1)} kg`}
                 </p>
               </div>
-              <p className="text-sm font-bold text-slate-700">{money(c.price)}</p>
+              <p className="text-sm font-bold tabnum" style={{ color: 'var(--text)' }}>{money(c.price)}</p>
             </div>
           ))}
-          {/* Jami */}
-          <div className="flex items-center justify-between p-3.5 bg-slate-50/50">
-            <span className="text-sm font-bold text-slate-700">{t('Jami')}</span>
-            <span className="text-sm font-extrabold" style={{ color: 'var(--brand)' }}>{money(totalPrice)}</span>
+          {/* Jami — daromad (lime) */}
+          <div className="flex items-center justify-between p-3.5" style={{ background: 'var(--card-2)', borderColor: 'var(--border-soft)' }}>
+            <span className="text-sm font-bold" style={{ color: 'var(--text-2)' }}>{t('Jami daromad')}</span>
+            <span className="text-base font-extrabold tabnum text-earn">{money(totalPrice)}</span>
           </div>
         </div>
 
         {/* Yuk olish joyi */}
         <div>
-          <p className="font-bold text-slate-900 text-[15px] mb-3">{t('Yukni qabul qilish joyi')}</p>
+          <p className="font-bold text-[15px] mb-3" style={{ color: 'var(--text)' }}>{t('Yukni qabul qilish joyi')}</p>
           <div className="grid grid-cols-2 gap-3">
             {([
               { key: 'self' as const, icon: <IconBox size={22} />, title: t('Ombordan'), desc: t('O\'zim olaman') },
@@ -96,10 +97,13 @@ export default function Checkout() {
               return (
                 <button key={opt.key} type="button"
                   onClick={() => { haptic('light'); setPickupType(opt.key) }}
-                  className={`press rounded-2xl p-4 border-2 text-left transition-colors ${active ? 'border-red-400 bg-red-50/50' : 'border-slate-100 bg-white'}`}>
-                  <div className={active ? '' : 'text-slate-400'} style={active ? { color: 'var(--brand)' } : undefined}>{opt.icon}</div>
-                  <p className="font-bold text-sm text-slate-900 mt-2">{opt.title}</p>
-                  <p className="text-xs text-slate-400">{opt.desc}</p>
+                  className="press rounded-2xl p-4 text-left transition-colors border"
+                  style={active
+                    ? { borderColor: 'var(--brand-tint-border)', background: 'var(--brand-tint)' }
+                    : { borderColor: 'var(--border)', background: 'var(--card)' }}>
+                  <div style={{ color: active ? 'var(--brand)' : 'var(--text-dim)' }}>{opt.icon}</div>
+                  <p className="font-bold text-sm mt-2" style={{ color: 'var(--text)' }}>{opt.title}</p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{opt.desc}</p>
                 </button>
               )
             })}

@@ -5,7 +5,7 @@ import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import { initials } from '@/shared/lib/format'
 import type { Role } from '@/shared/types'
-import { Header, ListSkeleton, EmptyState, StatusBadge, IconUsers } from '@/shared/ui'
+import { Header, ListSkeleton, EmptyState, StatusBadge, Input, Button, IconUsers } from '@/shared/ui'
 
 interface StaffMember {
   id: number; first_name: string; last_name: string; phone: string
@@ -83,16 +83,16 @@ export default function Staff() {
               (changeRole.isPending && changeRole.variables?.id === s.id) ||
               (remove.isPending && remove.variables === s.id)
             return (
-              <div key={s.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+              <div key={s.id} className="rounded-2xl border overflow-hidden" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
                 <button onClick={() => setExpanded(open ? null : s.id)}
                   className="w-full p-4 flex items-center gap-3.5 text-left">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shrink-0" style={{ background: 'linear-gradient(135deg, #64748b 0%, #475569 100%)' }}>
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shrink-0" style={{ background: 'var(--brand-gradient)' }}>
                     {initials(s.first_name, s.last_name)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-900 truncate">{s.first_name} {s.last_name}</p>
-                    <p className="text-xs text-slate-400">{s.phone}</p>
-                    <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--brand)' }}>
+                    <p className="font-bold truncate text-[14.5px]" style={{ color: 'var(--ink)' }}>{s.first_name} {s.last_name}</p>
+                    <p className="text-xs" style={{ color: 'var(--muted)' }}>{s.phone}</p>
+                    <p className="text-xs font-semibold mt-0.5" style={{ color: 'var(--royal)' }}>
                       {ROLE_LABELS[s.role] ?? s.role}
                     </p>
                   </div>
@@ -102,8 +102,8 @@ export default function Staff() {
                 </button>
 
                 {open && (
-                  <div className="px-4 pb-4 animate-fade-in">
-                    <p className="text-xs font-medium text-slate-500 mb-2">{t('Rolni almashtirish:')}</p>
+                  <div className="px-4 pb-4 animate-fade-in border-t" style={{ borderColor: 'var(--line)' }}>
+                    <p className="text-xs font-semibold mt-3 mb-2" style={{ color: 'var(--muted)' }}>{t('Rolni almashtirish:')}</p>
                     <div className="grid grid-cols-2 gap-2">
                       {ROLES.map((r) => {
                         const current = r.key === s.role
@@ -112,11 +112,12 @@ export default function Staff() {
                           <button key={r.key}
                             onClick={() => !current && changeRole.mutate({ id: s.id, role: r.key })}
                             disabled={busy || current}
-                            className={`press py-2.5 px-3 rounded-xl text-xs font-semibold disabled:opacity-50 flex items-center justify-center gap-1.5 ${
-                              current ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-700'
-                            }`}>
+                            className="press py-2.5 px-3 rounded-xl text-xs font-semibold disabled:opacity-50 flex items-center justify-center gap-1.5 border"
+                            style={current
+                              ? { background: '#EBF1FA', color: 'var(--royal)', borderColor: 'transparent' }
+                              : { background: 'var(--surface2)', color: 'var(--ink)', borderColor: 'var(--line2)' }}>
                             {picking && (
-                              <span className="w-3 h-3 border-2 border-slate-300 border-t-slate-500 rounded-full animate-spin" />
+                              <span className="w-3 h-3 border-2 rounded-full animate-spin" style={{ borderColor: 'var(--line2)', borderTopColor: 'var(--royal)' }} />
                             )}
                             {r.label}
                           </button>
@@ -124,26 +125,29 @@ export default function Staff() {
                       })}
                     </div>
                     {/* Sayt (brauzer) orqali kirish — login + parol */}
-                    <div className="mt-3 pt-3 border-t border-slate-100">
-                      <p className="text-xs font-medium text-slate-500 mb-2">
-                        {t('Sayt logini')} {s.username && <span className="text-emerald-600">{t('(joriy: {{username}})', { username: s.username })}</span>}
+                    <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--line)' }}>
+                      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--muted)' }}>
+                        {t('Sayt logini')} {s.username && <span style={{ color: 'var(--green)' }}>{t('(joriy: {{username}})', { username: s.username })}</span>}
                       </p>
                       <div className="flex flex-col gap-2">
-                        <input
+                        <Input
                           type="text"
                           placeholder={t('Login')}
                           value={creds[s.id]?.username ?? ''}
                           onChange={(e) => setCreds((c) => ({ ...c, [s.id]: { username: e.target.value, password: c[s.id]?.password ?? '' } }))}
-                          className="bg-slate-50 rounded-xl px-3 py-2.5 text-sm border border-slate-200 outline-none focus:border-slate-400"
+                          className="!h-11 !text-sm"
                         />
-                        <input
+                        <Input
                           type="text"
                           placeholder={t('Parol')}
                           value={creds[s.id]?.password ?? ''}
                           onChange={(e) => setCreds((c) => ({ ...c, [s.id]: { username: c[s.id]?.username ?? '', password: e.target.value } }))}
-                          className="bg-slate-50 rounded-xl px-3 py-2.5 text-sm border border-slate-200 outline-none focus:border-slate-400"
+                          className="!h-11 !text-sm"
                         />
-                        <button
+                        <Button
+                          variant="primary"
+                          fullWidth
+                          loading={setLogin.isPending && setLogin.variables?.id === s.id}
                           onClick={() => {
                             const v = creds[s.id]
                             if (!v || v.username.trim().length < 3 || v.password.length < 4) {
@@ -151,14 +155,9 @@ export default function Staff() {
                             }
                             setLogin.mutate({ id: s.id, username: v.username.trim(), password: v.password })
                           }}
-                          disabled={setLogin.isPending && setLogin.variables?.id === s.id}
-                          className="press py-2.5 rounded-xl text-xs font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-1.5"
-                          style={{ background: 'var(--brand-gradient)' }}>
-                          {setLogin.isPending && setLogin.variables?.id === s.id && (
-                            <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          )}
+                          className="!h-11 !text-xs">
                           {s.username ? t('Loginni yangilash') : t('Login o\'rnatish')}
-                        </button>
+                        </Button>
                       </div>
                     </div>
 
@@ -166,7 +165,8 @@ export default function Staff() {
                         if (confirm(t('{{name}} xodimlikdan olib tashlanadimi?', { name: s.first_name }))) remove.mutate(s.id)
                       }}
                       disabled={busy}
-                      className="press w-full mt-2 py-2.5 bg-red-50 text-red-600 rounded-xl text-xs font-semibold disabled:opacity-50">
+                      className="press w-full mt-2 py-2.5 rounded-xl text-xs font-semibold disabled:opacity-50"
+                      style={{ background: 'rgba(239,68,68,0.10)', color: 'var(--red)' }}>
                       {t('Roldan olib tashlash')}
                     </button>
                   </div>

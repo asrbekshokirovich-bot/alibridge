@@ -44,19 +44,19 @@ export default function Carriers() {
           {data.map((c) => {
             const busy = remove.isPending && remove.variables === c.id
             return (
-              <div key={c.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3.5">
+              <div key={c.id} className="rounded-2xl p-4 border flex items-center gap-3.5" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
                 <div className="relative shrink-0">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ background: 'var(--brand-gradient)' }}>
                     {initials(c.first_name, c.last_name)}
                   </div>
-                  <span className="absolute -bottom-1 -right-1 bg-slate-900 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                  <span className="absolute -bottom-1 -right-1 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--royal)' }}>
                     #{c.carrier_number}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-slate-900 truncate">{c.first_name} {c.last_name}</p>
-                  <p className="text-xs text-slate-400">{c.phone}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{t('Jami reys: {{count}}', { count: c.total_trips })}</p>
+                  <p className="font-bold truncate text-[14.5px]" style={{ color: 'var(--ink)' }}>{c.first_name} {c.last_name}</p>
+                  <p className="text-xs" style={{ color: 'var(--muted)' }}>{c.phone}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--muted2)' }}>{t('Jami reys: {{count}}', { count: c.total_trips })}</p>
                 </div>
                 <div className="flex flex-col items-end gap-2 shrink-0">
                   <StatusBadge tone={c.has_cargo ? 'green' : 'red'} dot>
@@ -69,7 +69,8 @@ export default function Carriers() {
                       }}
                       disabled={busy || c.has_cargo}
                       title={c.has_cargo ? t('Yuk bor — avval topshirilishi kerak') : t('Roldan olib tashlash')}
-                      className="press flex items-center gap-1 text-xs font-semibold text-red-600 disabled:opacity-40"
+                      className="press flex items-center gap-1 text-xs font-semibold disabled:opacity-40"
+                      style={{ color: 'var(--red)' }}
                     >
                       {busy ? (
                         <span className="w-3 h-3 border-2 border-red-300 border-t-red-500 rounded-full animate-spin" />

@@ -34,9 +34,10 @@ export default function Payments() {
       {/* Jami to'lanmagan */}
       {data && data.length > 0 && (
         <div className="px-4 pt-4">
-          <div className="rounded-3xl p-5 text-white" style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)' }}>
-            <p className="text-sm text-white/60">{t("Jami to'lanmagan")}</p>
-            <p className="text-3xl font-extrabold mt-1">{money(totalUnpaid)}</p>
+          <div className="relative overflow-hidden rounded-2xl p-5 text-white" style={{ background: 'var(--brand-gradient)', boxShadow: 'var(--shadow-brand)' }}>
+            <span className="absolute pointer-events-none" style={{ top: '-40px', right: '-26px', width: '130px', height: '130px', background: 'var(--lime)', opacity: 0.14, transform: 'rotate(42deg)', borderRadius: '28px' }} />
+            <p className="relative text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--lime)' }}>{t("Jami to'lanmagan")}</p>
+            <p className="relative text-[30px] font-extrabold mt-1.5 tabular-nums leading-none">{money(totalUnpaid)}</p>
           </div>
         </div>
       )}
@@ -48,15 +49,15 @@ export default function Payments() {
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((p) => (
-            <div key={p.id} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-bold text-slate-900">{p.carrier_number ? t("Yo'lovchi #{{number}}", { number: p.carrier_number }) : p.carrier_name}</p>
-                  <p className="text-xs text-slate-400">{p.carrier_name}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{t('{{count}} ta mahsulot', { count: p.products_count })}</p>
+            <div key={p.id} className="rounded-2xl p-4 border" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-bold text-[14.5px]" style={{ color: 'var(--ink)' }}>{p.carrier_number ? t("Yo'lovchi #{{number}}", { number: p.carrier_number }) : p.carrier_name}</p>
+                  <p className="text-xs" style={{ color: 'var(--muted)' }}>{p.carrier_name}</p>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--muted2)' }}>{t('{{count}} ta mahsulot', { count: p.products_count })}</p>
                 </div>
-                <div className="text-right">
-                  <p className="font-extrabold text-lg text-slate-900">{money(p.total_amount)}</p>
+                <div className="text-right shrink-0">
+                  <p className="font-extrabold text-lg tabular-nums" style={{ color: 'var(--lime-d)' }}>{money(p.total_amount)}</p>
                 </div>
               </div>
               <div className="flex items-center justify-between mt-3">

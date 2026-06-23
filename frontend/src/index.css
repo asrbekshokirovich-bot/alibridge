@@ -234,3 +234,22 @@ input[type="number"] {
 /* Gorizontal scroll uchun scrollbar yashirish (filtr chiplari va h.k.) */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Premium karta (dashboard menyu + stat kartalari) ──────────────────────
+   Yumshoq qatlamli soya, hairline chegara, hover ko'tarilishi, press effekti. */
+.ab-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 1px 2px rgba(26, 58, 108, 0.06), 0 8px 20px -12px rgba(26, 58, 108, 0.18);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+.ab-card:hover {
+  transform: translateY(-2px);
+  border-color: #CDD6E4;
+  box-shadow: 0 2px 6px rgba(26, 58, 108, 0.08), 0 18px 32px -14px rgba(26, 58, 108, 0.30);
+}
+.ab-card:active {
+  transform: translateY(0) scale(0.99);
+  box-shadow: 0 1px 2px rgba(26, 58, 108, 0.06), 0 6px 14px -10px rgba(26, 58, 108, 0.20);
+}

@@ -114,3 +114,15 @@ export const IconChevronDown = ({ size = 24, className }: IconProps) => (
     <path d="M6 9l6 6 6-6" {...stroke} />
   </svg>
 )
+
+export const IconChevronRight = ({ size = 24, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M9 18l6-6-6-6" {...stroke} />
+  </svg>
+)
+
+export const IconStar = ({ size = 24, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M12 2l2.4 5.5 6 .5-4.5 4 1.4 5.9L12 20l-5.3 2.9 1.4-5.9-4.5-4 6-.5L12 2z" {...stroke} />
+  </svg>
+)

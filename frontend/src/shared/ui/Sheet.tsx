@@ -17,12 +17,15 @@ export function Sheet({ open, onClose, children }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 animate-fade-in" onClick={onClose} />
+      {/* Backdrop — quyuq scrim */}
+      <div className="absolute inset-0 animate-fade-in" style={{ background: 'rgba(5,5,7,0.6)' }} onClick={onClose} />
       {/* Sheet */}
-      <div className="relative w-full max-w-[480px] bg-white rounded-t-3xl shadow-[0_-8px_32px_rgba(0,0,0,0.18)] animate-slide-up pb-6">
+      <div
+        className="relative w-full max-w-[480px] rounded-t-[30px] border-t animate-slide-up pb-6"
+        style={{ background: 'var(--card)', borderColor: 'var(--border-strong)', boxShadow: '0 -24px 60px -12px rgba(0,0,0,0.7)' }}
+      >
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-slate-300" />
+          <div className="w-[38px] h-1 rounded-full" style={{ background: 'var(--border-strong)' }} />
         </div>
         {children}
       </div>

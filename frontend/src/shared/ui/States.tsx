@@ -6,7 +6,7 @@ export function ListSkeleton({ count = 4 }: { count?: number }) {
   return (
     <div className="space-y-3 p-4">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="rounded-2xl p-4 border" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+        <div key={i} className="rounded-[18px] p-4 border" style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
           <Skeleton className="h-4 w-2/3 mb-2" />
           <Skeleton className="h-3 w-1/2 mb-1.5" />
           <Skeleton className="h-3 w-1/3" />
@@ -26,9 +26,13 @@ interface EmptyProps {
 export function EmptyState({ icon, title, description, action }: EmptyProps) {
   return (
     <div className="flex flex-col items-center justify-center px-8 py-16 text-center animate-fade-in">
-      <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-4"
-        style={{ background: 'var(--brand-gradient-soft)', border: '1px solid rgba(255,71,87,0.2)' }}>
-        <div className="text-3xl" style={{ color: 'var(--brand)' }}>{icon ?? '📭'}</div>
+      <div className="w-16 h-16 rounded-[18px] flex items-center justify-center mb-4"
+        style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-dim)' }}>
+        {icon ?? (
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M21 8l-9-5-9 5m18 0v8l-9 5m9-13l-9 5m0 8l-9-5V8" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
       </div>
       <h3 className="text-base font-bold mb-1" style={{ color: 'var(--text)' }}>{title}</h3>
       {description && (
@@ -48,10 +52,10 @@ interface SuccessProps {
 export function SuccessScreen({ title, description, action }: SuccessProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-8 text-center animate-scale-in">
-      <div className="w-24 h-24 rounded-full flex items-center justify-center mb-5"
-        style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', boxShadow: '0 12px 32px rgba(34,197,94,0.4)' }}>
-        <svg width="44" height="44" viewBox="0 0 24 24" fill="none">
-          <path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      <div className="w-20 h-20 rounded-full flex items-center justify-center mb-5"
+        style={{ background: 'rgba(61,220,132,0.14)', border: '1px solid rgba(61,220,132,0.3)' }}>
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+          <path d="M20 6L9 17l-5-5" stroke="#3ddc84" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
       <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--text)' }}>{title}</h2>

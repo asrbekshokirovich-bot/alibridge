@@ -333,7 +333,6 @@
   "Yo'lovchida": "Taşıyıcıda",
   "Yo'lovchidan olish": "Taşıyıcıdan al",
   "Yo'lovchidan qabul": "Taşıyıcıdan teslim al",
-  "Kuryerdan qabul": "Kuryeden teslim al",
   "Kuryer qaytargan yuklar": "Kuryenin iade ettiği yükler",
   "Yo'lovchidan yuk qabul qilish": "Taşıyıcıdan kargo al",
   "Yo'lovchiga topshirish": "Taşıyıcıya teslim et",
@@ -436,5 +435,13 @@
   "Qabul qilish ({{n}} ta)": "Kabul et ({{n}} adet)",
   "{{n}} ta mahsulot sizga (kuryerga) o'tdi.": "{{n}} ürün size (kuryeye) geçti.",
   "Bu yo'lovchida hozir yuk yo'q": "Bu yolcuda şu anda yük yok",
-  "Zarar yetgan yuk": "Hasarlı yük"
+  "Zarar yetgan yuk": "Hasarlı yük",
+  "Topshirish": "Teslim",
+  "Olish": "Alım",
+  "Moliya": "Finans",
+  "Tizim": "Sistem",
+  "Rolni tanlang": "Rol seçin",
+  "Xodim sifatida kirish": "Personel olarak giriş",
+  "Kargo logistikasi": "Kargo lojistiği",
+  "Toshkent (TAS) → Istanbul (IST) · Kargo logistikasi": "Taşkent (TAS) → İstanbul (IST) · Kargo lojistiği"
 }

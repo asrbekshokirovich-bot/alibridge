@@ -333,7 +333,6 @@
   "Yo'lovchida": "У перевозчика",
   "Yo'lovchidan olish": "Получить от перевозчика",
   "Yo'lovchidan qabul": "Приём от перевозчика",
-  "Kuryerdan qabul": "Приём от курьера",
   "Kuryer qaytargan yuklar": "Грузы, возвращённые курьером",
   "Yo'lovchidan yuk qabul qilish": "Принять груз от перевозчика",
   "Yo'lovchiga topshirish": "Передать перевозчику",
@@ -436,5 +435,13 @@
   "Qabul qilish ({{n}} ta)": "Принять ({{n}} шт.)",
   "{{n}} ta mahsulot sizga (kuryerga) o'tdi.": "{{n}} товаров перешло вам (курьеру).",
   "Bu yo'lovchida hozir yuk yo'q": "У этого пассажира сейчас нет грузов",
-  "Zarar yetgan yuk": "Повреждённый груз"
+  "Zarar yetgan yuk": "Повреждённый груз",
+  "Topshirish": "Передача",
+  "Olish": "Получение",
+  "Moliya": "Финансы",
+  "Tizim": "Система",
+  "Rolni tanlang": "Выберите роль",
+  "Xodim sifatida kirish": "Войти как сотрудник",
+  "Kargo logistikasi": "Карго логистика",
+  "Toshkent (TAS) → Istanbul (IST) · Kargo logistikasi": "Ташкент (TAS) → Стамбул (IST) · Карго логистика"
 }

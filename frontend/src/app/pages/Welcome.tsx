@@ -100,13 +100,13 @@ export default function Welcome() {
             className="relative text-[11px] font-bold uppercase mb-2"
             style={{ letterSpacing: '0.14em', color: 'var(--lime)' }}
           >
-            Kargo logistikasi
+            {t('Kargo logistikasi')}
           </div>
           <h1 className="relative text-[32px] font-extrabold tracking-[-0.02em] leading-none text-white">
             ALI BRIDGE
           </h1>
           <p className="relative text-[13.5px] font-medium mt-2.5" style={{ color: 'rgba(214,222,236,0.86)' }}>
-            Toshkent (TAS) → Istanbul (IST) · Kargo logistikasi
+            {t('Toshkent (TAS) → Istanbul (IST) · Kargo logistikasi')}
           </p>
         </div>
       </div>

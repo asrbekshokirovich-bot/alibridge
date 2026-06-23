@@ -14,25 +14,42 @@ export function DashboardHeader({ role, name, gradient, children }: HeaderProps)
   const { t } = useTranslation()
   return (
     <div
-      className="relative overflow-hidden px-5 pt-12 pb-7 text-white"
-      style={{ background: gradient ?? 'var(--brand-gradient)' }}
+      className="relative overflow-hidden px-5 pt-12 pb-10 text-white rounded-b-[28px]"
+      style={{
+        background:
+          gradient ??
+          'radial-gradient(130% 80% at 50% -10%, rgba(120,170,255,0.22), transparent 60%), linear-gradient(150deg,#1A3A6C 0%,#16325c 55%,#0F213D 100%)',
+        boxShadow: '0 14px 30px -16px rgba(15,33,61,0.55)',
+      }}
     >
-      {/* Lime burchak (wedge) + halqa — reference dekori */}
+      {/* Lime burchak (wedge) */}
       <span className="absolute pointer-events-none" style={{
-        top: '-44px', right: '-30px', width: '160px', height: '160px',
-        background: 'var(--lime)', opacity: 0.15, transform: 'rotate(42deg)', borderRadius: '30px',
+        top: '-46px', right: '-32px', width: '170px', height: '170px',
+        background: 'var(--lime)', opacity: 0.13, transform: 'rotate(42deg)', borderRadius: '34px',
       }} />
+      {/* Nozik halqa */}
       <span className="absolute pointer-events-none" style={{
-        bottom: '-50px', right: '70px', width: '120px', height: '120px',
+        bottom: '-46px', right: '64px', width: '120px', height: '120px',
         border: '1px solid rgba(255,255,255,0.10)', borderRadius: '50%',
       }} />
+      {/* Yumshoq lime glow */}
+      <span className="absolute pointer-events-none" style={{
+        top: '-30px', left: '-20px', width: '180px', height: '140px',
+        background: 'radial-gradient(circle at 30% 30%, rgba(212,233,76,0.16), transparent 65%)',
+      }} />
+      {/* Nozik nuqtali reys yoyi (splash ilhomi) */}
+      <svg className="absolute inset-x-0 top-0 w-full pointer-events-none" height="150" viewBox="0 0 400 150"
+        preserveAspectRatio="none" style={{ opacity: 0.55 }}>
+        <path d="M -12 122 Q 200 18 412 86" fill="none" stroke="rgba(212,233,76,0.30)"
+          strokeWidth="1.5" strokeDasharray="1 7" strokeLinecap="round" />
+      </svg>
 
       <div className="relative flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--lime)' }}>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--lime)' }}>
             {role}
           </p>
-          <h1 className="text-2xl font-extrabold tracking-[-0.02em] mt-1">
+          <h1 className="text-[26px] font-extrabold tracking-[-0.02em] mt-1 leading-tight">
             {name ? <>{t('Salom')}, {name}</> : t('Panel')}
           </h1>
         </div>
@@ -40,6 +57,10 @@ export function DashboardHeader({ role, name, gradient, children }: HeaderProps)
       </div>
 
       {children && <div className="relative mt-4">{children}</div>}
+
+      {/* Pastki ichki soya — chuqurlik (kartalar ustiga "overlap" qilishi uchun) */}
+      <span className="absolute inset-x-0 bottom-0 h-12 pointer-events-none"
+        style={{ background: 'linear-gradient(to top, rgba(8,18,38,0.28), transparent)' }} />
     </div>
   )
 }
@@ -53,20 +74,30 @@ export interface Action {
   badge?: number
 }
 
+// gradient string'idan birinchi hex rangni ajratib olamiz (semantik rang).
+function firstHex(g: string): string {
+  const m = g.match(/#[0-9a-fA-F]{6}/)
+  return m ? m[0] : '#1A3A6C'
+}
+function hexToRgba(hex: string, a: number): string {
+  const n = parseInt(hex.slice(1), 16)
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`
+}
+
 // Bitta menyu kartasi — ActionGrid va ActionSections uchun umumiy
 function ActionCard({ a }: { a: Action }) {
   const navigate = useNavigate()
   const { haptic } = useTelegram()
+  const tint = firstHex(a.gradient)
   return (
     <button
       onClick={() => { haptic('light'); navigate(a.path) }}
-      className="press w-full rounded-2xl p-4 flex items-center gap-4 text-left border transition-all"
-      style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}
+      className="ab-card w-full p-4 flex items-center gap-4 text-left cursor-pointer"
     >
-      {/* Icon tile */}
+      {/* Icon tile — yumshoq tint fon + o'z rangidagi ikona (premium) */}
       <div
-        className="w-[50px] h-[50px] rounded-xl flex items-center justify-center text-white shrink-0"
-        style={{ background: a.gradient }}
+        className="w-[50px] h-[50px] rounded-[14px] flex items-center justify-center shrink-0"
+        style={{ background: hexToRgba(tint, 0.12), color: tint }}
       >
         {a.icon}
       </div>
@@ -111,13 +142,15 @@ export interface ActionSection {
 }
 
 // Menyu kartalarini sarlavhali bo'limlarga ajratib ko'rsatadi.
-// Bo'lim sarlavhasi — kichik, katta harfli "eyebrow" uslubida (muted, harf oralig'i).
+// Bo'lim sarlavhasi — kichik, katta harfli "eyebrow" + oldida lime chiziqcha.
 export function ActionSections({ sections }: { sections: ActionSection[] }) {
   return (
     <div className="px-4 pt-4 pb-4 space-y-5">
       {sections.filter((s) => s.actions.length > 0).map((section) => (
         <div key={section.title}>
-          <p className="px-1 mb-2 text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--muted2)' }}>
+          <p className="flex items-center gap-2 px-1 mb-2.5 text-[11px] font-bold uppercase tracking-[0.16em]"
+            style={{ color: 'var(--muted2)' }}>
+            <span style={{ width: '14px', height: '2px', borderRadius: '2px', background: 'var(--lime)' }} />
             {section.title}
           </p>
           <div className="space-y-2.5">

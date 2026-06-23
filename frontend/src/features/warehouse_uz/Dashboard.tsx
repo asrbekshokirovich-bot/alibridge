@@ -1,13 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import client from '@/shared/api/client'
-import { ActionSections, LangSwitcher, IconPackagePlus, IconBag, IconTruck, IconBox, IconAlert, IconPlane, IconList } from '@/shared/ui'
+import { useAuthStore } from '@/shared/store/auth'
+import { DashboardHeader, ActionSections, IconPackagePlus, IconBag, IconTruck, IconBox, IconAlert, IconPlane, IconList } from '@/shared/ui'
 import type { ActionSection } from '@/shared/ui'
 
 interface Stats { pending_receive: number; in_warehouse: number; pending_orders: number }
 
 export default function WarehouseUzDashboard() {
   const { t } = useTranslation()
+  const user = useAuthStore((s) => s.user)
   const { data: stats } = useQuery({
     queryKey: ['warehouse-uz-stats'],
     queryFn: () => client.get<Stats>('/warehouse-uz/stats').then((r) => r.data),
@@ -37,10 +39,8 @@ export default function WarehouseUzDashboard() {
   ]
 
   return (
-    <div className="min-h-screen animate-fade-in pt-4">
-      <div className="px-4 flex justify-end">
-        <LangSwitcher dark={false} />
-      </div>
+    <div className="min-h-screen animate-fade-in" style={{ background: 'var(--bg)' }}>
+      <DashboardHeader role={t('Toshkent ombori')} name={user?.first_name} />
       <ActionSections sections={sections} />
     </div>
   )

@@ -42,13 +42,12 @@ export default function AdminDashboard() {
     <div className="min-h-screen animate-fade-in" style={{ background: 'var(--bg)' }}>
       <DashboardHeader role={t('Administrator')} name={t('Boshqaruv paneli')} />
 
-      {/* Stats — bosiladigan */}
-      <div className="px-4 -mt-5 relative">
+      {/* Stats — bosiladigan (hero ustiga biroz "overlap") */}
+      <div className="px-4 -mt-7 relative z-10">
         <div className="grid grid-cols-2 gap-3.5">
           <button
             onClick={() => navigate('/admin/products')}
-            className="press text-left rounded-2xl p-4 border"
-            style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}
+            className="ab-card text-left p-4 cursor-pointer"
           >
             <div className="flex items-center gap-2.5 mb-3">
               <span className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
@@ -61,8 +60,7 @@ export default function AdminDashboard() {
 
           <button
             onClick={() => navigate('/admin/carriers')}
-            className="press text-left rounded-2xl p-4 border"
-            style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}
+            className="ab-card text-left p-4 cursor-pointer"
           >
             <div className="flex items-center gap-2.5 mb-3">
               <span className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center" style={{ background: '#E9F6EE', color: 'var(--green)' }}>

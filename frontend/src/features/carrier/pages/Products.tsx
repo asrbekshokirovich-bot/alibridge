@@ -6,8 +6,8 @@ import client from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import type { Product, ProductVariant, CartItem } from '@/shared/types'
 import { money } from '@/shared/lib/format'
-import { isPiece, typeLabel, typeEmoji, unitWord } from '@/shared/lib/product'
-import { Header, ListSkeleton, EmptyState, Sheet } from '@/shared/ui'
+import { isPiece, typeLabel, unitWord } from '@/shared/lib/product'
+import { Header, ListSkeleton, EmptyState, Sheet, IconBox } from '@/shared/ui'
 
 // Donali uchun og'irlik = dona × 1 dona vazni; kiloli/tekstil uchun = kiritilgan kg
 function calcWeight(p: Product, v: ProductVariant, amount: number): number {
@@ -85,28 +85,38 @@ export default function Products() {
             const pr = priceRange(p)
             return (
               <button key={p.id} onClick={() => { haptic('light'); setOpen(p) }}
-                className={`text-left bg-white rounded-2xl overflow-hidden border-2 flex flex-col transition-colors ${selectedCount > 0 ? 'border-red-400' : 'border-slate-100'}`}>
+                className="press text-left rounded-[18px] overflow-hidden border flex flex-col transition-all"
+                style={{
+                  background: 'var(--surface)',
+                  borderColor: selectedCount > 0 ? 'var(--royal)' : 'var(--line)',
+                  boxShadow: selectedCount > 0 ? '0 0 0 1px var(--royal), var(--shadow-md)' : 'var(--shadow-md)',
+                }}>
                 {/* Rasm */}
-                <div className="aspect-square bg-slate-50 flex items-center justify-center overflow-hidden relative">
+                <div className="aspect-square flex items-center justify-center overflow-hidden relative" style={{ background: '#EAEEF4' }}>
                   {p.image_url
                     ? <img src={p.image_url} alt="" className="w-full h-full object-cover" />
-                    : <span className="text-5xl">{typeEmoji(p.type)}</span>}
+                    : <span style={{ color: 'var(--muted3)' }}><IconBox size={44} /></span>}
+                  {/* Kategoriya pill (top-left) */}
+                  <span className="absolute top-2.5 left-2.5 text-[10.5px] font-bold px-2.5 py-1 rounded-full"
+                    style={{ background: 'rgba(255,255,255,0.94)', color: 'var(--royal)', boxShadow: '0 1px 4px rgba(10,26,52,0.12)' }}>
+                    {typeLabel(p.type)}
+                  </span>
                   {selectedCount > 0 && (
-                    <span className="absolute top-2 right-2 bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">{t("{{count}} o'lcham", { count: selectedCount })}</span>
+                    <span className="absolute top-2.5 right-2.5 text-white text-[10.5px] font-bold px-2.5 py-1 rounded-full"
+                      style={{ background: 'var(--royal)', boxShadow: '0 1px 4px rgba(10,26,52,0.18)' }}>
+                      {t("{{count}} o'lcham", { count: selectedCount })}
+                    </span>
                   )}
                 </div>
 
-                <div className="p-2.5 flex flex-col gap-1 flex-1">
-                  <span className={`self-start text-[10px] font-bold px-2 py-0.5 rounded ${isPiece(p.type) ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
-                    {typeLabel(p.type)}
-                  </span>
-                  <h3 className="text-[14px] font-bold text-slate-900 leading-tight line-clamp-2">{p.category || p.name}</h3>
+                <div className="p-3 flex flex-col gap-1.5 flex-1">
+                  <h3 className="text-[14.5px] font-bold leading-tight line-clamp-2 tracking-[-0.01em]" style={{ color: 'var(--ink)' }}>{p.category || p.name}</h3>
                   {pr && (
-                    <div className="text-[15px] font-bold leading-tight" style={{ color: 'var(--brand)' }}>
-                      {pr}<span className="text-xs font-medium text-slate-400">/{unit}</span>
+                    <div className="text-[18.5px] font-extrabold leading-none tabular-nums tracking-[-0.02em]" style={{ color: 'var(--royal)' }}>
+                      {pr}<span className="text-[11px] font-semibold ml-1" style={{ color: 'var(--muted3)' }}>so'm/{unit}</span>
                     </div>
                   )}
-                  <p className="text-[11px] text-slate-400 mt-auto pt-1">{t("{{count}} o'lcham mavjud →", { count: vs.length })}</p>
+                  <p className="text-[11px] mt-auto pt-1" style={{ color: 'var(--muted3)' }}>{t("{{count}} o'lcham mavjud →", { count: vs.length })}</p>
                 </div>
               </button>
             )
@@ -119,14 +129,14 @@ export default function Products() {
         {open && (
           <div className="px-5 pt-2 pb-2">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-14 h-14 rounded-xl bg-slate-50 flex items-center justify-center overflow-hidden shrink-0">
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden shrink-0" style={{ background: '#EAEEF4', color: 'var(--muted3)' }}>
                 {open.image_url
                   ? <img src={open.image_url} alt="" className="w-full h-full object-cover" />
-                  : <span className="text-3xl">{typeEmoji(open.type)}</span>}
+                  : <IconBox size={26} />}
               </div>
               <div className="min-w-0">
-                <h3 className="font-bold text-slate-900 truncate">{open.category || open.name}</h3>
-                <p className="text-xs text-slate-400">{t("O'lchamni tanlang")}</p>
+                <h3 className="font-bold truncate" style={{ color: 'var(--ink)' }}>{open.category || open.name}</h3>
+                <p className="text-xs" style={{ color: 'var(--muted)' }}>{t("O'lchamni tanlang")}</p>
               </div>
             </div>
             <div className="space-y-2.5">
@@ -137,19 +147,19 @@ export default function Products() {
                 const unit = unitWord(open.type)
                 const max = maxAmount(open, v)
                 return (
-                  <div key={v.id} className="flex items-center gap-3 bg-slate-50 rounded-xl p-3">
-                    <span className="w-11 h-11 rounded-lg bg-white flex items-center justify-center font-bold text-slate-700 shrink-0">
+                  <div key={v.id} className="flex items-center gap-3 rounded-xl p-3 border" style={{ background: 'var(--surface2)', borderColor: 'var(--line)' }}>
+                    <span className="w-11 h-11 rounded-lg flex items-center justify-center font-bold shrink-0 border" style={{ background: 'var(--surface)', borderColor: 'var(--line2)', color: 'var(--ink)' }}>
                       {v.size_label || '—'}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold" style={{ color: 'var(--brand)' }}>
-                        {money(v.cargo_price)}<span className="text-xs font-medium text-slate-400">/{unit}</span>
+                      <p className="text-sm font-extrabold tabular-nums" style={{ color: 'var(--royal)' }}>
+                        {money(v.cargo_price)}<span className="text-xs font-medium ml-0.5" style={{ color: 'var(--muted3)' }}>so'm/{unit}</span>
                       </p>
-                      <p className="text-[11px] text-slate-400">{t('{{count}} {{unit}} mavjud', { count: max, unit })}</p>
+                      <p className="text-[11px]" style={{ color: 'var(--muted2)' }}>{t('{{count}} {{unit}} mavjud', { count: max, unit })}</p>
                     </div>
                     <div className="shrink-0 w-[120px]">
                       {selected ? (
-                        <div className="flex items-center justify-between rounded-xl overflow-hidden" style={{ background: 'var(--brand-gradient)' }}>
+                        <div className="flex items-center justify-between rounded-xl overflow-hidden" style={{ background: 'var(--royal)' }}>
                           <button onClick={() => dec(open, v, amount)} className="press w-9 h-9 flex items-center justify-center text-white text-xl font-bold">−</button>
                           <span className="text-white text-sm font-bold tabular-nums">{amount}</span>
                           <button onClick={() => inc(open, v, amount)} disabled={amount >= max}
@@ -157,7 +167,7 @@ export default function Products() {
                         </div>
                       ) : (
                         <button onClick={() => select(open, v)} disabled={max <= 0}
-                          className="press w-full h-9 rounded-xl text-sm font-bold text-white disabled:opacity-40" style={{ background: 'var(--brand-gradient)' }}>
+                          className="press w-full h-9 rounded-xl text-sm font-bold text-white disabled:opacity-40" style={{ background: 'var(--royal)' }}>
                           {t('Tanlash')}
                         </button>
                       )}

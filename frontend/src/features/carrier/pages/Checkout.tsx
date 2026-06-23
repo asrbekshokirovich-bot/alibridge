@@ -6,7 +6,7 @@ import { useTelegram } from '@/shared/hooks/useTelegram'
 import { useCarrierStore } from '../store'
 import type { CartItem } from '@/shared/types'
 import { money } from '@/shared/lib/format'
-import { isPiece, typeEmoji, unitWord } from '@/shared/lib/product'
+import { isPiece, unitWord } from '@/shared/lib/product'
 import { Header, Button, Input, Textarea, IconBox, IconTruck } from '@/shared/ui'
 
 interface LocationState { cart: CartItem[] }
@@ -58,35 +58,35 @@ export default function Checkout() {
 
       <form onSubmit={handleSubmit} className="px-4 pt-5 space-y-6">
         {/* Yuk ro'yxati */}
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm divide-y divide-slate-50">
+        <div className="rounded-2xl border divide-y" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
           {cart.map((c) => (
-            <div key={c.variant.id} className="flex items-center gap-3 p-3.5">
-              <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-lg shrink-0">
-                {typeEmoji(c.product.type)}
+            <div key={c.variant.id} className="flex items-center gap-3 p-3.5" style={{ borderColor: 'var(--line)' }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: '#EAEEF4', color: 'var(--muted3)' }}>
+                <IconBox size={18} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm text-slate-900 truncate">
+                <p className="font-semibold text-sm truncate" style={{ color: 'var(--ink)' }}>
                   {c.product.category || c.product.name}
-                  {c.variant.size_label && <span className="text-slate-400 font-normal"> · {c.variant.size_label}</span>}
+                  {c.variant.size_label && <span className="font-normal" style={{ color: 'var(--muted3)' }}> · {c.variant.size_label}</span>}
                 </p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs" style={{ color: 'var(--muted)' }}>
                   {c.amount} {unitWord(c.product.type)}
                   {isPiece(c.product.type) && ` · ~${c.weight.toFixed(1)} kg`}
                 </p>
               </div>
-              <p className="text-sm font-bold text-slate-700">{money(c.price)}</p>
+              <p className="text-sm font-bold tabular-nums" style={{ color: 'var(--ink)' }}>{money(c.price)}</p>
             </div>
           ))}
           {/* Jami */}
-          <div className="flex items-center justify-between p-3.5 bg-slate-50/50">
-            <span className="text-sm font-bold text-slate-700">{t('Jami')}</span>
-            <span className="text-sm font-extrabold" style={{ color: 'var(--brand)' }}>{money(totalPrice)}</span>
+          <div className="flex items-center justify-between p-3.5" style={{ background: 'var(--surface2)', borderColor: 'var(--line)' }}>
+            <span className="text-sm font-bold" style={{ color: 'var(--ink)' }}>{t('Jami')}</span>
+            <span className="text-[17px] font-extrabold tabular-nums" style={{ color: 'var(--lime-d)' }}>{money(totalPrice)} <span className="text-xs font-semibold" style={{ color: 'var(--muted3)' }}>so'm</span></span>
           </div>
         </div>
 
         {/* Yuk olish joyi */}
         <div>
-          <p className="font-bold text-slate-900 text-[15px] mb-3">{t('Yukni qabul qilish joyi')}</p>
+          <p className="font-bold text-[15px] mb-3" style={{ color: 'var(--ink)' }}>{t('Yukni qabul qilish joyi')}</p>
           <div className="grid grid-cols-2 gap-3">
             {([
               { key: 'self' as const, icon: <IconBox size={22} />, title: t('Ombordan'), desc: t('O\'zim olaman') },
@@ -96,10 +96,15 @@ export default function Checkout() {
               return (
                 <button key={opt.key} type="button"
                   onClick={() => { haptic('light'); setPickupType(opt.key) }}
-                  className={`press rounded-2xl p-4 border-2 text-left transition-colors ${active ? 'border-red-400 bg-red-50/50' : 'border-slate-100 bg-white'}`}>
-                  <div className={active ? '' : 'text-slate-400'} style={active ? { color: 'var(--brand)' } : undefined}>{opt.icon}</div>
-                  <p className="font-bold text-sm text-slate-900 mt-2">{opt.title}</p>
-                  <p className="text-xs text-slate-400">{opt.desc}</p>
+                  className="press rounded-2xl p-4 border text-left transition-all"
+                  style={{
+                    background: active ? 'rgba(26,58,108,0.06)' : 'var(--surface)',
+                    borderColor: active ? 'var(--royal)' : 'var(--line)',
+                    boxShadow: 'var(--shadow-md)',
+                  }}>
+                  <div style={{ color: active ? 'var(--royal)' : 'var(--muted3)' }}>{opt.icon}</div>
+                  <p className="font-bold text-sm mt-2" style={{ color: 'var(--ink)' }}>{opt.title}</p>
+                  <p className="text-xs" style={{ color: 'var(--muted)' }}>{opt.desc}</p>
                 </button>
               )
             })}
@@ -116,14 +121,14 @@ export default function Checkout() {
         <Textarea label={t('Turkiyada yukni qoldirish manzili')}
           placeholder={t('Kuryer kelib oladigan joy (mehmonxona, manzil...)')}
           value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} rows={3} />
-        <p className="text-xs text-slate-400 -mt-3">
+        <p className="text-xs -mt-3" style={{ color: 'var(--muted)' }}>
           {t('Yukni shu manzilga qoldirasiz — Turkiyadagi kuryer o\'sha yerdan olib ketadi.')}
         </p>
 
-        {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-2xl">{error}</div>}
+        {error && <div className="text-sm px-4 py-3 rounded-2xl" style={{ background: 'rgba(239,68,68,0.10)', color: 'var(--red)' }}>{error}</div>}
       </form>
 
-      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 bg-white/80 backdrop-blur-xl border-t border-slate-100">
+      <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] p-4 border-t" style={{ background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)', borderColor: 'var(--line)' }}>
         <Button fullWidth loading={loading} onClick={handleSubmit}>{t('Yuborish')}</Button>
       </div>
     </div>

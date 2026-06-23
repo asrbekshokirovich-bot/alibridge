@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import { useAuthBootstrap } from '@/shared/hooks/useAuthBootstrap'
+import { SplashScreen } from '@/shared/ui'
 import Router from './app/router'
 
 const queryClient = new QueryClient({
@@ -19,11 +20,7 @@ export default function App() {
   const ready = useAuthBootstrap()
 
   if (!ready) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <span className="w-7 h-7 border-2 border-white/20 border-t-white/80 rounded-full animate-spin" />
-      </div>
-    )
+    return <SplashScreen />
   }
 
   return (

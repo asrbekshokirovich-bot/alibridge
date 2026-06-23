@@ -92,29 +92,29 @@ export default function CourierUzCarrierHandover() {
           {groups.map((g) => {
             const busy = handover.isPending && handover.variables?.carrier_number === g.carrier_number
             return (
-              <div key={g.carrier_number} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+              <div key={g.carrier_number} className="rounded-2xl border overflow-hidden" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
                 {/* Yo'lovchi sarlavhasi */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-50">
+                <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--line)' }}>
                   <div>
-                    <span className="text-sm font-bold text-slate-900">{t("Yo'lovchi #{{n}}", { n: g.carrier_number })}</span>
-                    {g.carrier_name && <p className="text-xs text-slate-400 mt-0.5">{g.carrier_name}</p>}
+                    <span className="text-sm font-bold" style={{ color: 'var(--ink)' }}>{t("Yo'lovchi #{{n}}", { n: g.carrier_number })}</span>
+                    {g.carrier_name && <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>{g.carrier_name}</p>}
                   </div>
-                  <span className="text-xs font-bold text-white px-2.5 py-0.5 rounded-full" style={{ background: 'var(--brand)' }}>
+                  <span className="text-xs font-bold text-white px-2.5 py-0.5 rounded-full" style={{ background: 'var(--royal)' }}>
                     {t('{{n}} ta', { n: g.total })}
                   </span>
                 </div>
 
                 {/* Yuklar */}
-                <div className="divide-y divide-slate-50">
+                <div className="divide-y" style={{ borderColor: 'var(--line)' }}>
                   {g.items.map((p) => (
                     <div key={`${p.product_id}:${p.size_label}`} className="flex items-center gap-3 px-4 py-2.5">
-                      <div className="w-9 h-9 rounded-lg bg-slate-50 flex items-center justify-center text-base shrink-0 overflow-hidden">
-                        {p.image_url ? <img src={p.image_url} alt="" className="w-full h-full object-cover" /> : '📦'}
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 overflow-hidden" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
+                        {p.image_url ? <img src={p.image_url} alt="" className="w-full h-full object-cover" /> : <IconBox size={16} />}
                       </div>
-                      <span className="flex-1 text-sm text-slate-700 truncate">
+                      <span className="flex-1 text-sm truncate" style={{ color: 'var(--ink)' }}>
                         {p.product_name}{p.size_label ? ` · ${p.size_label}` : ''}
                       </span>
-                      <span className="text-xs text-slate-400 shrink-0">{t('{{n}} ta', { n: p.quantity })}</span>
+                      <span className="text-xs shrink-0" style={{ color: 'var(--muted2)' }}>{t('{{n}} ta', { n: p.quantity })}</span>
                     </div>
                   ))}
                 </div>
@@ -123,8 +123,8 @@ export default function CourierUzCarrierHandover() {
                 <div className="px-4 py-3">
                   <button onClick={() => { haptic('medium'); setError(''); handover.mutate(g) }}
                     disabled={busy}
-                    className="press w-full py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
-                    style={{ background: 'var(--brand-gradient)' }}>
+                    className="press w-full py-3 rounded-xl text-sm font-bold text-white disabled:opacity-50"
+                    style={{ background: 'var(--royal)', boxShadow: 'var(--shadow-brand)' }}>
                     {busy ? t('Topshirilmoqda…') : t('Topshirdim')}
                   </button>
                 </div>

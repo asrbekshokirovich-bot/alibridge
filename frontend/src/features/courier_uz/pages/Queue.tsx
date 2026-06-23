@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
-import { Header, ListSkeleton, EmptyState, StatusBadge, IconList, IconCheck } from '@/shared/ui'
+import { Header, ListSkeleton, EmptyState, StatusBadge, IconList, IconCheck, IconBox } from '@/shared/ui'
 
 interface QueueProduct {
   barcode: string
@@ -77,18 +77,18 @@ export default function CourierUzQueue() {
             const done = item.status === 'done'
             const busy = pickup.isPending && pickup.variables?.orderId === item.id
             return (
-              <div key={item.id} className={`rounded-2xl border shadow-sm overflow-hidden ${done ? 'bg-emerald-50/40 border-emerald-200' : 'bg-white border-slate-100'}`}>
+              <div key={item.id} className="rounded-2xl border overflow-hidden" style={{ background: done ? 'var(--surface2)' : 'var(--surface)', borderColor: done ? 'rgba(22,163,74,0.3)' : 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
                 {/* Header */}
-                <div className="px-4 py-3 border-b border-slate-50">
+                <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--line)' }}>
                   <div className="flex items-center justify-between mb-0.5">
-                    <span className="text-sm font-bold text-slate-900">
+                    <span className="text-sm font-bold" style={{ color: 'var(--ink)' }}>
                       {t("Yo'lovchi")} {item.carrier_number ? `#${item.carrier_number}` : ''}
                     </span>
                     <StatusBadge tone={done ? 'green' : 'yellow'} dot>{done ? t('Olib ketildi') : t('Kutilmoqda')}</StatusBadge>
                   </div>
-                  <p className="text-xs text-slate-400">{item.carrier_name}</p>
+                  <p className="text-xs" style={{ color: 'var(--muted)' }}>{item.carrier_name}</p>
                   {item.address && (
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1">
+                    <div className="flex items-center gap-1.5 text-xs mt-1" style={{ color: 'var(--muted)' }}>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" className="shrink-0">
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z M12 13a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
@@ -98,23 +98,23 @@ export default function CourierUzQueue() {
                 </div>
 
                 {/* Mahsulotlar */}
-                <div className="divide-y divide-slate-50">
+                <div className="divide-y" style={{ borderColor: 'var(--line)' }}>
                   {item.products.map((p) => (
                     <div key={p.barcode} className="flex items-center gap-3 px-4 py-3">
                       {p.picked_up ? (
-                        <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: '#E9F6EE', color: 'var(--green)' }}>
                           <IconCheck size={18} />
                         </div>
                       ) : (
-                        <div className="w-9 h-9 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
-                          <span className="text-lg">📦</span>
+                        <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
+                          <IconBox size={18} />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-slate-900 truncate">
+                        <p className="text-[14.5px] font-bold truncate" style={{ color: 'var(--ink)' }}>
                           {p.product_name}{p.size_label ? ` · ${p.size_label}` : ''}
                         </p>
-                        <p className="text-[11px] font-mono text-slate-400">{p.barcode}</p>
+                        <p className="text-[11px] font-mono" style={{ color: 'var(--muted2)' }}>{p.barcode}</p>
                       </div>
                     </div>
                   ))}
@@ -122,16 +122,16 @@ export default function CourierUzQueue() {
 
                 {/* Footer: tugma yoki tasdiqlangan */}
                 {done ? (
-                  <div className="px-4 py-2.5 bg-emerald-100/50 text-xs font-medium text-emerald-700">
-                    ✓ {item.confirmed_by_name ? t('{{name}} tasdiqladi', { name: item.confirmed_by_name }) : t('Olib ketildi')}
+                  <div className="px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5" style={{ background: '#E9F6EE', color: 'var(--green)' }}>
+                    <IconCheck size={14} /> {item.confirmed_by_name ? t('{{name}} tasdiqladi', { name: item.confirmed_by_name }) : t('Olib ketildi')}
                   </div>
                 ) : (
                   <div className="px-4 py-3">
                     <button
                       onClick={() => takeOrder(item)}
                       disabled={busy}
-                      className="press w-full py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
-                      style={{ background: 'var(--brand-gradient)' }}
+                      className="press w-full py-3 rounded-xl text-sm font-bold text-white disabled:opacity-50"
+                      style={{ background: 'var(--royal)', boxShadow: 'var(--shadow-brand)' }}
                     >
                       {busy ? t('Olinmoqda…') : t('Olib ketdim')}
                     </button>

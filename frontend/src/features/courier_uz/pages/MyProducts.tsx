@@ -30,9 +30,9 @@ export default function CourierUzMyProducts() {
 
       {data && data.length > 0 && (
         <div className="px-4 pt-3">
-          <div className="rounded-2xl px-4 py-3 flex items-center justify-between" style={{ background: 'var(--brand-gradient-soft)' }}>
-            <span className="text-sm font-semibold text-red-900/80">{t('Aeroportда topshirilishi kerak')}</span>
-            <span className="text-lg font-extrabold" style={{ color: 'var(--brand)' }}>
+          <div className="rounded-2xl px-4 py-3 flex items-center justify-between border" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+            <span className="text-sm font-semibold" style={{ color: 'var(--muted)' }}>{t('Aeroportда topshirilishi kerak')}</span>
+            <span className="text-[22px] font-extrabold tabular-nums" style={{ color: 'var(--royal)' }}>
               {t('{{n}} ta', { n: data.reduce((s, p) => s + (p.quantity || 0), 0) })}
             </span>
           </div>
@@ -50,30 +50,30 @@ export default function CourierUzMyProducts() {
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((p) => (
-            <div key={`${p.product_id}:${p.size_label}`} className="bg-white rounded-2xl p-3.5 border border-slate-100 shadow-sm flex items-center gap-3">
-              <div className="w-14 h-14 rounded-xl bg-slate-50 flex items-center justify-center text-2xl shrink-0 overflow-hidden">
-                {p.image_url ? <img src={p.image_url} alt="" className="w-full h-full object-cover" /> : '📦'}
+            <div key={`${p.product_id}:${p.size_label}`} className="rounded-2xl p-3.5 border flex items-center gap-3" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 overflow-hidden" style={{ background: '#EBF1FA', color: 'var(--royal)' }}>
+                {p.image_url ? <img src={p.image_url} alt="" className="w-full h-full object-cover" /> : <IconBox size={24} />}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-slate-900 truncate">
+                <p className="text-[14.5px] font-bold truncate" style={{ color: 'var(--ink)' }}>
                   {p.product_name}{p.size_label ? ` · ${p.size_label}` : ''}
                 </p>
-                <p className="text-[11px] font-mono text-slate-400">{p.barcode}</p>
+                <p className="text-[11px] font-mono" style={{ color: 'var(--muted2)' }}>{p.barcode}</p>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="text-xs font-bold text-white px-2 py-0.5 rounded-lg" style={{ background: 'var(--brand)' }}>
+                  <span className="text-xs font-bold text-white px-2 py-0.5 rounded-lg" style={{ background: 'var(--royal)' }}>
                     {t('{{n}} ta', { n: p.quantity })}
                   </span>
                   {p.carrier_number ? (
-                    <span className="text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg">
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-lg" style={{ background: 'var(--surface2)', color: 'var(--muted)' }}>
                       {t("Yo'lovchi #{{number}}", { number: p.carrier_number })}
                     </span>
                   ) : (
-                    <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg">
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-lg" style={{ background: '#FEF1E0', color: 'var(--amber-d)' }}>
                       {t('Buyurtmasiz')}
                     </span>
                   )}
                   {p.picked_up_at && (
-                    <span className="text-[11px] text-slate-400">{p.picked_up_at}</span>
+                    <span className="text-[11px]" style={{ color: 'var(--muted2)' }}>{p.picked_up_at}</span>
                   )}
                 </div>
               </div>

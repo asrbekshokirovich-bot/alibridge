@@ -2,8 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import client from '@/shared/api/client'
-import { DashboardHeader, ActionGrid, IconUsers, IconPlane, IconAlert, IconMoney, IconUser, IconList, IconBox } from '@/shared/ui'
-import type { Action } from '@/shared/ui'
+import { DashboardHeader, ActionSections, IconUsers, IconPlane, IconAlert, IconMoney, IconUser, IconList, IconBox } from '@/shared/ui'
+import type { ActionSection } from '@/shared/ui'
 
 interface AdminStats {
   pending_staff: number; active_carriers: number; total_products: number
@@ -18,15 +18,24 @@ export default function AdminDashboard() {
     queryFn: () => client.get<AdminStats>('/admin/stats').then((r) => r.data),
   })
 
-  const actions: Action[] = [
-    { label: t('Xodim so\'rovlari'), desc: t('Rol tayinlash'), path: '/admin/staff-approval', icon: <IconUsers size={24} />, gradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', badge: stats?.pending_staff },
-    { label: t('Xodimlar'), desc: t('Barcha xodimlar'), path: '/admin/staff', icon: <IconUsers size={24} />, gradient: 'linear-gradient(135deg, #1A3A6C 0%, #132A4D 100%)' },
-    { label: t('Yo\'lovchilar'), desc: t('Boshqaruv'), path: '/admin/carriers', icon: <IconPlane size={24} />, gradient: 'linear-gradient(135deg, #1A3A6C 0%, #16325c 100%)' },
-    { label: t('Nizolar'), desc: t('Shikast holatlari'), path: '/admin/disputes', icon: <IconAlert size={24} />, gradient: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)', badge: stats?.open_disputes },
-    { label: t('To\'lovlar'), desc: t('Hisobot'), path: '/admin/payments', icon: <IconMoney size={24} />, gradient: 'linear-gradient(135deg, #16A34A 0%, #15803D 100%)', badge: stats?.unpaid_payments },
-    { label: t('Kunlik hisobot'), desc: t('Ombordan chiqqan yuklar'), path: '/admin/daily-report', icon: <IconList size={24} />, gradient: 'linear-gradient(135deg, #1A3A6C 0%, #0F213D 100%)' },
-    { label: t('Rol sifatida ko\'rish'), desc: t('Istalgan panelni ochish'), path: '/admin/view-as', icon: <IconUser size={24} />, gradient: 'linear-gradient(135deg, #132A4D 0%, #0F213D 100%)' },
-    { label: t('Sayt logini'), desc: t('Brauzer orqali kirish'), path: '/admin/my-credentials', icon: <IconUser size={24} />, gradient: 'linear-gradient(135deg, #1A3A6C 0%, #132A4D 100%)' },
+  // Workflow tartibida bo'limlar: Boshqaruv → Moliya → Hisobot → Tizim
+  const sections: ActionSection[] = [
+    { title: t('Boshqaruv'), actions: [
+      { label: t('Xodim so\'rovlari'), desc: t('Rol tayinlash'), path: '/admin/staff-approval', icon: <IconUsers size={24} />, gradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', badge: stats?.pending_staff },
+      { label: t('Xodimlar'), desc: t('Barcha xodimlar'), path: '/admin/staff', icon: <IconUsers size={24} />, gradient: 'linear-gradient(135deg, #1A3A6C 0%, #132A4D 100%)' },
+      { label: t('Yo\'lovchilar'), desc: t('Boshqaruv'), path: '/admin/carriers', icon: <IconPlane size={24} />, gradient: 'linear-gradient(135deg, #1A3A6C 0%, #16325c 100%)' },
+    ] },
+    { title: t('Moliya'), actions: [
+      { label: t('To\'lovlar'), desc: t('Hisobot'), path: '/admin/payments', icon: <IconMoney size={24} />, gradient: 'linear-gradient(135deg, #16A34A 0%, #15803D 100%)', badge: stats?.unpaid_payments },
+    ] },
+    { title: t('Hisobot'), actions: [
+      { label: t('Kunlik hisobot'), desc: t('Ombordan chiqqan yuklar'), path: '/admin/daily-report', icon: <IconList size={24} />, gradient: 'linear-gradient(135deg, #1A3A6C 0%, #0F213D 100%)' },
+      { label: t('Nizolar'), desc: t('Shikast holatlari'), path: '/admin/disputes', icon: <IconAlert size={24} />, gradient: 'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)', badge: stats?.open_disputes },
+    ] },
+    { title: t('Tizim'), actions: [
+      { label: t('Rol sifatida ko\'rish'), desc: t('Istalgan panelni ochish'), path: '/admin/view-as', icon: <IconUser size={24} />, gradient: 'linear-gradient(135deg, #132A4D 0%, #0F213D 100%)' },
+      { label: t('Sayt logini'), desc: t('Brauzer orqali kirish'), path: '/admin/my-credentials', icon: <IconUser size={24} />, gradient: 'linear-gradient(135deg, #1A3A6C 0%, #132A4D 100%)' },
+    ] },
   ]
 
   return (
@@ -66,7 +75,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <ActionGrid actions={actions} />
+      <ActionSections sections={sections} />
     </div>
   )
 }

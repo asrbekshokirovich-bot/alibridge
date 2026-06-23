@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import { useAuthStore } from '@/shared/store/auth'
-import { Header, ListSkeleton, IconHandshake } from '@/shared/ui'
+import { Header, ListSkeleton, IconHandshake, IconBox } from '@/shared/ui'
 
 interface PendingItem {
   barcode: string
@@ -120,8 +120,9 @@ export default function AutoReceive() {
                 <div className="divide-y divide-slate-50">
                   {p.items.map((it) => (
                     <div key={`${it.barcode}:${it.size_label}`} className="flex items-center gap-3 px-4 py-2.5">
-                      <div className="w-9 h-9 rounded-lg bg-slate-50 flex items-center justify-center text-base shrink-0 overflow-hidden">
-                        {it.image_url ? <img src={it.image_url} alt="" className="w-full h-full object-cover" /> : '📦'}
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 overflow-hidden border"
+                        style={{ background: 'var(--card-2)', borderColor: 'var(--border)', color: 'var(--text-dim)' }}>
+                        {it.image_url ? <img src={it.image_url} alt="" className="w-full h-full object-cover" /> : <IconBox size={16} />}
                       </div>
                       <span className="flex-1 text-sm text-slate-700 truncate">
                         {it.product_name}{it.size_label ? ` · ${it.size_label}` : ''}
@@ -158,9 +159,9 @@ export default function AutoReceive() {
         <>
           {/* Info banner */}
           <div className="px-4 pt-4">
-            <div className="rounded-2xl p-4 flex gap-3" style={{ background: 'var(--brand-gradient-soft)' }}>
-              <div className="text-red-500 shrink-0"><IconHandshake size={22} /></div>
-              <p className="text-[13px] text-red-900/80 leading-snug">
+            <div className="rounded-2xl p-4 flex gap-3 border" style={{ background: 'var(--brand-tint)', borderColor: 'var(--brand-tint-border)' }}>
+              <div className="shrink-0" style={{ color: 'var(--brand-light)' }}><IconHandshake size={22} /></div>
+              <p className="text-[13px] leading-snug" style={{ color: 'var(--text-2)' }}>
                 {t('Aeroportда kuryerga quyidagi raqamingizni ayting. Kuryer barkodlarni skanlab, yuklaringizni sizga topshiradi.')}
               </p>
             </div>

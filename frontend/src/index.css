@@ -1,32 +1,59 @@
 @import "tailwindcss";
 
+/* ════════════════════════════════════════════════════════════════════════
+   ALI BRIDGE — Premium dark dizayn tokenlari
+   Manba (source of truth): "ALI BRIDGE - Redesign" mockup.
+   Yondashuv: deyarli-qora fon, soch-tolasi (hairline) chegaralar, BITTA qizil
+   aksent, faqat daromad raqamlari uchun lime. Dark — asosiy (real base) tema.
+   ════════════════════════════════════════════════════════════════════════ */
+
 :root {
-  /* Brand — qizil gradient (aksent) */
-  --brand: #ff4757;
+  /* ── Yagona qizil aksent (gradient — faqat asosiy harakat/aktiv holat) ── */
+  --brand: #ff5c6a;
   --brand-dark: #e0334a;
-  --brand-light: #ff6b7a;
-  --brand-gradient: linear-gradient(135deg, #ff4757 0%, #e0334a 100%);
-  --brand-gradient-soft: linear-gradient(135deg, rgba(255,71,87,0.18) 0%, rgba(224,51,74,0.12) 100%);
+  --brand-light: #ff8088;            /* dark fon ustidagi qizil matn */
+  --brand-gradient: linear-gradient(150deg, #ff5c6a 0%, #e0334a 100%);
+  --brand-tint: rgba(255, 92, 106, 0.12);    /* qizil yumshoq fon */
+  --brand-tint-border: rgba(255, 92, 106, 0.28);
 
-  /* Neon aksentlar (rasmdan) */
-  --neon-lime: #d4ff3f;
-  --neon-purple: #a78bfa;
-  --neon-pink: #ff5ca8;
-  --neon-cyan: #4dd4e8;
+  /* ── Lime — FAQAT daromad/pul raqamlari uchun ── */
+  --lime: #d4ff3f;
+  --lime-muted: #7e8a4a;             /* lime yonidagi birlik (so'm/mln) */
 
-  /* Surface — dark */
-  --bg: #0c0d12;
-  --card: #16181f;
-  --card-2: #1d2029;
-  --text: #f1f3f8;
-  --text-muted: #8b8fa3;
-  --border: #262a35;
+  /* ── Semantik holatlar ── */
+  --success: #3ddc84;
+  --warning: #fbbf24;
+  --info: #4dd4e8;
+  --gold: #e8c84a;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
-  --shadow-brand: 0 8px 28px rgba(255, 71, 87, 0.4);
+  /* ── Yuzalar — deyarli qora qatlamlar ── */
+  --bg: #0b0b0e;                     /* ekran asosi */
+  --bg-deep: #08080a;                /* eng chuqur (telefon ramkasi) */
+  --card: #141417;                   /* standart karta */
+  --card-2: #16161a;                 /* chip / pill / ko'tarilgan */
+  --card-3: #1d1d22;                 /* ichki kichik plitka */
+  --panel: #101013;                  /* chuqur panel (sidebar / jadval) */
+  --surface-raised: linear-gradient(165deg, #17171c 0%, #121216 100%); /* hero karta */
+
+  /* ── Matn ierarxiyasi ── */
+  --text: #f5f5f7;                   /* asosiy */
+  --text-2: #b4b4be;                 /* ikkilamchi yorqin */
+  --text-muted: #8c8c97;             /* sokin */
+  --text-dim: #6b6b76;               /* uchlamchi */
+  --text-faint: #5c5c66;             /* juda sokin */
+  --text-ghost: #46464f;             /* placeholder / ikona to'ldiruvchi */
+
+  /* ── Chegaralar — soch tolasi (hairline) ── */
+  --border: #24242b;                 /* asosiy */
+  --border-soft: #1f1f25;            /* ingichka ajratuvchi */
+  --border-strong: #2c2c34;          /* sheet / ko'tarilgan chekka */
+  --border-chip: #26262e;            /* chip chegarasi */
+
+  /* ── Soyalar ── */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 20px 40px -22px rgba(0, 0, 0, 0.8);
+  --shadow-lg: 0 24px 60px -16px rgba(0, 0, 0, 0.7);
+  --shadow-brand: 0 12px 28px -8px rgba(255, 77, 94, 0.55);
 }
 
 * {
@@ -38,12 +65,13 @@ html, body, #root {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
   font-size: 15px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overscroll-behavior-y: none;
 }
 
@@ -65,8 +93,8 @@ body {
 }
 
 @media (min-width: 1024px) {
-  /* Desktop fonni biroz boshqacha — kontent ajralib tursin */
-  .web body { background: #0a0b0f; }
+  /* Desktop fonni biroz chuqurroq — kontent ajralib tursin */
+  .web body { background: var(--bg-deep); }
 
   /* Sidebar bor bo'lsa, kontent o'ngga suriladi (WebShell beradi) */
   .web .web-shell {
@@ -81,8 +109,8 @@ body {
     height: 100vh;
     height: 100dvh;
     overflow-y: auto;
-    border-right: 1px solid var(--border);
-    background: var(--card);
+    border-right: 1px solid var(--border-soft);
+    background: var(--panel);
   }
   .web .web-content {
     min-width: 0;
@@ -94,8 +122,7 @@ body {
      suzuvchi tasdiqlash) desktopda KERAK EMAS — sidebar bor. Yashiramiz. */
   .web .web-shell .tg-only { display: none !important; }
 
-  /* Sahifa ichidagi qattiq max-w cheklovlarni desktopda yumshatamiz —
-     kontent keng grid'da yoyilsin. Form sahifalari o'zining max-w'ini saqlaydi. */
+  /* Sahifa ichidagi qattiq max-w cheklovlarni desktopda yumshatamiz. */
   .web .web-content .page-wide { max-width: 100%; }
 
   /* FixedBar — desktopda pastga qotirmaymiz, kontent oqimida sticky qilamiz */
@@ -104,7 +131,7 @@ body {
     left: auto;
     transform: none;
     max-width: 100%;
-    background: var(--card);
+    background: var(--panel);
   }
 
   /* Suzuvchi tasdiqlash tugmasi (carrier) — desktopda markazlamaymiz */
@@ -116,10 +143,7 @@ body {
     margin: 0 auto;
   }
 
-  /* ── Ro'yxat sahifalarini desktopda grid'ga aylantirish (opt-in) ──
-     Sahifaning asosiy ro'yxat konteyneriga `web-grid` klassi qo'shiladi.
-     Desktopda kartalar 2 ustunli grid'da yoyiladi (forma ichidagi
-     kichik gridlarga ta'sir qilmaydi — faqat shu konteynerga). */
+  /* ── Ro'yxat sahifalarini desktopda grid'ga aylantirish (opt-in) ── */
   .web .web-grid {
     display: grid !important;
     grid-template-columns: repeat(var(--web-cols, 2), minmax(0, 1fr));
@@ -139,46 +163,34 @@ body {
 }
 /* Brauzerda nozik scrollbar */
 .web ::-webkit-scrollbar { width: 10px; height: 10px; }
-.web ::-webkit-scrollbar-thumb { background: #2a2e3a; border-radius: 6px; }
+.web ::-webkit-scrollbar-thumb { background: #2a2a32; border-radius: 6px; }
 .web ::-webkit-scrollbar-track { background: transparent; }
 
-/* Animatsiyalar */
+/* ── Animatsiyalar ────────────────────────────────────────────── */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(100%); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes scaleIn {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
 }
-
 @keyframes shimmer {
   0% { background-position: -400px 0; }
   100% { background-position: 400px 0; }
 }
 
-.animate-fade-in {
-  opacity: 1;
-  animation: fadeIn 0.35s ease-out;
-}
-
-.animate-scale-in {
-  animation: scaleIn 0.25s ease-out;
-}
-
-.animate-slide-up {
-  animation: slideUp 0.3s ease-out;
-}
+.animate-fade-in { opacity: 1; animation: fadeIn 0.35s ease-out; }
+.animate-scale-in { animation: scaleIn 0.25s ease-out; }
+.animate-slide-up { animation: slideUp 0.3s ease-out; }
 
 /* Skeleton loader */
 .skeleton {
-  background: linear-gradient(90deg, #1d2029 25%, #262a35 50%, #1d2029 75%);
+  background: linear-gradient(90deg, #16161a 25%, #20202a 50%, #16161a 75%);
   background-size: 800px 100%;
   animation: shimmer 1.5s infinite linear;
   border-radius: 8px;
@@ -193,93 +205,100 @@ body {
   opacity: 0.85;
 }
 
-/* Brand gradient utility */
-.bg-brand {
-  background: var(--brand-gradient);
-}
-.bg-brand-soft {
-  background: var(--brand-gradient-soft);
-}
+/* ── Aksent / brand utilitalari ──────────────────────────────── */
+.bg-brand { background: var(--brand-gradient); }
+.bg-brand-soft { background: var(--brand-tint); }
+/* Lime — faqat daromad raqamlari uchun. Bevosita matn rangi sifatida. */
+.text-earn { color: var(--lime); }
+.text-earn-unit { color: var(--lime-muted); }
 
-/* ── Semantik theme klasslari (dark) ────────────────── */
-/* Yuza (karta) */
+/* ── Semantik theme klasslari (dark) ─────────────────────────── */
 .surface { background: var(--card); }
 .surface-2 { background: var(--card-2); }
-/* Matn */
+.surface-3 { background: var(--card-3); }
+.surface-raised { background: var(--surface-raised); }
 .txt { color: var(--text); }
+.txt-2 { color: var(--text-2); }
 .txt-muted { color: var(--text-muted); }
-/* Chegara */
+.txt-dim { color: var(--text-dim); }
 .bordered { border-color: var(--border); }
+.tabnum { font-variant-numeric: tabular-nums; }
 
-/* Tailwind klasslarini dark'ga moslashtirish (override).
-   MUHIM: to'g'ridan-to'g'ri hex ranglar (var() emas) — Chromium'da
-   var()+!important kaskad muammosini chetlab o'tadi. */
-.bg-white { background-color: #16181f !important; }
-.bg-slate-50 { background-color: #1d2029 !important; }
-.bg-slate-100 { background-color: #1d2029 !important; }
-.bg-slate-50\/50 { background-color: #1d2029 !important; }
-.bg-slate-50\/60 { background-color: #1d2029 !important; }
+/* ════════════════════════════════════════════════════════════════════════
+   Tailwind "light" klasslarini dark palitraga moslashtirish (override).
+   Carrier/shared/Welcome ekranlari endi to'g'ridan-to'g'ri dark tokenlardan
+   foydalanadi; bu qatlam esa hali ko'chirilmagan ekranlarni (admin, courier,
+   warehouse) yangi deyarli-qora palitrada ushlab turadi.
+   MUHIM: to'g'ridan-to'g'ri hex (var() emas) — Chromium var()+!important
+   kaskad muammosini chetlab o'tadi. ─────────────────────────────────── */
+.bg-white { background-color: #141417 !important; }
+.bg-slate-50 { background-color: #1d1d22 !important; }
+.bg-slate-100 { background-color: #1d1d22 !important; }
+.bg-slate-50\/50 { background-color: #16161a !important; }
+.bg-slate-50\/60 { background-color: #16161a !important; }
 
-.text-slate-900 { color: #f1f3f8 !important; }
-.text-slate-800 { color: #f1f3f8 !important; }
-.text-slate-700 { color: #c7cbd9 !important; }
-.text-slate-600 { color: #8b8fa3 !important; }
-.text-slate-500 { color: #8b8fa3 !important; }
-.text-slate-400 { color: #6b6f82 !important; }
-.text-slate-300 { color: #4a4e5e !important; }
+.text-slate-900 { color: #f5f5f7 !important; }
+.text-slate-800 { color: #f5f5f7 !important; }
+.text-slate-700 { color: #b4b4be !important; }
+.text-slate-600 { color: #8c8c97 !important; }
+.text-slate-500 { color: #8c8c97 !important; }
+.text-slate-400 { color: #6b6b76 !important; }
+.text-slate-300 { color: #46464f !important; }
 
-.border-slate-100 { border-color: #262a35 !important; }
-.border-slate-200 { border-color: #262a35 !important; }
-.border-slate-50 { border-color: #262a35 !important; }
+.border-slate-100 { border-color: #24242b !important; }
+.border-slate-200 { border-color: #24242b !important; }
+.border-slate-50 { border-color: #1f1f25 !important; }
 
-.divide-slate-50 > :not([hidden]) ~ :not([hidden]) { border-color: var(--border) !important; }
-.divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: var(--border) !important; }
+.divide-slate-50 > :not([hidden]) ~ :not([hidden]) { border-color: #1f1f25 !important; }
+.divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: #24242b !important; }
 
 /* Input dark fon */
-input, textarea {
-  background-color: #1d2029 !important;
-  color: #f1f3f8 !important;
-  border-color: #262a35 !important;
+input, textarea, select {
+  background-color: #16161a !important;
+  color: #f5f5f7 !important;
+  border-color: #24242b !important;
 }
-/* Fokusda brand rangli chegara (override !important) */
-input:focus, textarea:focus {
-  border-color: #ff4757 !important;
+input:focus, textarea:focus, select:focus {
+  border-color: #ff5c6a !important;
 }
 input::placeholder, textarea::placeholder {
-  color: #6b6f82 !important;
+  color: #5c5c66 !important;
 }
 
 /* Soft rangli fonlar (badge, banner) — dark'da yarim-shaffof */
-.bg-amber-50 { background-color: rgba(245, 158, 11, 0.14) !important; }
-.bg-amber-100 { background-color: rgba(245, 158, 11, 0.18) !important; }
-.bg-red-50 { background-color: rgba(255, 71, 87, 0.14) !important; }
-.bg-red-100 { background-color: rgba(255, 71, 87, 0.18) !important; }
-.bg-red-50\/50, .bg-red-50\/60 { background-color: rgba(255, 71, 87, 0.1) !important; }
-.bg-emerald-50 { background-color: rgba(16, 185, 129, 0.14) !important; }
-.bg-emerald-100 { background-color: rgba(16, 185, 129, 0.18) !important; }
-.bg-blue-50 { background-color: rgba(59, 130, 246, 0.14) !important; }
-.bg-blue-100 { background-color: rgba(59, 130, 246, 0.18) !important; }
-.bg-purple-50 { background-color: rgba(167, 139, 250, 0.14) !important; }
-.bg-purple-100 { background-color: rgba(167, 139, 250, 0.18) !important; }
-.bg-green-50 { background-color: rgba(16, 185, 129, 0.14) !important; }
-.bg-green-100 { background-color: rgba(16, 185, 129, 0.18) !important; }
-.bg-yellow-50 { background-color: rgba(234, 179, 8, 0.14) !important; }
+.bg-amber-50 { background-color: rgba(251, 191, 36, 0.12) !important; }
+.bg-amber-100 { background-color: rgba(251, 191, 36, 0.16) !important; }
+.bg-red-50 { background-color: rgba(255, 92, 106, 0.12) !important; }
+.bg-red-100 { background-color: rgba(255, 92, 106, 0.16) !important; }
+.bg-red-50\/50, .bg-red-50\/60 { background-color: rgba(255, 92, 106, 0.08) !important; }
+.bg-emerald-50 { background-color: rgba(61, 220, 132, 0.12) !important; }
+.bg-emerald-100 { background-color: rgba(61, 220, 132, 0.16) !important; }
+.bg-blue-50 { background-color: rgba(77, 212, 232, 0.12) !important; }
+.bg-blue-100 { background-color: rgba(77, 212, 232, 0.16) !important; }
+.bg-purple-50 { background-color: rgba(167, 139, 250, 0.12) !important; }
+.bg-purple-100 { background-color: rgba(167, 139, 250, 0.16) !important; }
+.bg-green-50 { background-color: rgba(61, 220, 132, 0.12) !important; }
+.bg-green-100 { background-color: rgba(61, 220, 132, 0.16) !important; }
+.bg-yellow-50 { background-color: rgba(251, 191, 36, 0.12) !important; }
 
 /* Soft fon ustidagi matn yorqinroq bo'lsin (dark uchun) */
 .text-amber-700, .text-amber-600 { color: #fbbf24 !important; }
-.text-red-700, .text-red-600 { color: #ff6b7a !important; }
-.text-emerald-700, .text-emerald-600 { color: #34d399 !important; }
-.text-blue-700, .text-blue-600 { color: #60a5fa !important; }
+.text-red-700, .text-red-600 { color: #ff8088 !important; }
+.text-red-500 { color: #ff8088 !important; }
+.text-emerald-700, .text-emerald-600 { color: #3ddc84 !important; }
+.text-blue-700, .text-blue-600 { color: #4dd4e8 !important; }
 .text-purple-700, .text-purple-600 { color: #c4b5fd !important; }
-.text-green-700, .text-green-600 { color: #34d399 !important; }
+.text-green-700, .text-green-600 { color: #3ddc84 !important; }
 .text-yellow-700, .text-yellow-600 { color: #fbbf24 !important; }
 
-/* Header/nav blur fonni dark qilish */
-.bg-white\/80 { background-color: rgba(22, 24, 31, 0.85) !important; }
-.bg-white\/90 { background-color: rgba(22, 24, 31, 0.9) !important; }
+/* Border util ranglar (badge konturi) */
+.border-red-100, .border-red-200 { border-color: rgba(255, 92, 106, 0.22) !important; }
 
-/* Number input spinner (↑↓) tugmalarini yashirish — tasodifan bosilib son o'zgarmasligi uchun.
-   Chrome/Safari/Edge (WebKit) + Firefox. */
+/* Header/nav blur fonni dark qilish */
+.bg-white\/80 { background-color: rgba(11, 11, 14, 0.82) !important; }
+.bg-white\/90 { background-color: rgba(11, 11, 14, 0.9) !important; }
+
+/* Number input spinner (↑↓) tugmalarini yashirish */
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;

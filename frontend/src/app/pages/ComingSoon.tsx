@@ -20,15 +20,18 @@ export default function ComingSoon({ title, subtitle }: Props) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-8 text-center animate-scale-in">
+    <div className="min-h-screen flex flex-col items-center justify-center px-8 text-center animate-scale-in" style={{ background: 'var(--bg)' }}>
       <div
-        className="w-24 h-24 rounded-full flex items-center justify-center mb-6"
-        style={{ background: 'var(--brand-gradient-soft)' }}
+        className="w-[72px] h-[72px] rounded-[20px] flex items-center justify-center mb-6"
+        style={{ background: '#EBF1FA', color: 'var(--royal)' }}
       >
-        <div className="text-5xl">🚧</div>
+        {/* Tools / construction line icon */}
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+        </svg>
       </div>
-      <h2 className="text-xl font-bold text-slate-900 mb-2">{title}</h2>
-      <p className="text-sm text-slate-500 max-w-[280px]">
+      <h2 className="text-xl font-extrabold mb-2" style={{ color: 'var(--ink)' }}>{title}</h2>
+      <p className="text-sm max-w-[280px]" style={{ color: 'var(--muted)' }}>
         {subtitle ?? t("Bu bo'lim tez orada tayyor bo'ladi.")}
       </p>
 

@@ -18,11 +18,14 @@ export function Sheet({ open, onClose, children }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 animate-fade-in" onClick={onClose} />
+      <div className="absolute inset-0 animate-fade-in" style={{ background: 'rgba(10,26,52,0.46)', backdropFilter: 'blur(3px)' }} onClick={onClose} />
       {/* Sheet */}
-      <div className="relative w-full max-w-[480px] bg-white rounded-t-3xl shadow-[0_-8px_32px_rgba(0,0,0,0.18)] animate-slide-up pb-6">
+      <div
+        className="relative w-full max-w-[480px] rounded-t-3xl animate-slide-up pb-6 border-t"
+        style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: '0 -18px 50px rgba(10,26,52,0.22)' }}
+      >
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-slate-300" />
+          <div className="w-10 h-1 rounded-full" style={{ background: 'var(--line2)' }} />
         </div>
         {children}
       </div>

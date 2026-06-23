@@ -114,3 +114,35 @@ export const IconChevronDown = ({ size = 24, className }: IconProps) => (
     <path d="M6 9l6 6 6-6" {...stroke} />
   </svg>
 )
+
+export const IconChevronRight = ({ size = 24, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M9 18l6-6-6-6" {...stroke} />
+  </svg>
+)
+
+export const IconSearch = ({ size = 24, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <circle cx="11" cy="11" r="8" {...stroke} />
+    <path d="m21 21-4.34-4.34" {...stroke} />
+  </svg>
+)
+
+export const IconPlus = ({ size = 24, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M5 12h14M12 5v14" {...stroke} />
+  </svg>
+)
+
+export const IconPencil = ({ size = 24, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" {...stroke} />
+    <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z" {...stroke} />
+  </svg>
+)
+
+export const IconStar = ({ size = 24, className }: IconProps) => (
+  <svg {...base(size)} className={className}>
+    <path d="M12 2l2.4 5.5 6 .5-4.5 4 1.4 5.9L12 20l-5.3 2.9 1.4-5.9-4.5-4 6-.5L12 2z" {...stroke} />
+  </svg>
+)

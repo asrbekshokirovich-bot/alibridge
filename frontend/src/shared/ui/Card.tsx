@@ -9,9 +9,9 @@ export function Card({ interactive, glow, className = '', children, ...rest }: P
       {...rest}
       className={`rounded-2xl border ${interactive ? 'press cursor-pointer' : ''} ${className}`}
       style={{
-        background: 'var(--card)',
-        borderColor: 'var(--border)',
-        boxShadow: glow ? 'var(--shadow-brand)' : 'var(--shadow-sm)',
+        background: 'var(--surface)',
+        borderColor: 'var(--line)',
+        boxShadow: glow ? 'var(--shadow-brand)' : 'var(--shadow-md)',
         ...(rest.style ?? {}),
       }}
     >

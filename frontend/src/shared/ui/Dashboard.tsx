@@ -14,22 +14,26 @@ export function DashboardHeader({ role, name, gradient, children }: HeaderProps)
   const { t } = useTranslation()
   return (
     <div
-      className="relative overflow-hidden px-5 pt-12 pb-6 text-white"
+      className="relative overflow-hidden px-5 pt-12 pb-7 text-white"
       style={{ background: gradient ?? 'var(--brand-gradient)' }}
     >
-      {/* Subtle pattern overlay */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 80% 60% at 100% 0%, rgba(255,255,255,0.08) 0%, transparent 60%)',
+      {/* Lime burchak (wedge) + halqa — reference dekori */}
+      <span className="absolute pointer-events-none" style={{
+        top: '-44px', right: '-30px', width: '160px', height: '160px',
+        background: 'var(--lime)', opacity: 0.15, transform: 'rotate(42deg)', borderRadius: '30px',
       }} />
-      <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
+      <span className="absolute pointer-events-none" style={{
+        bottom: '-50px', right: '70px', width: '120px', height: '120px',
+        border: '1px solid rgba(255,255,255,0.10)', borderRadius: '50%',
+      }} />
 
       <div className="relative flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.65)' }}>
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--lime)' }}>
             {role}
           </p>
-          <h1 className="text-2xl font-extrabold mt-0.5">
-            {name ? <>{t('Salom')}, {name} 👋</> : t('Panel')}
+          <h1 className="text-2xl font-extrabold tracking-[-0.02em] mt-1">
+            {name ? <>{t('Salom')}, {name}</> : t('Panel')}
           </h1>
         </div>
         <LangSwitcher />
@@ -60,9 +64,9 @@ export function ActionGrid({ actions }: { actions: Action[] }) {
           key={a.path}
           onClick={() => { haptic('light'); navigate(a.path) }}
           className="press w-full rounded-2xl p-4 flex items-center gap-4 text-left border transition-all"
-          style={{ background: 'var(--card)', borderColor: 'var(--border)' }}
+          style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}
         >
-          {/* Icon */}
+          {/* Icon tile */}
           <div
             className="w-[50px] h-[50px] rounded-xl flex items-center justify-center text-white shrink-0"
             style={{ background: a.gradient }}
@@ -72,10 +76,10 @@ export function ActionGrid({ actions }: { actions: Action[] }) {
 
           {/* Text */}
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-[15px]" style={{ color: 'var(--text)' }}>
+            <h3 className="font-bold text-[15px]" style={{ color: 'var(--ink)' }}>
               {a.label}
             </h3>
-            <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--muted)' }}>
               {a.desc}
             </p>
           </div>
@@ -83,12 +87,12 @@ export function ActionGrid({ actions }: { actions: Action[] }) {
           {/* Badge or arrow */}
           {a.badge ? (
             <span className="shrink-0 min-w-[24px] h-6 px-1.5 flex items-center justify-center rounded-full text-xs font-bold text-white"
-              style={{ background: 'var(--brand)' }}>
+              style={{ background: 'var(--royal)' }}>
               {a.badge > 99 ? '99+' : a.badge}
             </span>
           ) : (
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="shrink-0"
-              style={{ color: 'var(--border)' }}>
+              style={{ color: 'var(--muted3)' }}>
               <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           )}

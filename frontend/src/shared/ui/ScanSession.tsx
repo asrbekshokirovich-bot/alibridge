@@ -6,7 +6,7 @@ import { useTelegram } from '@/shared/hooks/useTelegram'
 import { Header } from './Header'
 import { ScanInput } from './ScanInput'
 import { SuccessScreen } from './States'
-import { IconCheck } from './icons'
+import { IconCheck, IconTrash } from './icons'
 
 interface VariantAvailability {
   variant_id: number
@@ -277,7 +277,7 @@ export function ScanSession({
       {/* Fonда tekshirilayotgan skanlar (skan to'xtatmaydi — faqat ko'rsatkich) */}
       {checking > 0 && (
         <div className="mx-4 -mt-1 mb-2 flex items-center gap-2 text-xs text-slate-400">
-          <span className="inline-block w-3 h-3 border-2 border-slate-200 border-t-red-400 rounded-full animate-spin" />
+          <span className="inline-block w-3 h-3 border-2 border-slate-200 border-t-[var(--royal)] rounded-full animate-spin" />
           {t('{{checking}} ta tekshirilmoqda…', { checking })}
         </div>
       )}
@@ -309,7 +309,7 @@ export function ScanSession({
               {/* Holat ikonkasi */}
               <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-sm font-bold">
                 {r.status === 'ok' && <span className="bg-emerald-100 text-emerald-600 w-full h-full rounded-full flex items-center justify-center"><IconCheck size={18} /></span>}
-                {r.status === 'pending' && <span className="w-4 h-4 border-2 border-slate-300 border-t-red-400 rounded-full animate-spin" />}
+                {r.status === 'pending' && <span className="w-4 h-4 border-2 border-slate-300 border-t-[var(--royal)] rounded-full animate-spin" />}
                 {r.status === 'error' && <span className="bg-red-100 text-red-500 w-full h-full rounded-full flex items-center justify-center">✕</span>}
                 {r.status === 'choose' && <span className="bg-amber-100 text-amber-600 w-full h-full rounded-full flex items-center justify-center">?</span>}
               </div>
@@ -348,13 +348,13 @@ export function ScanSession({
                   <button onClick={() => setQty(r.key, r.quantity + 1)}
                     className="press w-7 h-7 rounded-lg bg-slate-100 text-slate-600 font-bold flex items-center justify-center">+</button>
                   <button onClick={() => removeRow(r.key)}
-                    className="press w-7 h-7 rounded-lg text-red-400 flex items-center justify-center">🗑️</button>
+                    className="press w-7 h-7 rounded-lg flex items-center justify-center" style={{ color: 'var(--red)' }}><IconTrash size={15} /></button>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-sm font-bold text-slate-400">{r.quantity}</span>
                   <button onClick={() => removeRow(r.key)}
-                    className="press w-7 h-7 rounded-lg text-red-400 flex items-center justify-center">🗑️</button>
+                    className="press w-7 h-7 rounded-lg flex items-center justify-center" style={{ color: 'var(--red)' }}><IconTrash size={15} /></button>
                 </div>
               )}
             </div>

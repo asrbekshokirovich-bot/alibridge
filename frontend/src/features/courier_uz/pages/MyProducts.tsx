@@ -30,7 +30,7 @@ export default function CourierUzMyProducts() {
 
       {data && data.length > 0 && (
         <div className="px-4 pt-3">
-          <div className="rounded-2xl px-4 py-3 flex items-center justify-between border" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl px-4 py-3 flex items-center justify-between border" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
             <span className="text-sm font-semibold" style={{ color: 'var(--muted)' }}>{t('Aeroportда topshirilishi kerak')}</span>
             <span className="text-[22px] font-extrabold tabular-nums" style={{ color: 'var(--brand-light)' }}>
               {t('{{n}} ta', { n: data.reduce((s, p) => s + (p.quantity || 0), 0) })}
@@ -50,7 +50,7 @@ export default function CourierUzMyProducts() {
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((p) => (
-            <div key={`${p.product_id}:${p.size_label}`} className="rounded-2xl p-3.5 border flex items-center gap-3" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+            <div key={`${p.product_id}:${p.size_label}`} className="rounded-2xl p-3.5 border flex items-center gap-3" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
               <div className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 overflow-hidden" style={{ background: 'rgba(106,163,255,0.14)', color: '#6aa3ff' }}>
                 {p.image_url ? <img src={p.image_url} alt="" className="w-full h-full object-cover" /> : <IconBox size={24} />}
               </div>

@@ -9,6 +9,10 @@ interface Props {
   right?: React.ReactNode
 }
 
+/**
+ * v2 (redesign): sarlavha biroz kattaroq/qalinroq (kontrast), header foni nozik
+ * vertikal gradient + aniqroq pastki chegara. Orqaga tugmasi aniqroq.
+ */
 export function Header({ title, subtitle, showBack, onBack, right }: Props) {
   const navigate = useNavigate()
   const { haptic } = useTelegram()
@@ -23,8 +27,8 @@ export function Header({ title, subtitle, showBack, onBack, right }: Props) {
     <div
       className="sticky top-0 z-20 border-b"
       style={{
-        background: 'rgba(11,20,38,0.72)',
-        borderColor: 'var(--line)',
+        background: 'linear-gradient(180deg, rgba(16,28,52,0.92) 0%, rgba(11,20,38,0.72) 100%)',
+        borderColor: 'var(--line2)',
         backdropFilter: 'blur(20px) saturate(140%)',
         WebkitBackdropFilter: 'blur(20px) saturate(140%)',
       }}
@@ -42,7 +46,7 @@ export function Header({ title, subtitle, showBack, onBack, right }: Props) {
           </button>
         )}
         <div className="flex-1 min-w-0">
-          <h1 className="text-[17px] font-extrabold tracking-[-0.02em] truncate leading-tight" style={{ color: 'var(--ink)' }}>
+          <h1 className="text-[18px] font-extrabold tracking-[-0.02em] truncate leading-tight" style={{ color: 'var(--ink)' }}>
             {title}
           </h1>
           {subtitle && (

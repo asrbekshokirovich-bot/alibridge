@@ -6,7 +6,7 @@ export function ListSkeleton({ count = 4 }: { count?: number }) {
   return (
     <div className="space-y-3 p-4">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="rounded-2xl p-4 border" style={{ background: 'var(--surface)', borderColor: 'var(--line)' }}>
+        <div key={i} className="rounded-2xl p-4 border" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
           <Skeleton className="h-4 w-2/3 mb-2" />
           <Skeleton className="h-3 w-1/2 mb-1.5" />
           <Skeleton className="h-3 w-1/3" />
@@ -27,7 +27,7 @@ export function EmptyState({ icon, title, description, action }: EmptyProps) {
   return (
     <div className="flex flex-col items-center justify-center px-8 py-14 text-center animate-fade-in">
       <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3.5"
-        style={{ background: 'var(--surface2)', border: '1px solid var(--line)', color: 'var(--muted2)' }}>
+        style={{ background: 'var(--surface2)', border: '1px solid var(--line2)', color: 'var(--muted2)' }}>
         {icon ?? (
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.84z" />
@@ -51,11 +51,12 @@ interface SuccessProps {
   action?: React.ReactNode
 }
 
+/** v2 (redesign): muvaffaqiyat halqasiga nozik yashil glow qo'shildi. */
 export function SuccessScreen({ title, description, action }: SuccessProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-8 text-center animate-scale-in">
       <div className="w-20 h-20 rounded-full flex items-center justify-center mb-5"
-        style={{ background: 'rgba(22,163,74,0.12)', border: '1px solid rgba(22,163,74,0.3)' }}>
+        style={{ background: 'rgba(22,163,74,0.14)', border: '1px solid rgba(22,163,74,0.34)', boxShadow: '0 0 32px -6px rgba(52,211,153,0.55)' }}>
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
           <path d="M20 6L9 17l-5-5" stroke="var(--green)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>

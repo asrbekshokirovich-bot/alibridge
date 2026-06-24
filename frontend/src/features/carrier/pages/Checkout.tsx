@@ -58,7 +58,7 @@ export default function Checkout() {
 
       <form onSubmit={handleSubmit} className="px-4 pt-5 space-y-6">
         {/* Yuk ro'yxati */}
-        <div className="rounded-2xl border divide-y" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+        <div className="rounded-2xl border divide-y" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
           {cart.map((c) => (
             <div key={c.variant.id} className="flex items-center gap-3 p-3.5" style={{ borderColor: 'var(--line)' }}>
               <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--surface2)', color: 'var(--muted3)' }}>
@@ -80,7 +80,7 @@ export default function Checkout() {
           {/* Jami */}
           <div className="flex items-center justify-between p-3.5" style={{ background: 'var(--surface2)', borderColor: 'var(--line)' }}>
             <span className="text-sm font-bold" style={{ color: 'var(--ink)' }}>{t('Jami')}</span>
-            <span className="text-[17px] font-extrabold tabular-nums" style={{ color: 'var(--lime)' }}>{money(totalPrice)} <span className="text-xs font-semibold" style={{ color: 'var(--muted3)' }}>so'm</span></span>
+            <span className="text-glow-lime text-[17px] font-extrabold tabular-nums" style={{ color: 'var(--lime)' }}>{money(totalPrice)} <span className="text-xs font-semibold" style={{ color: 'var(--muted3)' }}>so'm</span></span>
           </div>
         </div>
 
@@ -98,9 +98,9 @@ export default function Checkout() {
                   onClick={() => { haptic('light'); setPickupType(opt.key) }}
                   className="press rounded-2xl p-4 border text-left transition-all"
                   style={{
-                    background: active ? 'rgba(106,163,255,0.14)' : 'var(--surface)',
-                    borderColor: active ? 'var(--brand-light)' : 'var(--line)',
-                    boxShadow: 'var(--shadow-md)',
+                    background: active ? 'rgba(106,163,255,0.14)' : 'var(--card-gradient)',
+                    borderColor: active ? 'var(--brand-light)' : 'var(--line2)',
+                    boxShadow: active ? 'var(--glow-royal)' : 'var(--shadow-md)',
                   }}>
                   <div style={{ color: active ? 'var(--brand-light)' : 'var(--muted3)' }}>{opt.icon}</div>
                   <p className="font-bold text-sm mt-2" style={{ color: 'var(--ink)' }}>{opt.title}</p>

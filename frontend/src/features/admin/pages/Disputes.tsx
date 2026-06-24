@@ -43,7 +43,7 @@ export default function Disputes() {
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((d) => (
-            <div key={d.id} className="rounded-2xl border overflow-hidden" style={{ background: 'var(--surface)', borderColor: 'rgba(239,68,68,0.25)', boxShadow: 'var(--shadow-md)' }}>
+            <div key={d.id} className="rounded-2xl border overflow-hidden" style={{ background: 'var(--card-gradient)', borderColor: 'rgba(239,68,68,0.25)', boxShadow: 'var(--shadow-md)' }}>
               <div className="px-4 py-3 flex items-center justify-between" style={{ background: 'rgba(239,68,68,0.07)' }}>
                 <div className="flex items-center gap-2 min-w-0">
                   <span style={{ color: 'var(--red)' }}><IconAlert size={18} /></span>

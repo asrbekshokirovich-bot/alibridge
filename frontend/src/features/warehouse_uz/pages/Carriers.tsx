@@ -49,7 +49,7 @@ export default function Carriers() {
               onClick={() => c.has_cargo && setOpen(c)}
               disabled={!c.has_cargo}
               className="w-full rounded-2xl p-4 border flex items-center gap-3.5 text-left disabled:cursor-default"
-              style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}
+              style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}
             >
               <div className="relative shrink-0">
                 <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ background: 'linear-gradient(135deg, #1A3A6C, #132A4D)' }}>

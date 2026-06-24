@@ -36,7 +36,7 @@ export default function MyOrders() {
               {t('{{count}} dona', { count: receivedTotal })}
             </span>
           </div>
-          <div className="rounded-2xl border divide-y" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl border divide-y" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
             {received!.map((p) => (
               <div key={`${p.product_id}-${p.size_label}`} className="flex items-center gap-3 p-3.5" style={{ borderColor: 'var(--line)' }}>
                 <div className="w-11 h-11 rounded-xl flex items-center justify-center overflow-hidden shrink-0" style={{ background: 'var(--surface2)', color: 'var(--muted3)' }}>
@@ -73,7 +73,7 @@ export default function MyOrders() {
             return (
               <div key={order.id}
                 className="rounded-2xl border overflow-hidden"
-                style={{ background: 'var(--surface)', borderColor: damaged ? 'rgba(239,68,68,0.35)' : 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+                style={{ background: 'var(--card-gradient)', borderColor: damaged ? 'rgba(239,68,68,0.35)' : 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--line)' }}>
                   <div>

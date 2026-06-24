@@ -54,14 +54,14 @@ export default function Profile() {
 
       {/* Ma'lumotlar */}
       <div className="px-4 pt-2 space-y-3">
-        <div className="rounded-2xl border divide-y" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+        <div className="rounded-2xl border divide-y" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
           <Row label={t('Telefon')} value={user?.phone ?? '—'} />
           <Row label={t('Rol')} value={t('Yo\'lovchi')} />
         </div>
 
         {/* Joriy bilet */}
         {ticket && (
-          <div className="rounded-2xl border p-4" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl border p-4" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white" style={{ background: 'var(--brand-gradient)' }}>
                 <IconPlane size={16} />
@@ -76,14 +76,14 @@ export default function Profile() {
 
         {/* Statistika (mock) */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border p-4 text-center" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl border p-4 text-center" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center mx-auto mb-2" style={{ background: 'rgba(52,211,153,0.14)', color: 'var(--green)' }}>
               <IconCheck size={18} />
             </div>
             <p className="text-2xl font-extrabold tabular-nums" style={{ color: 'var(--ink)' }}>0</p>
             <p className="text-xs" style={{ color: 'var(--muted)' }}>{t('Yetkazilgan')}</p>
           </div>
-          <div className="rounded-2xl border p-4 text-center" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl border p-4 text-center" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center mx-auto mb-2" style={{ background: 'rgba(106,163,255,0.14)', color: 'var(--brand-light)' }}>
               <IconBag size={18} />
             </div>

@@ -48,7 +48,7 @@ export default function Products() {
               g !== 'piece' && totalKg >= 0.1 ? t('{{n}} kg', { n: totalKg.toFixed(1) }) : '',
             ].filter(Boolean)
             return (
-              <div key={p.id} className="rounded-2xl p-3.5 border" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+              <div key={p.id} className="rounded-2xl p-3.5 border" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
                 <div className="flex items-stretch gap-3">
                   {/* Chap: katta rasm */}
                   <div className="w-24 h-24 rounded-xl flex items-center justify-center shrink-0 overflow-hidden self-start" style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--muted3)' }}>

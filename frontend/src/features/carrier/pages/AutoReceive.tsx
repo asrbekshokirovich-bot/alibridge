@@ -69,7 +69,7 @@ export default function AutoReceive() {
       ) : hasPending ? (
         <div className="px-4 pt-4 space-y-4">
           {/* Manzil + reys formi (barcha pendinglar uchun bitta) */}
-          <div className="rounded-2xl p-4 border space-y-3" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+          <div className="rounded-2xl p-4 border space-y-3" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
             <p className="text-sm font-bold" style={{ color: 'var(--ink)' }}>{t('Qabuldan oldin maʼlumotlarni kiriting')}</p>
             <div>
               <label className="text-xs font-semibold" style={{ color: 'var(--muted)' }}>{t('Turkiyadagi manzil')}</label>
@@ -109,7 +109,7 @@ export default function AutoReceive() {
           {pendings!.map((p) => {
             const busy = confirm.isPending && confirm.variables === p.id
             return (
-              <div key={p.id} className="rounded-2xl border overflow-hidden" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+              <div key={p.id} className="rounded-2xl border overflow-hidden" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
                 <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--line)' }}>
                   <div>
                     <span className="text-sm font-bold" style={{ color: 'var(--ink)' }}>{t('Kuryer topshirmoqchi')}</span>
@@ -175,8 +175,8 @@ export default function AutoReceive() {
               <>
                 <p className="text-sm mb-2" style={{ color: 'var(--muted)' }}>{t("Sizning yo'lovchi raqamingiz")}</p>
                 <div
-                  className="w-40 h-40 rounded-[2rem] flex items-center justify-center text-white shadow-[var(--shadow-brand)]"
-                  style={{ background: 'var(--brand-gradient)' }}
+                  className="glow-pulse w-40 h-40 rounded-[2rem] flex items-center justify-center text-white"
+                  style={{ background: 'var(--brand-gradient)', boxShadow: 'var(--shadow-brand), var(--glow-royal)' }}
                 >
                   <span className="text-6xl font-extrabold tracking-tight tabular-nums">#{carrierNumber}</span>
                 </div>

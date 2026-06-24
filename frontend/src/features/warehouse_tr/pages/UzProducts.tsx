@@ -24,7 +24,7 @@ export default function UzProducts() {
       ) : (
         <div className="px-4 pt-4 space-y-3">
           {products.map((p) => (
-            <div key={p.id} className="rounded-2xl p-4 border" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+            <div key={p.id} className="rounded-2xl p-4 border" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
               <div className="flex items-start gap-3">
                 <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 overflow-hidden" style={{ background: 'rgba(106,163,255,0.14)', color: '#6aa3ff' }}>
                   {p.image_url

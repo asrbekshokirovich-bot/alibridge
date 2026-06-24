@@ -113,7 +113,7 @@ export function WebShell({ children }: { children: React.ReactNode }) {
                 className={`press w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-left transition-colors ${
                   active ? 'text-white' : 'text-slate-600 hover:bg-slate-100'
                 }`}
-                style={active ? { background: 'var(--royal)' } : undefined}
+                style={active ? { background: 'var(--royal)', boxShadow: 'var(--glow-royal)' } : undefined}
               >
                 <span className={active ? 'text-white' : 'text-slate-400'}>{item.icon}</span>
                 <span className="truncate">{item.label}</span>

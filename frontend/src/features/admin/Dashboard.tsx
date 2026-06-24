@@ -42,15 +42,19 @@ export default function AdminDashboard() {
     <div className="min-h-screen animate-fade-in" style={{ background: 'var(--bg)' }}>
       <DashboardHeader role={t('Administrator')} name={t('Boshqaruv paneli')} />
 
-      {/* Stats — bosiladigan (hero ustiga biroz "overlap") */}
-      <div className="px-4 -mt-7 relative z-10">
+      {/*
+        v2 (redesign): stat kartalari endi hero ustiga "overlap" qilmaydi —
+        toza, teng masofa (mt-4). Bu noaniq ustma-ust tushishni yo'qotadi.
+        (Avval `-mt-7` edi.)
+      */}
+      <div className="px-4 mt-4 relative z-10">
         <div className="grid grid-cols-2 gap-3.5">
           <button
             onClick={() => navigate('/admin/products')}
             className="ab-card text-left p-4 cursor-pointer"
           >
             <div className="flex items-center gap-2.5 mb-3">
-              <span className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center" style={{ background: 'rgba(106,163,255,0.14)', color: 'var(--brand-light)' }}>
+              <span className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center" style={{ background: 'rgba(106,163,255,0.16)', color: 'var(--brand-light)' }}>
                 <IconBox size={18} />
               </span>
               <span className="text-[10.5px] font-bold uppercase tracking-[0.05em]" style={{ color: 'var(--muted2)' }}>{t('Jami mahsulot')}</span>
@@ -63,7 +67,7 @@ export default function AdminDashboard() {
             className="ab-card text-left p-4 cursor-pointer"
           >
             <div className="flex items-center gap-2.5 mb-3">
-              <span className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center" style={{ background: 'rgba(52,211,153,0.14)', color: 'var(--green)' }}>
+              <span className="w-[34px] h-[34px] rounded-[10px] flex items-center justify-center" style={{ background: 'rgba(52,211,153,0.16)', color: 'var(--green)' }}>
                 <IconPlane size={18} />
               </span>
               <span className="text-[10.5px] font-bold uppercase tracking-[0.05em]" style={{ color: 'var(--muted2)' }}>{t('Faol yo\'lovchi')}</span>

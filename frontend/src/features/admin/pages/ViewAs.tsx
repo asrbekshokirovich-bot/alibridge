@@ -35,7 +35,7 @@ export default function ViewAs() {
         {PANELS.map((p) => (
           <button key={p.role} onClick={() => open(p.path)}
             className="press rounded-2xl p-4 border text-left flex flex-col gap-3"
-            style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+            style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
             <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white" style={{ background: p.gradient }}>
               {p.icon}
             </div>

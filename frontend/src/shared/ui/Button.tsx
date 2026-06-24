@@ -8,19 +8,23 @@ interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean
 }
 
+/**
+ * v2 (redesign): primary endi brand gradient + royal glow soya (yassi rangdan
+ * ko'ra boyroq). Boshqa variantlar aniqroq chegara/kontrast oldi. Bosilganda
+ * .press scale animatsiyasi (GPU-do'st). Ranglar o'zgarmagan.
+ */
 export function Button({ variant = 'primary', fullWidth, loading, children, className = '', disabled, onClick, ...rest }: Props) {
   const { haptic } = useTelegram()
 
   const styles: Record<Variant, React.CSSProperties> = {
-    primary: { background: 'var(--royal)', color: '#fff', boxShadow: 'var(--shadow-brand)' },
-    lime:    { background: 'var(--lime)', color: 'var(--ink)', boxShadow: '0 8px 20px rgba(26,58,108,0.18)' },
-    success: { background: 'var(--green)', color: '#fff', boxShadow: '0 8px 20px rgba(22,163,74,0.25)' },
-    danger:  { background: 'rgba(239,68,68,0.10)', color: 'var(--red)', border: '1px solid rgba(239,68,68,0.30)' },
+    primary:   { background: 'var(--brand-gradient)', color: '#fff', boxShadow: 'var(--shadow-brand)' },
+    lime:      { background: 'var(--lime)', color: '#0b1426', boxShadow: '0 10px 26px -8px rgba(212,233,76,0.45)' },
+    success:   { background: 'linear-gradient(135deg,#34d399,#16A34A)', color: '#fff', boxShadow: '0 12px 26px -8px rgba(22,163,74,0.5)' },
+    danger:    { background: 'rgba(255,107,107,0.12)', color: 'var(--red)', border: '1px solid rgba(255,107,107,0.34)' },
     secondary: { background: 'var(--surface2)', color: 'var(--ink)', border: '1px solid var(--line2)' },
-    ghost:   { background: 'transparent', color: 'var(--muted)' },
+    ghost:     { background: 'transparent', color: 'var(--muted)' },
   }
 
-  // Lime tugma uchun spinner qorong'i bo'lsin
   const spinnerColor = variant === 'lime' ? 'border-black/25 border-t-black' : 'border-white/30 border-t-white'
 
   return (

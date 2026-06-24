@@ -89,7 +89,7 @@ export default function AllProducts() {
             const st = STATUS_LABEL[p.status] ?? { label: p.status, tone: 'gray' as const }
             return (
               <button key={p.id} onClick={() => setOpenId(p.id)}
-                className="press w-full text-left rounded-2xl p-4 border" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+                className="press w-full text-left rounded-2xl p-4 border" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
                 <div className="flex items-start gap-3">
                   <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(106,163,255,0.14)', color: '#6aa3ff' }}>
                     <IconBox size={20} />

@@ -46,7 +46,7 @@ export default function OrdererTracking() {
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] mb-2" style={{ color: 'var(--lime-d)' }}>
               {t('Yetkazib berish kodi')}
             </p>
-            <p className="text-[40px] font-extrabold tracking-[0.18em] leading-none tabnum" style={{ color: 'var(--lime)' }}>
+            <p className="text-glow-lime text-[40px] font-extrabold tracking-[0.18em] leading-none tabnum" style={{ color: 'var(--lime)' }}>
               {order.deliveryCode}
             </p>
             <p className="text-[12px] mt-3" style={{ color: 'var(--muted)' }}>

@@ -83,7 +83,7 @@ export default function Staff() {
               (changeRole.isPending && changeRole.variables?.id === s.id) ||
               (remove.isPending && remove.variables === s.id)
             return (
-              <div key={s.id} className="rounded-2xl border overflow-hidden" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+              <div key={s.id} className="rounded-2xl border overflow-hidden" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
                 <button onClick={() => setExpanded(open ? null : s.id)}
                   className="w-full p-4 flex items-center gap-3.5 text-left">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shrink-0" style={{ background: 'var(--brand-gradient)' }}>

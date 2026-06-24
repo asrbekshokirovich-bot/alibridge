@@ -72,7 +72,7 @@ export default function StaffApproval() {
               <div key={req.id} className="rounded-2xl border overflow-hidden transition-colors"
                 style={done
                   ? { background: 'rgba(52,211,153,0.10)', borderColor: 'rgba(52,211,153,0.30)', boxShadow: 'var(--shadow-md)' }
-                  : { background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+                  : { background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
                 <button onClick={() => setExpanded(open ? null : req.id)}
                   className="w-full p-4 flex items-center gap-3 text-left">
                   <div className="w-11 h-11 rounded-full flex items-center justify-center text-white shrink-0" style={{ background: done ? 'linear-gradient(135deg, #34d399, #16A34A)' : 'var(--brand-gradient)' }}>

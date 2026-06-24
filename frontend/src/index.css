@@ -1,14 +1,20 @@
 @import "tailwindcss";
 
 /* ════════════════════════════════════════════════════════════════════════
-   ALI BRIDGE — Dark "glass" dizayn tizimi
+   ALI BRIDGE — Dark "glass" dizayn tizimi  ·  REDESIGN v2 (contrast + effects)
    Chuqur navy gradient fon, shisha (glass) kartalar, royal blue + lime aksent.
-   DARK — asosiy (real base) tema. Tailwind light klasslari override orqali
-   dark shishaga moslanadi (hech narsa yorug' qolmaydi).
+   v2 o'zgarishlari (RANGLAR SAQLANGAN):
+     • Kontrast oshirildi  — chegaralar (line/line2) aniqroq, matn yorqinroq
+     • Effektlar           — kartalarda gradient yuza, chuqurroq soyalar,
+                             royal/lime glow (halqa) aktiv elementlarda
+     • Animatsiyalar       — bir xil yumshoq easing (cubic-bezier), GPU-do'st
+                             (faqat transform/opacity/box-shadow), reduced-motion
+   Bu fayl + shared/ui komponentlari = BARCHA rollar (carrier, courier_uz/tr,
+   warehouse_uz/tr, admin) avtomatik yangi ko'rinishni oladi.
    ════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Brand = ROYAL BLUE ── */
+  /* ── Brand = ROYAL BLUE (rang o'zgarmagan) ── */
   --royal: #1A3A6C;
   --royal-d: #16325c;
   --navy2: #132A4D;
@@ -17,49 +23,58 @@
   --brand-dark: #16325c;
   --brand-light: #6aa3ff;
   --brand-gradient: linear-gradient(150deg, #1A3A6C 0%, #16325c 55%, #0F213D 100%);
-  --brand-gradient-soft: linear-gradient(135deg, rgba(47,90,160,0.22) 0%, rgba(19,42,77,0.12) 100%);
+  --brand-gradient-soft: linear-gradient(135deg, rgba(47,90,160,0.26) 0%, rgba(19,42,77,0.14) 100%);
 
-  /* ── Lime — sharp aksent (figuralar / aktiv holat / yetkazib berish kodi) ── */
+  /* ── Lime — sharp aksent ── */
   --lime: #D4E94C;
   --lime-d: #b7cc2f;
   --lime-dim: #7e8a4a;
 
-  /* ── Matn / muted (deyarli oq + ko'k-kulrang) ── */
-  --ink: #f2f6ff;
-  --text: #f2f6ff;
-  --text-muted: #8ba0c4;
-  --muted: #8ba0c4;
-  --muted2: #6b7fa3;
-  --muted3: #56678a;
+  /* ── Matn / muted — v2: biroz yorqinroq (kontrast) ── */
+  --ink: #f4f8ff;
+  --text: #f4f8ff;
+  --text-muted: #9bb0d2;
+  --muted: #9bb0d2;
+  --muted2: #7d93b8;
+  --muted3: #5c6f93;
 
-  /* ── Yuzalar = shisha (glass) ── */
+  /* ── Yuzalar = shisha (glass) — v2: yuza gradienti + biroz yorqinroq ── */
   --bg: #0a1020;
-  --bg-grad: linear-gradient(180deg, #0b1426 0%, #0a1020 48%, #0F213D 100%);
-  --surface: rgba(255, 255, 255, 0.05);
-  --surface2: rgba(255, 255, 255, 0.07);
-  --surface3: rgba(255, 255, 255, 0.10);
-  --card: rgba(255, 255, 255, 0.05);
-  --card-2: rgba(255, 255, 255, 0.07);
-  --glass-blur: blur(14px);
+  --bg-grad:
+    radial-gradient(120% 70% at 50% -10%, rgba(47,90,160,0.20), transparent 55%),
+    linear-gradient(180deg, #0b1426 0%, #0a1020 48%, #0F213D 100%);
+  --surface: rgba(255, 255, 255, 0.06);
+  --surface2: rgba(255, 255, 255, 0.085);
+  --surface3: rgba(255, 255, 255, 0.12);
+  --card: rgba(255, 255, 255, 0.06);
+  --card-2: rgba(255, 255, 255, 0.085);
+  /* v2: kartalar uchun nozik gradient yuza (yassi rangdan ko'ra chuqurroq) */
+  --card-gradient: linear-gradient(158deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 100%);
+  --card-gradient-hover: linear-gradient(158deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.045) 100%);
+  --glass-blur: blur(16px);
 
-  /* ── Chegaralar (hairline, oq tiniq) ── */
-  --line: rgba(255, 255, 255, 0.10);
-  --line2: rgba(255, 255, 255, 0.14);
-  --border: rgba(255, 255, 255, 0.10);
+  /* ── Chegaralar — v2: aniqroq (kontrast) ── */
+  --line: rgba(255, 255, 255, 0.12);
+  --line2: rgba(255, 255, 255, 0.18);
+  --border: rgba(255, 255, 255, 0.12);
 
-  /* ── Semantik (dark fonga uyg'un) ── */
-  --green: #34d399;     /* Tugadi / done */
-  --red: #ff6b6b;       /* aktiv "Hozir" / Yo'lovchida */
+  /* ── Semantik ── */
+  --green: #34d399;
+  --red: #ff6b6b;
   --coral: #ff7a6b;
-  --blue: #6aa3ff;      /* jarayonda — Omborda */
-  --purple: #a78bfa;    /* jarayonda — Xaridda */
+  --blue: #6aa3ff;
+  --purple: #a78bfa;
   --amber: #fbbf24;
 
-  /* ── Soyalar (chuqur, yumshoq) ── */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 10px 30px -12px rgba(0, 0, 0, 0.55);
-  --shadow-lg: 0 24px 60px -16px rgba(0, 0, 0, 0.6);
-  --shadow-brand: 0 12px 28px -8px rgba(26, 58, 108, 0.6);
+  /* ── Soyalar — v2: chuqurroq, ko'p qatlamli ── */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 16px 38px -18px rgba(0, 0, 0, 0.72), 0 2px 6px -2px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 30px 70px -18px rgba(0, 0, 0, 0.7), 0 4px 12px -4px rgba(0, 0, 0, 0.5);
+  --shadow-brand: 0 16px 34px -10px rgba(26, 58, 108, 0.7), 0 0 0 1px rgba(106, 163, 255, 0.18);
+
+  /* ── Glow (halo) — v2 YANGI: aktiv/tanlangan elementlar uchun ── */
+  --glow-royal: 0 0 0 1px rgba(106, 163, 255, 0.42), 0 10px 34px -10px rgba(47, 90, 160, 0.85);
+  --glow-lime: 0 0 20px rgba(212, 233, 76, 0.45);
 }
 
 * {
@@ -85,7 +100,6 @@ body {
   max-width: 480px;
   margin: 0 auto;
   position: relative;
-  /* Chuqur navy gradient — butun ilova foni */
   background: var(--bg-grad);
   background-attachment: fixed;
   min-height: 100vh;
@@ -110,9 +124,10 @@ body {
     height: 100vh;
     height: 100dvh;
     overflow-y: auto;
-    border-right: 1px solid var(--line);
-    background: rgba(255, 255, 255, 0.04);
+    border-right: 1px solid var(--line2);
+    background: linear-gradient(180deg, rgba(16,28,52,0.62), rgba(10,16,32,0.62));
     backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
   }
   .web .web-content {
     min-width: 0;
@@ -148,7 +163,7 @@ body {
   .web .web-grid-catalog { --web-cols: 4; }
 }
 
-/* Scrollbar (Telegram telefon — yashirin; brauzerda nozik) */
+/* Scrollbar */
 :root:not(.web) ::-webkit-scrollbar {
   width: 0;
   background: transparent;
@@ -157,41 +172,59 @@ body {
 .web ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.14); border-radius: 6px; }
 .web ::-webkit-scrollbar-track { background: transparent; }
 
-/* ── Animatsiyalar ── */
-@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
-@keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-@keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
-.animate-fade-in { opacity: 1; animation: fadeIn 0.35s ease-out; }
-.animate-scale-in { animation: scaleIn 0.25s ease-out; }
-.animate-slide-up { animation: slideUp 0.3s ease-out; }
+/* ════════════════════════════════════════════════════════════════════════
+   Animatsiyalar — v2: bir xil yumshoq easing, GPU-do'st (transform/opacity)
+   ════════════════════════════════════════════════════════════════════════ */
+@keyframes fadeIn   { from { opacity: 0; transform: translate3d(0, 8px, 0);   } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+@keyframes slideUp  { from { opacity: 0; transform: translate3d(0, 100%, 0);  } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+@keyframes scaleIn  { from { opacity: 0; transform: scale(0.95);              } to { opacity: 1; transform: scale(1); } }
+@keyframes floatUp  { from { opacity: 0; transform: translate3d(0, 16px, 0);  } to { opacity: 1; transform: translate3d(0, 0, 0); } }
+@keyframes shimmer  { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+/* v2 YANGI: aktiv element atrofidagi yumshoq glow puls (masalan #14 raqami) */
+@keyframes glowPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
-/* Skeleton loader (dark glass) */
+/* Smooth easing — barcha kirish animatsiyalari bir xil his beradi */
+.animate-fade-in  { opacity: 1; animation: fadeIn  0.38s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.animate-scale-in {            animation: scaleIn 0.30s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.animate-slide-up {            animation: slideUp 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.animate-float-up {            animation: floatUp 0.40s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.glow-pulse       {            animation: glowPulse 2.6s ease-in-out infinite; }
+
+/* Skeleton loader — v2: kontrasti biroz oshirilgan, tezroq shimmer */
 .skeleton {
-  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.05) 75%);
+  background: linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.13) 50%, rgba(255,255,255,0.06) 75%);
   background-size: 800px 100%;
-  animation: shimmer 1.5s infinite linear;
+  animation: shimmer 1.3s infinite linear;
   border-radius: 8px;
 }
 
-/* Press effekt */
-.press { transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease; }
-.press:active { transform: scale(0.96); opacity: 0.9; }
+/* Press effekt — v2: bir xil easing, GPU-do'st */
+.press {
+  transition: transform 0.14s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 0.14s ease, opacity 0.14s ease;
+  will-change: transform;
+}
+.press:active { transform: scale(0.96); opacity: 0.92; }
 
 /* ── Brand / aksent utilitalari ── */
 .bg-brand { background: var(--brand-gradient); }
 .bg-brand-soft { background: var(--brand-gradient-soft); }
+.bg-card-grad { background: var(--card-gradient); }
 .text-royal { color: var(--brand-light); }
 .text-lime-accent { color: var(--lime); }
+/* v2 YANGI glow utilitalari */
+.glow-royal { box-shadow: var(--glow-royal); }
+.glow-lime  { box-shadow: var(--glow-lime); }
+.ring-royal { box-shadow: 0 0 0 1.5px var(--royal), var(--glow-royal); }
+.text-glow-lime { text-shadow: 0 0 18px rgba(212, 233, 76, 0.35); }
 
 /* ── Glass yuza utilitalari ── */
 .glass {
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: var(--card-gradient);
+  border: 1px solid var(--line2);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
 }
-.glass-2 { background: var(--surface2); border: 1px solid var(--line); }
+.glass-2 { background: var(--surface2); border: 1px solid var(--line2); }
 .surface { background: var(--surface); }
 .surface-2 { background: var(--surface2); }
 .txt { color: var(--ink); }
@@ -200,54 +233,52 @@ body {
 .tabnum { font-variant-numeric: tabular-nums; }
 
 /* ════════════════════════════════════════════════════════════════════════
-   Tailwind "light" klasslarini dark shishaga moslash (override).
-   Hali tokenlarga ko'chirilmagan ekranlar shu qatlam orqali dark bo'ladi —
-   hech narsa yorug' qolmaydi.
+   Tailwind "light" klasslarini dark shishaga moslash (override) — v2: kontrast
    ════════════════════════════════════════════════════════════════════════ */
-.bg-white { background-color: rgba(255, 255, 255, 0.05) !important; }
-.bg-slate-50 { background-color: rgba(255, 255, 255, 0.04) !important; }
-.bg-slate-100 { background-color: rgba(255, 255, 255, 0.07) !important; }
-.bg-slate-50\/50, .bg-slate-50\/60 { background-color: rgba(255, 255, 255, 0.04) !important; }
+.bg-white { background-color: rgba(255, 255, 255, 0.06) !important; }
+.bg-slate-50 { background-color: rgba(255, 255, 255, 0.05) !important; }
+.bg-slate-100 { background-color: rgba(255, 255, 255, 0.085) !important; }
+.bg-slate-50\/50, .bg-slate-50\/60 { background-color: rgba(255, 255, 255, 0.05) !important; }
 
-.text-slate-900, .text-slate-800 { color: #f2f6ff !important; }
-.text-slate-700 { color: #d6e0f5 !important; }
-.text-slate-600, .text-slate-500 { color: #8ba0c4 !important; }
-.text-slate-400 { color: #6b7fa3 !important; }
-.text-slate-300 { color: #56678a !important; }
+.text-slate-900, .text-slate-800 { color: #f4f8ff !important; }
+.text-slate-700 { color: #dbe5f8 !important; }
+.text-slate-600, .text-slate-500 { color: #9bb0d2 !important; }
+.text-slate-400 { color: #7d93b8 !important; }
+.text-slate-300 { color: #5c6f93 !important; }
 
-.border-slate-100, .border-slate-200 { border-color: rgba(255, 255, 255, 0.10) !important; }
-.border-slate-50 { border-color: rgba(255, 255, 255, 0.07) !important; }
-.divide-slate-50 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(255, 255, 255, 0.07) !important; }
-.divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(255, 255, 255, 0.10) !important; }
+.border-slate-100, .border-slate-200 { border-color: rgba(255, 255, 255, 0.12) !important; }
+.border-slate-50 { border-color: rgba(255, 255, 255, 0.085) !important; }
+.divide-slate-50 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(255, 255, 255, 0.085) !important; }
+.divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(255, 255, 255, 0.12) !important; }
 
-/* Inputlar — dark glass + royal/lime fokus */
+/* Inputlar — dark glass + royal/lime fokus (v2: fokus halqasi biroz kuchliroq) */
 input, textarea, select {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(255, 255, 255, 0.06);
   color: var(--ink);
-  border-color: var(--line);
+  border-color: var(--line2);
 }
 input:focus, textarea:focus, select:focus {
   border-color: var(--brand-light) !important;
-  box-shadow: 0 0 0 3px rgba(106, 163, 255, 0.18);
+  box-shadow: 0 0 0 3px rgba(106, 163, 255, 0.22);
   outline: none;
 }
 input::placeholder, textarea::placeholder { color: #5b6c8f; }
 .focus\:border-red-400:focus { border-color: var(--brand-light) !important; }
-.focus\:ring-red-400\/25:focus { box-shadow: 0 0 0 3px rgba(106, 163, 255, 0.18) !important; }
+.focus\:ring-red-400\/25:focus { box-shadow: 0 0 0 3px rgba(106, 163, 255, 0.22) !important; }
 
-/* Yumshoq rangli fonlar (badge/banner) — dark'da yarim-shaffof */
-.bg-amber-50 { background-color: rgba(251, 191, 36, 0.14) !important; }
-.bg-amber-100 { background-color: rgba(251, 191, 36, 0.18) !important; }
-.bg-red-50 { background-color: rgba(255, 107, 107, 0.14) !important; }
-.bg-red-100 { background-color: rgba(255, 107, 107, 0.18) !important; }
-.bg-red-50\/50, .bg-red-50\/60 { background-color: rgba(255, 107, 107, 0.10) !important; }
-.bg-emerald-50, .bg-green-50 { background-color: rgba(52, 211, 153, 0.14) !important; }
-.bg-emerald-100, .bg-green-100 { background-color: rgba(52, 211, 153, 0.18) !important; }
-.bg-blue-50 { background-color: rgba(106, 163, 255, 0.14) !important; }
-.bg-blue-100 { background-color: rgba(106, 163, 255, 0.18) !important; }
-.bg-purple-50 { background-color: rgba(167, 139, 250, 0.14) !important; }
-.bg-purple-100 { background-color: rgba(167, 139, 250, 0.18) !important; }
-.bg-yellow-50 { background-color: rgba(251, 191, 36, 0.14) !important; }
+/* Yumshoq rangli fonlar (badge/banner) — v2: biroz to'qroq (kontrast) */
+.bg-amber-50 { background-color: rgba(251, 191, 36, 0.16) !important; }
+.bg-amber-100 { background-color: rgba(251, 191, 36, 0.20) !important; }
+.bg-red-50 { background-color: rgba(255, 107, 107, 0.16) !important; }
+.bg-red-100 { background-color: rgba(255, 107, 107, 0.20) !important; }
+.bg-red-50\/50, .bg-red-50\/60 { background-color: rgba(255, 107, 107, 0.12) !important; }
+.bg-emerald-50, .bg-green-50 { background-color: rgba(52, 211, 153, 0.16) !important; }
+.bg-emerald-100, .bg-green-100 { background-color: rgba(52, 211, 153, 0.20) !important; }
+.bg-blue-50 { background-color: rgba(106, 163, 255, 0.16) !important; }
+.bg-blue-100 { background-color: rgba(106, 163, 255, 0.20) !important; }
+.bg-purple-50 { background-color: rgba(167, 139, 250, 0.16) !important; }
+.bg-purple-100 { background-color: rgba(167, 139, 250, 0.20) !important; }
+.bg-yellow-50 { background-color: rgba(251, 191, 36, 0.16) !important; }
 
 .text-amber-700, .text-amber-600 { color: #fbbf24 !important; }
 .text-red-700, .text-red-600, .text-red-500 { color: #ff8a8a !important; }
@@ -256,11 +287,11 @@ input::placeholder, textarea::placeholder { color: #5b6c8f; }
 .text-purple-700, .text-purple-600 { color: #c4b5fd !important; }
 .text-yellow-700, .text-yellow-600 { color: #fbbf24 !important; }
 
-.border-red-100, .border-red-200 { border-color: rgba(255, 107, 107, 0.28) !important; }
+.border-red-100, .border-red-200 { border-color: rgba(255, 107, 107, 0.32) !important; }
 
 /* Blur header/nav fonlari → dark glass */
-.bg-white\/80 { background-color: rgba(11, 20, 38, 0.72) !important; }
-.bg-white\/90 { background-color: rgba(11, 20, 38, 0.85) !important; }
+.bg-white\/80 { background-color: rgba(11, 20, 38, 0.74) !important; }
+.bg-white\/90 { background-color: rgba(11, 20, 38, 0.86) !important; }
 
 /* Number input spinner yashirish */
 input[type="number"]::-webkit-outer-spin-button,
@@ -271,20 +302,34 @@ input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* ── Premium glass karta (dashboard menyu + stat kartalari) ── */
+/* ════════════════════════════════════════════════════════════════════════
+   Premium glass karta — v2: gradient yuza, aniq chegara, chuqur soya, glow
+   hover (dashboard menyu + stat kartalari + ko'p joyda ishlatiladi)
+   ════════════════════════════════════════════════════════════════════════ */
 .ab-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: var(--card-gradient);
+  border: 1px solid var(--line2);
   border-radius: 20px;
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   box-shadow: var(--shadow-md);
-  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+  transition: transform 0.18s cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+  will-change: transform;
 }
 .ab-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--line2);
-  background: var(--surface2);
-  box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.6);
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.24);
+  background: var(--card-gradient-hover);
+  box-shadow: var(--shadow-lg);
 }
-.ab-card:active { transform: translateY(0) scale(0.99); }
+.ab-card:active { transform: translateY(-1px) scale(0.99); }
+
+/* ── Harakatni kamaytirish (accessibility + lag oldini olish) ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

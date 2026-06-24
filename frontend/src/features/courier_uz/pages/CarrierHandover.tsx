@@ -92,7 +92,7 @@ export default function CourierUzCarrierHandover() {
           {groups.map((g) => {
             const busy = handover.isPending && handover.variables?.carrier_number === g.carrier_number
             return (
-              <div key={g.carrier_number} className="rounded-2xl border overflow-hidden" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+              <div key={g.carrier_number} className="rounded-2xl border overflow-hidden" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
                 {/* Yo'lovchi sarlavhasi */}
                 <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--line)' }}>
                   <div>

@@ -49,7 +49,7 @@ export default function Payments() {
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((p) => (
-            <div key={p.id} className="rounded-2xl p-4 border" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+            <div key={p.id} className="rounded-2xl p-4 border" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="font-bold text-[14.5px]" style={{ color: 'var(--ink)' }}>{p.carrier_number ? t("Yo'lovchi #{{number}}", { number: p.carrier_number }) : p.carrier_name}</p>

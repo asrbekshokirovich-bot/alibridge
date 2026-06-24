@@ -135,7 +135,7 @@ export default function Incoming() {
                   const tgLink = telegramLink(h.holder_username)
                   const openProfile = () => { if (tgLink) openTelegramLink(tgLink) }
                   return (
-                    <div key={h.holder_id} className="rounded-2xl border overflow-hidden web-grid" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+                    <div key={h.holder_id} className="rounded-2xl border overflow-hidden web-grid" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
                       <div className="flex items-center gap-3 p-3.5">
                         {tgLink ? (
                           <button

@@ -45,7 +45,7 @@ export default function HeldCargo() {
           </div>
           <div className="px-4 pt-3 space-y-2 web-grid">
             {items.map((p) => (
-              <div key={`${p.product_id}:${p.size_label}`} className="rounded-2xl p-3.5 border flex items-center gap-3" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+              <div key={`${p.product_id}:${p.size_label}`} className="rounded-2xl p-3.5 border flex items-center gap-3" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(106,163,255,0.14)', color: '#6aa3ff' }}>
                   <IconBox size={20} />
                 </div>

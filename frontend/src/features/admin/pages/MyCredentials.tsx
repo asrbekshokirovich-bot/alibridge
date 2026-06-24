@@ -38,7 +38,7 @@ export default function MyCredentials() {
       <Header title={t('Sayt logini')} subtitle={t('Brauzer orqali kirish')} showBack />
 
       <div className="px-4 pt-4">
-        <div className="rounded-2xl p-4 border" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+        <div className="rounded-2xl p-4 border" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
           <p className="text-sm mb-3" style={{ color: 'var(--muted)' }}>
             {t('Saytga (brauzerda) kirish uchun o\'zingizga login va parol o\'rnating.')}
             {user?.username && (

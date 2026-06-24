@@ -37,7 +37,7 @@ export default function CourierTrDisputes() {
       ) : (
         <div className="px-4 pt-4 space-y-3 web-grid">
           {data.map((d) => (
-            <div key={d.id} className="rounded-2xl border overflow-hidden" style={{ background: 'var(--surface)', borderColor: 'rgba(239,68,68,0.25)', boxShadow: 'var(--shadow-md)' }}>
+            <div key={d.id} className="rounded-2xl border overflow-hidden" style={{ background: 'var(--card-gradient)', borderColor: 'rgba(239,68,68,0.25)', boxShadow: 'var(--shadow-md)' }}>
               <div className="px-4 py-3 flex items-center justify-between" style={{ background: 'rgba(255,107,107,0.10)' }}>
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="shrink-0" style={{ color: 'var(--red)' }}><IconAlert size={18} /></span>

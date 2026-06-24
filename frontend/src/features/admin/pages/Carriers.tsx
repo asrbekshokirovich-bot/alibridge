@@ -44,7 +44,7 @@ export default function Carriers() {
           {data.map((c) => {
             const busy = remove.isPending && remove.variables === c.id
             return (
-              <div key={c.id} className="rounded-2xl p-4 border flex items-center gap-3.5" style={{ background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+              <div key={c.id} className="rounded-2xl p-4 border flex items-center gap-3.5" style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
                 <div className="relative shrink-0">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ background: 'var(--brand-gradient)' }}>
                     {initials(c.first_name, c.last_name)}

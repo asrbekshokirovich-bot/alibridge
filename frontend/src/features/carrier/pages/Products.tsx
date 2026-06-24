@@ -87,9 +87,9 @@ export default function Products() {
               <button key={p.id} onClick={() => { haptic('light'); setOpen(p) }}
                 className="press text-left rounded-[18px] overflow-hidden border flex flex-col transition-all"
                 style={{
-                  background: 'var(--surface)',
-                  borderColor: selectedCount > 0 ? 'var(--royal)' : 'var(--line)',
-                  boxShadow: selectedCount > 0 ? '0 0 0 1px var(--royal), var(--shadow-md)' : 'var(--shadow-md)',
+                  background: 'var(--card-gradient)',
+                  borderColor: selectedCount > 0 ? 'var(--royal)' : 'var(--line2)',
+                  boxShadow: selectedCount > 0 ? 'var(--glow-royal)' : 'var(--shadow-md)',
                 }}>
                 {/* Rasm */}
                 <div className="aspect-square flex items-center justify-center overflow-hidden relative" style={{ background: 'var(--surface2)' }}>
@@ -112,7 +112,7 @@ export default function Products() {
                 <div className="p-3 flex flex-col gap-1.5 flex-1">
                   <h3 className="text-[14.5px] font-bold leading-tight line-clamp-2 tracking-[-0.01em]" style={{ color: 'var(--ink)' }}>{p.category || p.name}</h3>
                   {pr && (
-                    <div className="text-[18.5px] font-extrabold leading-none tabular-nums tracking-[-0.02em]" style={{ color: 'var(--lime)' }}>
+                    <div className="text-glow-lime text-[18.5px] font-extrabold leading-none tabular-nums tracking-[-0.02em]" style={{ color: 'var(--lime)' }}>
                       {pr}<span className="text-[11px] font-semibold ml-1" style={{ color: 'var(--muted3)' }}>so'm/{unit}</span>
                     </div>
                   )}

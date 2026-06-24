@@ -86,7 +86,7 @@ export default function Orders() {
             const done = o.items.filter((i) => i.confirmed).length
             const allDone = o.all_confirmed || done === o.items.length
             return (
-              <div key={o.order_id} className="rounded-2xl border overflow-hidden" style={allDone ? { background: 'rgba(52,211,153,0.10)', borderColor: 'rgba(52,211,153,0.30)', boxShadow: 'var(--shadow-md)' } : { background: 'var(--surface)', borderColor: 'var(--line)', boxShadow: 'var(--shadow-md)' }}>
+              <div key={o.order_id} className="rounded-2xl border overflow-hidden" style={allDone ? { background: 'rgba(52,211,153,0.10)', borderColor: 'rgba(52,211,153,0.30)', boxShadow: 'var(--shadow-md)' } : { background: 'var(--card-gradient)', borderColor: 'var(--line2)', boxShadow: 'var(--shadow-md)' }}>
                 {/* Header */}
                 <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--line)' }}>
                   <div className="flex items-center justify-between mb-0.5">

@@ -183,11 +183,17 @@ body {
 /* v2 YANGI: aktiv element atrofidagi yumshoq glow puls (masalan #14 raqami) */
 @keyframes glowPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
-/* Smooth easing — barcha kirish animatsiyalari bir xil his beradi */
-.animate-fade-in  { opacity: 1; animation: fadeIn  0.38s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
-.animate-scale-in {            animation: scaleIn 0.30s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
-.animate-slide-up {            animation: slideUp 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
-.animate-float-up {            animation: floatUp 0.40s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+/* Smooth easing — barcha kirish animatsiyalari bir xil his beradi.
+   MUHIM: fill-mode `backwards` (`both` EMAS) — animatsiya tugagach element
+   bazaviy holatiga qaytadi va transform `none` bo'ladi. Aks holda (`both`)
+   tugash kadridagi translate3d(0,0,0) transform qolib ketadi va element
+   ichidagi `position: fixed` elementlar (Sheet, fixed pastki panellar,
+   suzuvchi tugmalar) viewport o'rniga shu elementga nisbatan joylashadi —
+   natijada sheet ekrandan tashqarida qoladi ("xira ekran" muammosi). */
+.animate-fade-in  { opacity: 1; animation: fadeIn  0.38s cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+.animate-scale-in {            animation: scaleIn 0.30s cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+.animate-slide-up {            animation: slideUp 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
+.animate-float-up {            animation: floatUp 0.40s cubic-bezier(0.22, 0.61, 0.36, 1) backwards; }
 .glow-pulse       {            animation: glowPulse 2.6s ease-in-out infinite; }
 
 /* Skeleton loader — v2: kontrasti biroz oshirilgan, tezroq shimmer */

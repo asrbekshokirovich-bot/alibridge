@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMutation } from '@tanstack/react-query'
 import client, { extractErrorMessage } from '@/shared/api/client'
@@ -55,13 +55,22 @@ interface Props {
   successDesc?: (count: number) => string
   showBack?: boolean
   onBack?: () => void
+  // Tasdiqdan OLDIN qo'shimcha tanlash qadami (masalan: qaysi kuryerga).
+  // Berilsa: "Tasdiqlash" bosilganda darhol POST qilinmaydi — bu UI ochiladi.
+  // proceed(extra) chaqirilganda extra confirm body'ga qo'shilib yuboriladi.
+  // Berilmasa — eski xatti-harakat (darhol tasdiq) o'zgarishsiz qoladi.
+  renderConfirmGate?: (gate: {
+    proceed: (extra: Record<string, unknown>) => void
+    cancel: () => void
+    totalQty: number
+  }) => ReactNode
 }
 
 // Miqdor bo'yicha skanlash sessiyasi (split custody) — optimistik live rejim:
 // pistolet tezligida skan darhol ro'yxatga tushadi, tekshiruv fonда parallel ketadi.
 export function ScanSession({
   title, subtitle, scanUrl, confirmUrl, scanBody = {}, confirmBody = {},
-  successTitle, successDesc, showBack, onBack,
+  successTitle, successDesc, showBack, onBack, renderConfirmGate,
 }: Props) {
   const { t } = useTranslation()
   const { notify } = useTelegram()
@@ -69,6 +78,8 @@ export function ScanSession({
   const [rows, setRows] = useState<ScannedRow[]>([])
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
+  // Tasdiq-gate (kuryer tanlash kabi) ochiqmi
+  const [gateOpen, setGateOpen] = useState(false)
   // Fonда tekshirilayotgan (hali javob kelmagan) skanlar soni
   const [checking, setChecking] = useState(0)
   const checkingRef = useRef(0)
@@ -238,7 +249,7 @@ export function ScanSession({
   }
 
   const confirm = useMutation({
-    mutationFn: () =>
+    mutationFn: (extra: Record<string, unknown> = {}) =>
       client.post(confirmUrl, {
         items: validRows.map((r) => ({
           barcode: r.barcode,
@@ -246,10 +257,17 @@ export function ScanSession({
           quantity: r.quantity,
         })),
         ...confirmBody,
+        ...extra,
       }),
-    onSuccess: () => { notify('success'); setDone(true) },
-    onError: (err) => { setError(extractErrorMessage(err)); notify('error') },
+    onSuccess: () => { notify('success'); setGateOpen(false); setDone(true) },
+    onError: (err) => { setError(extractErrorMessage(err)); setGateOpen(false); notify('error') },
   })
+
+  // "Tasdiqlash" bosilganda: gate bo'lsa — tanlash UI'sini ochamiz, bo'lmasa darhol POST.
+  const onConfirmClick = () => {
+    if (renderConfirmGate) setGateOpen(true)
+    else confirm.mutate({})
+  }
 
   const setQty = (key: string, qty: number) => {
     setRowsSync((prev) =>
@@ -374,11 +392,26 @@ export function ScanSession({
           {hasErrors && (
             <p className="text-xs text-red-500 text-center mb-2">{t('Xatoli qatorlar tasdiqlashga kirmaydi')}</p>
           )}
-          <button onClick={() => confirm.mutate()} disabled={confirm.isPending}
+          <button onClick={onConfirmClick} disabled={confirm.isPending}
             style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' }}
             className="press w-full text-white rounded-2xl py-4 font-bold shadow-[0_8px_24px_rgba(34,197,94,0.35)] disabled:opacity-50">
             {confirm.isPending ? t('Yuklanmoqda...') : t('Tasdiqlash ({{totalQty}} ta)', { totalQty })}
           </button>
+        </div>
+      )}
+
+      {/* Tasdiqdan oldingi tanlash qadami (masalan kuryerni tanlash) */}
+      {gateOpen && renderConfirmGate && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in"
+          onClick={() => !confirm.isPending && setGateOpen(false)}>
+          <div className="w-full max-w-[480px] max-h-[85vh] overflow-y-auto bg-white rounded-t-3xl sm:rounded-3xl p-4"
+            onClick={(e) => e.stopPropagation()}>
+            {renderConfirmGate({
+              proceed: (extra) => confirm.mutate(extra),
+              cancel: () => setGateOpen(false),
+              totalQty,
+            })}
+          </div>
         </div>
       )}
     </div>

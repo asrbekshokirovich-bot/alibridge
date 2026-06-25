@@ -28,6 +28,7 @@ from app.db.models import (
 from app.schemas.common import OkResponse
 from app.schemas.courier import (
     ConfirmAirportRequest,
+    CourierPendingHandover,
     CourierUzMyProduct,
     CourierUzQueueItem,
     CourierUzQueueProduct,
@@ -422,3 +423,33 @@ async def confirm_airport(
     await db.flush()
     await notify.on_airport_handover_pending(db, carrier_id=carrier.id, count=total)
     return OkResponse(ok=True)
+
+
+@router.get("/pending-handovers", response_model=list[CourierPendingHandover])
+async def courier_pending_handovers(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*ROLE)),
+) -> list[CourierPendingHandover]:
+    """Kuryer topshirgan, lekin yo'lovchi hali TASDIQLAMAGAN topshiriqlar —
+    yo'lovchi raqami bo'yicha. Kuryer ro'yxatida 'kutilmoqda' belgisi uchun."""
+    rows = await db.execute(
+        select(PendingHandover, User)
+        .join(User, User.id == PendingHandover.carrier_id)
+        .where(PendingHandover.courier_id == user.id, PendingHandover.status == "pending")
+    )
+    by_num: dict[int, CourierPendingHandover] = {}
+    for p, carrier in rows.all():
+        num = carrier.carrier_number
+        if num is None:
+            continue
+        cnt = sum(int(it.get("quantity", 0)) for it in p.items)
+        existing = by_num.get(num)
+        if existing is not None:
+            existing.count += cnt
+        else:
+            by_num[num] = CourierPendingHandover(
+                carrier_number=num,
+                carrier_name=f"{carrier.first_name} {carrier.last_name}".strip(),
+                count=cnt,
+            )
+    return list(by_num.values())

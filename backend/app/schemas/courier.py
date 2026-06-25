@@ -53,6 +53,14 @@ class ConfirmAirportRequest(BaseModel):
     items: list[CustodyTransferItem] = Field(min_length=1, max_length=200)
 
 
+class CourierPendingHandover(BaseModel):
+    """Kuryer yo'lovchiga topshirgan, lekin yo'lovchi hali tasdiqlamagan topshiriq."""
+
+    carrier_number: int
+    carrier_name: str
+    count: int
+
+
 # ─── Courier TR ─────────────────────────────────────────────────────────────────
 
 

@@ -49,12 +49,6 @@ function groupByCarrier(products: MyProduct[]): CarrierGroup[] {
   return [...map.values()].sort((a, b) => a.carrier_number - b.carrier_number)
 }
 
-interface PendingGroup {
-  carrier_number: number
-  carrier_name: string
-  count: number
-}
-
 export default function CourierUzCarrierHandover() {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -68,13 +62,6 @@ export default function CourierUzCarrierHandover() {
     queryFn: () => client.get<MyProduct[]>('/courier-uz/my-products').then((r) => r.data),
   })
 
-  // Yo'lovchi hali tasdiqlamagan topshiriqlar — "kutilmoqda" belgisi uchun
-  const { data: pendings } = useQuery({
-    queryKey: ['courier-uz-pending-handovers'],
-    queryFn: () => client.get<PendingGroup[]>('/courier-uz/pending-handovers').then((r) => r.data),
-  })
-  const pendingNums = new Set((pendings ?? []).map((p) => p.carrier_number))
-
   const handover = useMutation({
     mutationFn: (g: CarrierGroup) =>
       client.post('/courier-uz/confirm-airport', {
@@ -84,9 +71,8 @@ export default function CourierUzCarrierHandover() {
     onSuccess: (_d, g) => {
       notify('success')
       setError('')
-      setOkMsg(t("Yo'lovchi #{{n}} ga topshirildi — yo'lovchi tasdig'i kutilmoqda", { n: g.carrier_number }))
+      setOkMsg(t("Yo'lovchi #{{n}} ga topshirildi", { n: g.carrier_number }))
       qc.invalidateQueries({ queryKey: ['courier-uz-my-products'] })
-      qc.invalidateQueries({ queryKey: ['courier-uz-pending-handovers'] })
     },
     onError: (err) => { setError(extractErrorMessage(err)); setOkMsg(''); notify('error') },
   })
@@ -135,22 +121,15 @@ export default function CourierUzCarrierHandover() {
                   ))}
                 </div>
 
-                {/* Footer: kutilmoqda yoki Topshirdim tugmasi */}
-                {pendingNums.has(g.carrier_number) ? (
-                  <div className="px-4 py-3 flex items-center gap-2 text-sm font-semibold" style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b' }}>
-                    <span className="inline-block w-3.5 h-3.5 border-2 border-amber-300 border-t-amber-500 rounded-full animate-spin" />
-                    {t("Yo'lovchi tasdig'i kutilmoqda")}
-                  </div>
-                ) : (
-                  <div className="px-4 py-3">
-                    <button onClick={() => { haptic('medium'); setError(''); setOkMsg(''); handover.mutate(g) }}
-                      disabled={busy}
-                      className="press w-full py-3 rounded-xl text-sm font-bold text-white disabled:opacity-50"
-                      style={{ background: 'var(--royal)', boxShadow: 'var(--shadow-brand)' }}>
-                      {busy ? t('Topshirilmoqda…') : t('Topshirdim')}
-                    </button>
-                  </div>
-                )}
+                {/* Topshirish tugmasi — bosilganda yuk darhol yo'lovchiga o'tadi */}
+                <div className="px-4 py-3">
+                  <button onClick={() => { haptic('medium'); setError(''); setOkMsg(''); handover.mutate(g) }}
+                    disabled={busy}
+                    className="press w-full py-3 rounded-xl text-sm font-bold text-white disabled:opacity-50"
+                    style={{ background: 'var(--royal)', boxShadow: 'var(--shadow-brand)' }}>
+                    {busy ? t('Topshirilmoqda…') : t('Topshirdim')}
+                  </button>
+                </div>
               </div>
             )
           })}

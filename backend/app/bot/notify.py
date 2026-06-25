@@ -126,6 +126,16 @@ async def on_airport_handover_pending(db: AsyncSession, *, carrier_id: int, coun
     await notify_user(db, carrier_id, text)
 
 
+async def on_airport_handover_done(db: AsyncSession, *, carrier_id: int, count: int) -> None:
+    text = (
+        f"📦 <b>Yuk qabul qilindi</b>\n\n"
+        f"Kuryer sizga <b>{count} ta yuk</b> topshirdi.\n"
+        "Ular endi <b>Yuklarim</b> bo'limida ko'rinadi.\n\n"
+        "👉 /app"
+    )
+    await notify_user(db, carrier_id, text)
+
+
 async def on_all_arrived(
     db: AsyncSession,
     *,

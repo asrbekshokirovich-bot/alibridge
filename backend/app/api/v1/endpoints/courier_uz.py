@@ -20,7 +20,6 @@ from app.db.models import (
     CustodyHolding,
     Order,
     OrderItem,
-    PendingHandover,
     Product,
     ProductVariant,
     User,
@@ -28,7 +27,6 @@ from app.db.models import (
 from app.schemas.common import OkResponse
 from app.schemas.courier import (
     ConfirmAirportRequest,
-    CourierPendingHandover,
     CourierUzMyProduct,
     CourierUzQueueItem,
     CourierUzQueueProduct,
@@ -388,14 +386,12 @@ async def confirm_airport(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role(*ROLE)),
 ) -> OkResponse:
-    """Kuryer aeroportда yo'lovchiga topshiradi — lekin yuk DARHOL o'tmaydi.
+    """Kuryer yo'lovchiga topshiradi — yuk DARHOL yo'lovchiga o'tadi.
 
-    Pending topshiriq yaratiladi, yo'lovchiga bildirishnoma boradi. Yo'lovchi
-    Turkiya manzili + reys raqamini kiritib tasdiqlaganidan keyingina custody
-    COURIER_UZ -> CARRIER ga o'tadi (confirm-airport-receive).
+    Yo'lovchining qabul tasdig'i shart emas: custody COURIER_UZ -> CARRIER ga
+    darhol ko'chadi va yuk yo'lovchining "Yuklarim" bo'limida ko'rinadi.
     """
     carrier = await _find_carrier_by_number(db, body.carrier_number)
-    items_json: list[dict] = []
     total = 0
     for item in body.items:
         product = await db.scalar(
@@ -408,48 +404,20 @@ async def confirm_airport(
         variant_id = await resolve_variant_id(db, product=product, variant_id=item.variant_id)
         # Buyurtmali yuk faqat egasiga; buyurtmasiz yuk istalgan yo'lovchiga
         await _ensure_can_handover(db, product.id, carrier.id)
-        items_json.append(
-            {"barcode": item.barcode, "variant_id": variant_id, "quantity": item.quantity}
+        # Kuryerdan (COURIER_UZ, user.id) yo'lovchiga (CARRIER, carrier.id) DARHOL
+        await transfer_custody(
+            db,
+            product,
+            variant_id=variant_id,
+            quantity=item.quantity,
+            from_holder_type=HolderType.COURIER_UZ,
+            from_holder_id=user.id,
+            to_holder_type=HolderType.CARRIER,
+            to_holder_id=carrier.id,
+            event_type=CustodyEventType.AIRPORT_HANDOVER,
+            scanned_by=user.id,
         )
         total += item.quantity
 
-    pending = PendingHandover(
-        carrier_id=carrier.id,
-        courier_id=user.id,
-        items=items_json,
-        status="pending",
-    )
-    db.add(pending)
-    await db.flush()
-    await notify.on_airport_handover_pending(db, carrier_id=carrier.id, count=total)
+    await notify.on_airport_handover_done(db, carrier_id=carrier.id, count=total)
     return OkResponse(ok=True)
-
-
-@router.get("/pending-handovers", response_model=list[CourierPendingHandover])
-async def courier_pending_handovers(
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(require_role(*ROLE)),
-) -> list[CourierPendingHandover]:
-    """Kuryer topshirgan, lekin yo'lovchi hali TASDIQLAMAGAN topshiriqlar —
-    yo'lovchi raqami bo'yicha. Kuryer ro'yxatida 'kutilmoqda' belgisi uchun."""
-    rows = await db.execute(
-        select(PendingHandover, User)
-        .join(User, User.id == PendingHandover.carrier_id)
-        .where(PendingHandover.courier_id == user.id, PendingHandover.status == "pending")
-    )
-    by_num: dict[int, CourierPendingHandover] = {}
-    for p, carrier in rows.all():
-        num = carrier.carrier_number
-        if num is None:
-            continue
-        cnt = sum(int(it.get("quantity", 0)) for it in p.items)
-        existing = by_num.get(num)
-        if existing is not None:
-            existing.count += cnt
-        else:
-            by_num[num] = CourierPendingHandover(
-                carrier_number=num,
-                carrier_name=f"{carrier.first_name} {carrier.last_name}".strip(),
-                count=cnt,
-            )
-    return list(by_num.values())

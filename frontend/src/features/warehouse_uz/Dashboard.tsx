@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import client from '@/shared/api/client'
 import { useAuthStore } from '@/shared/store/auth'
-import { DashboardHeader, ActionSections, IconPackagePlus, IconBag, IconTruck, IconBox, IconAlert, IconPlane, IconList } from '@/shared/ui'
+import { DashboardHeader, ActionSections, IconPackagePlus, IconBag, IconBox, IconAlert, IconPlane, IconList } from '@/shared/ui'
 import type { ActionSection } from '@/shared/ui'
 
 interface Stats { pending_receive: number; in_warehouse: number; pending_orders: number }
@@ -28,9 +28,6 @@ export default function WarehouseUzDashboard() {
       { label: t('Ombordagi mahsulotlar'), desc: t('Hozirgi qoldiq'), path: '/warehouse-uz/products', icon: <IconBox size={24} />, gradient: navy },
       { label: t('Barcha yuklar'), desc: t('Yuk harakatini kuzatish'), path: '/warehouse-uz/all-products', icon: <IconBox size={24} />, gradient: navy },
       { label: t('Yo\'lovchilar'), desc: t('Yo\'lovchilar va yuk holati'), path: '/warehouse-uz/carriers', icon: <IconPlane size={24} />, gradient: royal },
-    ] },
-    { title: t('Topshirish'), actions: [
-      { label: t('Kuryerga topshirish'), desc: t('Toshkent kuryeriga'), path: '/warehouse-uz/handover-courier', icon: <IconTruck size={24} />, gradient: royal },
     ] },
     { title: t('Hisobot'), actions: [
       { label: t('Nizolar'), desc: t('Shikast holatlari'), path: '/warehouse-uz/disputes', icon: <IconAlert size={24} />, gradient: royal },

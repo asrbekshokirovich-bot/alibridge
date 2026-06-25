@@ -93,6 +93,7 @@ class WarehouseOrderOut(BaseModel):
     created_at: str
     items: list[WarehouseOrderItemOut]
     all_confirmed: bool
+    handed_over: bool = False   # kuryerga topshirilganmi (qayta topshirishni bloklaydi)
 
 
 class ConfirmOrderItemRequest(BaseModel):
@@ -153,6 +154,12 @@ class CourierOption(BaseModel):
     first_name: str
     last_name: str
     phone: str
+
+
+class OrderHandoverRequest(BaseModel):
+    """Buyurtmani tanlangan kuryerga topshirish."""
+
+    courier_id: int
 
 
 class HandoverOrderItem(BaseModel):

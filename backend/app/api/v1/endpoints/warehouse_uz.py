@@ -42,6 +42,7 @@ from app.schemas.warehouse import (
     HandoverOrderItem,
     HandoverOrderOut,
     HeldCargoItem,
+    OrderHandoverRequest,
     ProductDistribution,
     ReceiveGoodsRequest,
     ReceiveGoodsResponse,
@@ -367,6 +368,7 @@ async def pending_orders(
                 created_at=o.created_at.date().isoformat(),
                 items=items,
                 all_confirmed=all(it.actual_quantity is not None for it in o.items),
+                handed_over=o.handed_to_courier_id is not None,
             )
         )
     return result
@@ -623,6 +625,65 @@ async def confirm_courier_handover(
             event_type=CustodyEventType.COURIER_UZ_PICKUP,
             scanned_by=user.id,
         )
+    return OkResponse(ok=True)
+
+
+@router.post("/orders/{order_id}/handover", response_model=OkResponse)
+async def order_handover(
+    order_id: int,
+    body: OrderHandoverRequest,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*WH_UZ)),
+) -> OkResponse:
+    """Tasdiqlangan buyurtmaning barcha yuklarini tanlangan kuryerga topshiradi.
+
+    Buyurtma to'liq tasdiqlangan (CONFIRMED) bo'lishi shart. Topshirilgach
+    handed_to_courier_id yoziladi — qayta topshirib bo'lmaydi. Yuk shu kuryerning
+    "Mening yuklarim" ro'yxatida ko'rinadi.
+    """
+    order = await db.scalar(
+        select(Order)
+        .where(Order.id == order_id)
+        .options(
+            selectinload(Order.items).selectinload(OrderItem.product).selectinload(Product.variants),
+            selectinload(Order.items).selectinload(OrderItem.variant),
+        )
+    )
+    if order is None:
+        raise AppError("ORDER_NOT_FOUND", "Buyurtma topilmadi", status_code=404)
+    if order.status != OrderStatus.CONFIRMED:
+        raise AppError("ORDER_NOT_CONFIRMED", "Buyurtma to'liq tasdiqlanmagan")
+    if order.handed_to_courier_id is not None:
+        raise AppError("ALREADY_HANDED_OVER", "Bu buyurtma allaqachon topshirilgan")
+
+    courier = (
+        await db.execute(
+            select(User).where(User.id == body.courier_id, User.role == Role.COURIER_UZ)
+        )
+    ).scalar_one_or_none()
+    if courier is None:
+        raise AppError("COURIER_NOT_FOUND", "Kuryer topilmadi")
+
+    for it in order.items:
+        qty = it.actual_quantity or int(it.amount) or 0
+        if qty <= 0:
+            continue
+        variant_id = await resolve_variant_id(db, product=it.product, variant_id=it.variant_id)
+        await transfer_custody(
+            db,
+            it.product,
+            variant_id=variant_id,
+            quantity=qty,
+            from_holder_type=HolderType.WAREHOUSE_UZ,
+            from_holder_id=0,
+            to_holder_type=HolderType.COURIER_UZ,
+            to_holder_id=courier.id,
+            event_type=CustodyEventType.COURIER_UZ_PICKUP,
+            scanned_by=user.id,
+        )
+
+    order.handed_to_courier_id = courier.id
+    await db.flush()
     return OkResponse(ok=True)
 
 

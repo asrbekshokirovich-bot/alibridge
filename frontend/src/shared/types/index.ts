@@ -179,4 +179,5 @@ export interface WarehouseOrder {
   created_at: string
   items: OrderItemDetail[]
   all_confirmed: boolean
+  handed_over?: boolean   // kuryerga topshirilganmi
 }

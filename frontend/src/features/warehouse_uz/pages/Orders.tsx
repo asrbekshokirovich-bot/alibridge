@@ -5,9 +5,14 @@ import client, { extractErrorMessage } from '@/shared/api/client'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import type { WarehouseOrder, OrderItemDetail, ProductType } from '@/shared/types'
 import { isPiece, unitWord } from '@/shared/lib/product'
-import { Header, ListSkeleton, EmptyState, StatusBadge, Sheet, Input, Button, IconBag, IconCheck, IconBox, IconChevronRight } from '@/shared/ui'
+import {
+  Header, ListSkeleton, EmptyState, StatusBadge, Sheet, Input, Button, ScanInput,
+  IconBag, IconCheck, IconBox, IconChevronRight, IconTruck,
+} from '@/shared/ui'
 
 type SheetState = { orderId: number; item: OrderItemDetail }
+
+interface Courier { id: number; first_name: string; last_name: string; phone: string }
 
 export default function Orders() {
   const { t } = useTranslation()
@@ -17,6 +22,11 @@ export default function Orders() {
   const [kg, setKg] = useState('')
   const [qty, setQty] = useState('')
   const [error, setError] = useState('')
+  // Skan majburiy: yuk barkodi to'g'ri skanlanmaguncha Tasdiqlash bosilmaydi
+  const [scanVal, setScanVal] = useState('')
+  const [scanned, setScanned] = useState(false)
+  // Qaysi buyurtma uchun kuryer tanlanmoqda
+  const [handoverFor, setHandoverFor] = useState<WarehouseOrder | null>(null)
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['warehouse-uz-orders'],
@@ -33,7 +43,21 @@ export default function Orders() {
       notify('success')
       qc.invalidateQueries({ queryKey: ['warehouse-uz-orders'] })
       qc.invalidateQueries({ queryKey: ['warehouse-uz-stats'] })
-      setSheet(null); setKg(''); setQty('')
+      setSheet(null); setKg(''); setQty(''); setScanVal(''); setScanned(false)
+    },
+    onError: (err) => { setError(extractErrorMessage(err)); notify('error') },
+  })
+
+  // Tanlangan kuryerga buyurtmani topshirish
+  const handover = useMutation({
+    mutationFn: (vars: { orderId: number; courierId: number }) =>
+      client.post(`/warehouse-uz/orders/${vars.orderId}/handover`, { courier_id: vars.courierId }),
+    onSuccess: () => {
+      notify('success')
+      qc.invalidateQueries({ queryKey: ['warehouse-uz-orders'] })
+      qc.invalidateQueries({ queryKey: ['courier-uz-queue'] })
+      qc.invalidateQueries({ queryKey: ['courier-uz-my-products'] })
+      setHandoverFor(null)
     },
     onError: (err) => { setError(extractErrorMessage(err)); notify('error') },
   })
@@ -42,13 +66,32 @@ export default function Orders() {
     haptic('light')
     setError('')
     setKg('')
+    setScanVal('')
+    setScanned(false)
     // Donali uchun so'ralgan sonni default qo'yamiz
     setQty(isPiece(item.type) ? String(Math.round(item.requested_amount)) : '')
     setSheet({ orderId, item })
   }
 
-  const submit = () => {
+  // Yuk barkodini skanlash — faqat shu yukniki bo'lsa qabul qilinadi
+  const onScanItem = (raw: string) => {
     if (!sheet) return
+    const bc = raw.trim()
+    setScanVal('')
+    if (!bc) return
+    if (bc === sheet.item.barcode) {
+      setScanned(true)
+      setError('')
+      notify('success')
+    } else {
+      setScanned(false)
+      notify('error')
+      setError(t('Boshqa yuk skanlandi — bu yukning barkodini skanlang'))
+    }
+  }
+
+  const submit = () => {
+    if (!sheet || !scanned) return
     const byWeight = !isPiece(sheet.item.type)
     const q = parseInt(qty, 10)
     const k = parseFloat(kg)
@@ -66,6 +109,7 @@ export default function Orders() {
 
   const orderBadge = (o: WarehouseOrder) => {
     const done = o.items.filter((i) => i.confirmed).length
+    if (o.handed_over) return { tone: 'green' as const, text: t('Topshirildi') }
     if (o.all_confirmed || done === o.items.length) return { tone: 'green' as const, text: t('Tasdiqlandi') }
     if (done > 0) return { tone: 'yellow' as const, text: t('Jarayonda') }
     return { tone: 'gray' as const, text: t('Yangi') }
@@ -139,17 +183,33 @@ export default function Orders() {
                   ))}
                 </div>
 
-                {/* Footer: progress */}
-                <div className="px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5" style={allDone ? { background: 'rgba(52,211,153,0.12)', color: 'var(--green)' } : { background: 'var(--surface2)', color: 'var(--muted)' }}>
-                  {allDone ? <><IconCheck size={14} /> {t('Tasdiqlandi')}</> : t('{{done}}/{{total}} tasdiqlandi', { done, total: o.items.length })}
-                </div>
+                {/* Footer: progress / Topshirish / Topshirildi */}
+                {o.handed_over ? (
+                  <div className="px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5" style={{ background: 'rgba(52,211,153,0.12)', color: 'var(--green)' }}>
+                    <IconTruck size={14} /> {t('Kuryerga topshirildi')}
+                  </div>
+                ) : allDone ? (
+                  <div className="px-4 py-3">
+                    <button
+                      onClick={() => { haptic('medium'); setError(''); setHandoverFor(o) }}
+                      className="press w-full py-3 rounded-xl text-sm font-bold text-white"
+                      style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', boxShadow: '0 8px 24px rgba(34,197,94,0.30)' }}
+                    >
+                      {t('Topshirish')}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="px-4 py-2.5 text-xs font-semibold flex items-center gap-1.5" style={{ background: 'var(--surface2)', color: 'var(--muted)' }}>
+                    {t('{{done}}/{{total}} tasdiqlandi', { done, total: o.items.length })}
+                  </div>
+                )}
               </div>
             )
           })}
         </div>
       )}
 
-      {/* Tasdiqlash Sheet */}
+      {/* Tasdiqlash Sheet — skan majburiy */}
       <Sheet open={!!sheet} onClose={() => setSheet(null)}>
         {sheet && (
           <div className="px-5 pt-2 space-y-4">
@@ -167,21 +227,86 @@ export default function Orders() {
               </div>
             </div>
 
-            {!isPiece(sheet.item.type) && (
-              <Input type="number" label={t('Necha kg chiqdi?')} placeholder={t('Tarozida tortilgan kg')}
-                value={kg} onChange={(e) => setKg(e.target.value)} autoFocus />
+            {/* 1-qadam: barkodni skanlash */}
+            {scanned ? (
+              <div className="flex items-center gap-2 px-4 py-3 rounded-2xl" style={{ background: 'rgba(52,211,153,0.12)', color: 'var(--green)' }}>
+                <IconCheck size={18} />
+                <span className="text-sm font-semibold">{t('Barkod tasdiqlandi')} · {sheet.item.barcode}</span>
+              </div>
+            ) : (
+              <div className="rounded-2xl border" style={{ borderColor: 'var(--line2)' }}>
+                <ScanInput value={scanVal} onChange={setScanVal} onScan={onScanItem} placeholder={t('Yuk barkodini skanlang')} />
+              </div>
             )}
-            <Input type="number" label={t('Necha dona?')} placeholder={t('Mahsulot soni')}
-              value={qty} onChange={(e) => setQty(e.target.value)} autoFocus={isPiece(sheet.item.type)} />
+
+            {/* 2-qadam: miqdor — faqat skandan keyin */}
+            {scanned && (
+              <>
+                {!isPiece(sheet.item.type) && (
+                  <Input type="number" label={t('Necha kg chiqdi?')} placeholder={t('Tarozida tortilgan kg')}
+                    value={kg} onChange={(e) => setKg(e.target.value)} autoFocus />
+                )}
+                <Input type="number" label={t('Necha dona?')} placeholder={t('Mahsulot soni')}
+                  value={qty} onChange={(e) => setQty(e.target.value)} autoFocus={isPiece(sheet.item.type)} />
+              </>
+            )}
 
             {error && <p className="text-red-500 text-sm">{error}</p>}
 
-            <Button variant="success" fullWidth loading={confirm.isPending} onClick={submit}>
-              {t('Tasdiqlash')}
+            <Button variant="success" fullWidth disabled={!scanned} loading={confirm.isPending} onClick={submit}>
+              {scanned ? t('Tasdiqlash') : t('Avval skanlang')}
             </Button>
           </div>
         )}
       </Sheet>
+
+      {/* Kuryer tanlash Sheet — buyurtmani topshirish */}
+      <Sheet open={!!handoverFor} onClose={() => setHandoverFor(null)}>
+        {handoverFor && (
+          <CourierPicker
+            busy={handover.isPending}
+            onPick={(courierId) => handover.mutate({ orderId: handoverFor.order_id, courierId })}
+          />
+        )}
+      </Sheet>
+    </div>
+  )
+}
+
+// Sistemadagi kuryerlar ro'yxati — bittasini tanlab buyurtma topshiriladi
+function CourierPicker({ busy, onPick }: { busy: boolean; onPick: (courierId: number) => void }) {
+  const { t } = useTranslation()
+  const { data, isLoading } = useQuery({
+    queryKey: ['warehouse-uz-couriers'],
+    queryFn: () => client.get<Courier[]>('/warehouse-uz/couriers').then((r) => r.data),
+  })
+
+  return (
+    <div className="px-5 pt-2 pb-2">
+      <h3 className="font-bold mb-1" style={{ color: 'var(--ink)' }}>{t('Qaysi kuryerga?')}</h3>
+      <p className="text-xs mb-3" style={{ color: 'var(--muted)' }}>{t('Kuryerni tanlang — yuk uning ro\'yxatiga o\'tadi')}</p>
+      {isLoading ? (
+        <ListSkeleton />
+      ) : !data?.length ? (
+        <EmptyState icon={<IconTruck size={30} />} title={t("Kuryer yo'q")} description={t('Faol Toshkent kuryeri topilmadi')} />
+      ) : (
+        <div className="space-y-2">
+          {data.map((c) => (
+            <button key={c.id} onClick={() => onPick(c.id)} disabled={busy}
+              className="press w-full text-left rounded-2xl p-4 border flex items-center gap-3 disabled:opacity-50"
+              style={{ background: 'var(--card-gradient)', borderColor: 'var(--line2)' }}>
+              <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(106,163,255,0.14)', color: '#6aa3ff' }}>
+                <IconTruck size={22} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14.5px] font-bold truncate" style={{ color: 'var(--ink)' }}>{`${c.first_name} ${c.last_name}`.trim()}</p>
+                {c.phone && <p className="text-xs" style={{ color: 'var(--muted)' }}>{c.phone}</p>}
+              </div>
+              <span className="shrink-0" style={{ color: 'var(--muted3)' }}><IconChevronRight size={18} /></span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

@@ -133,6 +133,10 @@ class Order(Base):
     status: Mapped[OrderStatus] = mapped_column(
         String(32), default=OrderStatus.PENDING_ADMIN, index=True
     )
+    # Kuryerga topshirilganda — qaysi kuryer. Null = hali topshirilmagan.
+    handed_to_courier_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
     carrier: Mapped[User] = relationship(back_populates="orders")

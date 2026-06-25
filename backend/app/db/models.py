@@ -54,7 +54,9 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
-    orders: Mapped[list[Order]] = relationship(back_populates="carrier")
+    orders: Mapped[list[Order]] = relationship(
+        back_populates="carrier", foreign_keys="Order.carrier_id"
+    )
 
 
 class Product(Base):
@@ -139,7 +141,7 @@ class Order(Base):
     )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
-    carrier: Mapped[User] = relationship(back_populates="orders")
+    carrier: Mapped[User] = relationship(back_populates="orders", foreign_keys=[carrier_id])
     items: Mapped[list[OrderItem]] = relationship(
         back_populates="order", cascade="all, delete-orphan"
     )

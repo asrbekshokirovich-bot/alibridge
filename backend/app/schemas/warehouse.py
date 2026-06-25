@@ -155,6 +155,29 @@ class CourierOption(BaseModel):
     phone: str
 
 
+class HandoverOrderItem(BaseModel):
+    """Buyurtmadagi bitta yuk — skan-checklist uchun (kutilayotgan + omborda bori)."""
+
+    product_id: int
+    variant_id: int | None = None
+    barcode: str
+    product_name: str
+    size_label: str
+    expected_qty: int       # buyurtmada so'ralgan (tasdiqlangan) miqdor
+    in_warehouse_qty: int   # omborda hozir mavjud (split custody)
+
+
+class HandoverOrderOut(BaseModel):
+    """Kuryerga topshirishga tayyor buyurtma — yuklari skanlab tekshiriladi."""
+
+    order_id: int
+    carrier_name: str
+    carrier_number: int | None = None
+    pickup_type: PickupType
+    items: list[HandoverOrderItem]
+    total_to_handover: int   # sum(min(expected, in_warehouse)) — skanlanishi kerak bo'lgan jami
+
+
 class HeldCargoItem(BaseModel):
     """Bir ega(holder)da turgan yuk: mahsulot + o'lcham + nechta dona."""
 

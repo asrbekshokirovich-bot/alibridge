@@ -39,6 +39,8 @@ from app.schemas.warehouse import (
     CourierOption,
     DailyOutItem,
     DailyOutReport,
+    HandoverOrderItem,
+    HandoverOrderOut,
     HeldCargoItem,
     ProductDistribution,
     ReceiveGoodsRequest,
@@ -490,6 +492,85 @@ async def list_couriers(
         )
         for u in rows.scalars().all()
     ]
+
+
+@router.get("/handover-orders", response_model=list[HandoverOrderOut])
+async def handover_orders(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*WH_UZ)),
+) -> list[HandoverOrderOut]:
+    """Kuryerga topshirishga tayyor (tasdiqlangan) buyurtmalar — har bir yuk
+    skanlab tekshiriladi. Omborda hozir yuki qolmagan buyurtma ko'rinmaydi.
+
+    expected_qty: buyurtmada tasdiqlangan miqdor (kiloli uchun actual_quantity).
+    in_warehouse_qty: shu mahsulot+o'lchamdan omborda hozir bori (split custody).
+    """
+    orders = (
+        (
+            await db.execute(
+                select(Order)
+                .where(Order.status == OrderStatus.CONFIRMED)
+                .options(
+                    selectinload(Order.items).selectinload(OrderItem.product),
+                    selectinload(Order.items).selectinload(OrderItem.variant),
+                    selectinload(Order.carrier),
+                )
+                .order_by(Order.created_at.desc())
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+    # Barcha tegishli variantlar uchun omborda (WAREHOUSE_UZ) qolgan miqdor — bitta so'rovda
+    variant_ids = [it.variant_id for o in orders for it in o.items if it.variant_id is not None]
+    in_wh: dict[int, int] = {}
+    if variant_ids:
+        wh_rows = await db.execute(
+            select(CustodyHolding.variant_id, func.sum(CustodyHolding.quantity))
+            .where(
+                CustodyHolding.holder_type == HolderType.WAREHOUSE_UZ,
+                CustodyHolding.variant_id.in_(variant_ids),
+                CustodyHolding.quantity > 0,
+            )
+            .group_by(CustodyHolding.variant_id)
+        )
+        in_wh = {vid: int(q or 0) for vid, q in wh_rows.all()}
+
+    result: list[HandoverOrderOut] = []
+    for o in orders:
+        carrier = o.carrier
+        items: list[HandoverOrderItem] = []
+        total = 0
+        for it in o.items:
+            wh_qty = in_wh.get(it.variant_id, 0) if it.variant_id is not None else 0
+            expected = it.actual_quantity or int(it.amount) or 0
+            items.append(
+                HandoverOrderItem(
+                    product_id=it.product_id,
+                    variant_id=it.variant_id,
+                    barcode=it.product.barcode,
+                    product_name=it.product.name,
+                    size_label=it.variant.size_label if it.variant else "",
+                    expected_qty=expected,
+                    in_warehouse_qty=wh_qty,
+                )
+            )
+            total += min(expected, wh_qty)
+        # Omborda topshiriladigan yuk qolmagan buyurtmani ko'rsatmaymiz
+        if total <= 0:
+            continue
+        result.append(
+            HandoverOrderOut(
+                order_id=o.id,
+                carrier_name=f"{carrier.first_name} {carrier.last_name}".strip(),
+                carrier_number=carrier.carrier_number,
+                pickup_type=o.pickup_type,
+                items=items,
+                total_to_handover=total,
+            )
+        )
+    return result
 
 
 @router.post("/scan-for-courier", response_model=ScanResponse)

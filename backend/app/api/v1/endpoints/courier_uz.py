@@ -393,6 +393,7 @@ async def confirm_airport(
     """
     carrier = await _find_carrier_by_number(db, body.carrier_number)
     total = 0
+    product_ids: list[int] = []
     for item in body.items:
         product = await db.scalar(
             select(Product)
@@ -418,6 +419,24 @@ async def confirm_airport(
             scanned_by=user.id,
         )
         total += item.quantity
+        product_ids.append(product.id)
+
+    # Yuk yo'lovchiga o'tdi — tegishli buyurtmalar holati "Yuk sizda" (WITH_CARRIER) ga
+    if product_ids:
+        orders = (
+            await db.execute(
+                select(Order)
+                .join(OrderItem, OrderItem.order_id == Order.id)
+                .where(
+                    Order.carrier_id == carrier.id,
+                    OrderItem.product_id.in_(product_ids),
+                    Order.status == OrderStatus.CONFIRMED,
+                )
+                .distinct()
+            )
+        ).scalars().unique()
+        for o in orders:
+            o.status = OrderStatus.WITH_CARRIER
 
     await notify.on_airport_handover_done(db, carrier_id=carrier.id, count=total)
     return OkResponse(ok=True)

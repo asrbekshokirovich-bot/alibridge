@@ -69,6 +69,16 @@ async def on_order_confirmed(db: AsyncSession, *, carrier_id: int, order_id: int
     await notify_user(db, carrier_id, text)
 
 
+async def on_courier_assigned(db: AsyncSession, *, courier_id: int, count: int) -> None:
+    text = (
+        f"📦 <b>Sizga yangi yuk biriktirildi</b>\n\n"
+        f"Ombor sizga <b>{count} ta yuk</b> topshirdi.\n"
+        "Ular <b>Mening yuklarim</b> bo'limida — yo'lovchilarga yetkazib bering.\n\n"
+        "👉 /app"
+    )
+    await notify_user(db, courier_id, text)
+
+
 async def on_staff_request(db: AsyncSession, *, name: str) -> None:
     text = (
         "👤 <b>Yangi xodim so'rovi</b>\n"

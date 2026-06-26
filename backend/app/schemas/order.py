@@ -70,5 +70,3 @@ class CourierBrief(BaseModel):
 
 class AutoReceiveRequest(BaseModel):
     courier_id: int
-
-

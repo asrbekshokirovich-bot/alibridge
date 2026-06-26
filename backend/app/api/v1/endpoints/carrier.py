@@ -18,7 +18,6 @@ from app.db.base import get_db
 from app.db.models import (
     CustodyEvent,
     CustodyHolding,
-    Order,
     Product,
     ProductVariant,
     User,

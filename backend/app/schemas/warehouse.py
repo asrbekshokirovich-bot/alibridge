@@ -93,7 +93,7 @@ class WarehouseOrderOut(BaseModel):
     created_at: str
     items: list[WarehouseOrderItemOut]
     all_confirmed: bool
-    handed_over: bool = False   # kuryerga topshirilganmi (qayta topshirishni bloklaydi)
+    handed_over: bool = False  # kuryerga topshirilganmi (qayta topshirishni bloklaydi)
 
 
 class ConfirmOrderItemRequest(BaseModel):

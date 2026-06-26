@@ -243,17 +243,21 @@ async def confirm_airport(
     # Yuk yo'lovchiga o'tdi — tegishli buyurtmalar holati "Yuk sizda" (WITH_CARRIER) ga
     if product_ids:
         orders = (
-            await db.execute(
-                select(Order)
-                .join(OrderItem, OrderItem.order_id == Order.id)
-                .where(
-                    Order.carrier_id == carrier.id,
-                    OrderItem.product_id.in_(product_ids),
-                    Order.status == OrderStatus.CONFIRMED,
+            (
+                await db.execute(
+                    select(Order)
+                    .join(OrderItem, OrderItem.order_id == Order.id)
+                    .where(
+                        Order.carrier_id == carrier.id,
+                        OrderItem.product_id.in_(product_ids),
+                        Order.status == OrderStatus.CONFIRMED,
+                    )
+                    .distinct()
                 )
-                .distinct()
             )
-        ).scalars().unique()
+            .scalars()
+            .unique()
+        )
         for o in orders:
             o.status = OrderStatus.WITH_CARRIER
 

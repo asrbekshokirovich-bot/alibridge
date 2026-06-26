@@ -479,7 +479,9 @@ async def order_handover(
         select(Order)
         .where(Order.id == order_id)
         .options(
-            selectinload(Order.items).selectinload(OrderItem.product).selectinload(Product.variants),
+            selectinload(Order.items)
+            .selectinload(OrderItem.product)
+            .selectinload(Product.variants),
             selectinload(Order.items).selectinload(OrderItem.variant),
         )
     )

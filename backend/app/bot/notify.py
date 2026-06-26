@@ -112,20 +112,6 @@ async def on_damage_reported(
     await notify_roles(db, (Role.ADMIN, Role.WAREHOUSE_TR, Role.WAREHOUSE_UZ), text)
 
 
-async def on_airport_handover_pending(db: AsyncSession, *, carrier_id: int, count: int) -> None:
-    text = (
-        f"✈️ <b>Yuk topshirish kutilmoqda</b>\n\n"
-        f"Kuryer sizga <b>{count} ta yuk</b> topshirmoqchi.\n\n"
-        "📋 Qilish kerak:\n"
-        "• Ilovaga kiring\n"
-        "• Turkiyadagi manzilingizni kiriting\n"
-        "• Reys raqamingizni kiriting\n"
-        "• Qabulni <b>TASDIQLANG</b>\n\n"
-        "👉 /app"
-    )
-    await notify_user(db, carrier_id, text)
-
-
 async def on_airport_handover_done(db: AsyncSession, *, carrier_id: int, count: int) -> None:
     text = (
         f"📦 <b>Yuk qabul qilindi</b>\n\n"

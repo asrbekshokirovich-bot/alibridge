@@ -31,7 +31,6 @@ const MENU: Partial<Record<Role, MenuItem[]>> = {
     { label: 'Buyurtmalar', path: '/warehouse-uz/orders', icon: <IconList size={20} /> },
     { label: 'Ombordagi mahsulotlar', path: '/warehouse-uz/products', icon: <IconBox size={20} /> },
     { label: 'Barcha yuklar', path: '/warehouse-uz/all-products', icon: <IconList size={20} /> },
-    { label: 'Kuryerga topshirish', path: '/warehouse-uz/handover-courier', icon: <IconTruck size={20} /> },
     { label: 'Yo\'lovchilar', path: '/warehouse-uz/carriers', icon: <IconPlane size={20} /> },
     { label: 'Nizolar', path: '/warehouse-uz/disputes', icon: <IconAlert size={20} /> },
   ],
@@ -47,8 +46,6 @@ const MENU: Partial<Record<Role, MenuItem[]>> = {
   ],
   courier_uz: [
     { label: 'Bosh sahifa', path: '/courier-uz', icon: <IconHome size={20} /> },
-    { label: 'Navbat', path: '/courier-uz/queue', icon: <IconList size={20} /> },
-    { label: 'Olib ketish (skan)', path: '/courier-uz/scan-pickup', icon: <IconScan size={20} /> },
     { label: 'Mening yuklarim', path: '/courier-uz/my-products', icon: <IconBox size={20} /> },
     { label: 'Aeroport topshirish', path: '/courier-uz/airport-handover', icon: <IconPlane size={20} /> },
   ],

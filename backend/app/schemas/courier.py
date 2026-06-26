@@ -5,27 +5,6 @@ from app.schemas.warehouse import CustodyTransferItem
 # ─── Courier UZ ─────────────────────────────────────────────────────────────────
 
 
-class CourierUzQueueProduct(BaseModel):
-    barcode: str
-    product_name: str
-    size_label: str = ""
-    picked_up: bool = False  # custody kuryerda — olib ketilgan
-    variant_id: int | None = None  # qaysi o'lcham (olishda kerak)
-    quantity: int = 1  # nechta olinishi kerak (ombor tasdiqlagan miqdor)
-
-
-class CourierUzQueueItem(BaseModel):
-    id: int
-    carrier_name: str
-    carrier_number: int | None = None
-    address: str
-    products_count: int
-    status: str  # pending | in_progress | done
-    products: list[CourierUzQueueProduct] = []
-    confirmed_by_name: str | None = None  # buyurtmani olib ketgan kuryer ismi
-    created_at: str = ""
-
-
 class CourierUzMyProduct(BaseModel):
     """Kuryer hozir o'zida olib yurgan yuk (WITH_COURIER_UZ, custody kuryerda)."""
 

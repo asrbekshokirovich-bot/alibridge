@@ -35,22 +35,16 @@ from app.schemas.warehouse import (
     AddVariantRequest,
     ConfirmOrderItemRequest,
     ConfirmOrderItemResponse,
-    ConfirmRequest,
     CourierOption,
     DailyOutItem,
     DailyOutReport,
-    HandoverOrderItem,
-    HandoverOrderOut,
     HeldCargoItem,
     OrderHandoverRequest,
     ProductDistribution,
     ReceiveGoodsRequest,
     ReceiveGoodsResponse,
-    ScanRequest,
-    ScanResponse,
     StageQuantity,
     UpdateProductRequest,
-    VariantAvailability,
     WarehouseOrderItemOut,
     WarehouseOrderOut,
     WarehouseUzStats,
@@ -63,7 +57,6 @@ from app.services.barcode_service import (
 )
 from app.services.custody_service import (
     STAGE_LABELS,
-    availability_for_holder,
     resolve_variant_id,
     sync_warehouse_holding,
     transfer_custody,
@@ -444,34 +437,7 @@ async def products(
     return result
 
 
-# ─── Scan / Confirm: kuryerga topshirish ────────────────────────────────────────
-
-
-async def _scan_for_handover(db: AsyncSession, barcode: str) -> ScanResponse:
-    product = await db.scalar(
-        select(Product).options(selectinload(Product.variants)).where(Product.barcode == barcode)
-    )
-    if product is None:
-        raise AppError("BARCODE_NOT_FOUND", "Barkod topilmadi", status_code=400)
-
-    # Omborda (WAREHOUSE_UZ, holder_id=0) shu mahsulotdan nechta qolgan
-    avail = await availability_for_holder(
-        db, product=product, holder_type=HolderType.WAREHOUSE_UZ, holder_id=0
-    )
-    if not avail:
-        raise AppError(
-            "INVALID_PRODUCT_STATE",
-            "Omborda bu yukdan qolmagan yoki o'lcham qo'shilmagan",
-        )
-
-    return ScanResponse(
-        barcode=product.barcode,
-        product_name=product.name,
-        quantity=sum(a[2] for a in avail),
-        available_by_variant=[
-            VariantAvailability(variant_id=vid, size_label=sl, available=q) for vid, sl, q in avail
-        ],
-    )
+# ─── Kuryerga topshirish (buyurtma asosida) ─────────────────────────────────────
 
 
 @router.get("/couriers", response_model=list[CourierOption])
@@ -494,138 +460,6 @@ async def list_couriers(
         )
         for u in rows.scalars().all()
     ]
-
-
-@router.get("/handover-orders", response_model=list[HandoverOrderOut])
-async def handover_orders(
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(require_role(*WH_UZ)),
-) -> list[HandoverOrderOut]:
-    """Kuryerga topshirishga tayyor (tasdiqlangan) buyurtmalar — har bir yuk
-    skanlab tekshiriladi. Omborda hozir yuki qolmagan buyurtma ko'rinmaydi.
-
-    expected_qty: buyurtmada tasdiqlangan miqdor (kiloli uchun actual_quantity).
-    in_warehouse_qty: shu mahsulot+o'lchamdan omborda hozir bori (split custody).
-    """
-    orders = (
-        (
-            await db.execute(
-                select(Order)
-                .where(Order.status == OrderStatus.CONFIRMED)
-                .options(
-                    selectinload(Order.items).selectinload(OrderItem.product),
-                    selectinload(Order.items).selectinload(OrderItem.variant),
-                    selectinload(Order.carrier),
-                )
-                .order_by(Order.created_at.desc())
-            )
-        )
-        .scalars()
-        .all()
-    )
-
-    # Barcha tegishli variantlar uchun omborda (WAREHOUSE_UZ) qolgan miqdor — bitta so'rovda
-    variant_ids = [it.variant_id for o in orders for it in o.items if it.variant_id is not None]
-    in_wh: dict[int, int] = {}
-    if variant_ids:
-        wh_rows = await db.execute(
-            select(CustodyHolding.variant_id, func.sum(CustodyHolding.quantity))
-            .where(
-                CustodyHolding.holder_type == HolderType.WAREHOUSE_UZ,
-                CustodyHolding.variant_id.in_(variant_ids),
-                CustodyHolding.quantity > 0,
-            )
-            .group_by(CustodyHolding.variant_id)
-        )
-        in_wh = {vid: int(q or 0) for vid, q in wh_rows.all()}
-
-    result: list[HandoverOrderOut] = []
-    for o in orders:
-        carrier = o.carrier
-        items: list[HandoverOrderItem] = []
-        total = 0
-        for it in o.items:
-            wh_qty = in_wh.get(it.variant_id, 0) if it.variant_id is not None else 0
-            expected = it.actual_quantity or int(it.amount) or 0
-            items.append(
-                HandoverOrderItem(
-                    product_id=it.product_id,
-                    variant_id=it.variant_id,
-                    barcode=it.product.barcode,
-                    product_name=it.product.name,
-                    size_label=it.variant.size_label if it.variant else "",
-                    expected_qty=expected,
-                    in_warehouse_qty=wh_qty,
-                )
-            )
-            total += min(expected, wh_qty)
-        # Omborda topshiriladigan yuk qolmagan buyurtmani ko'rsatmaymiz
-        if total <= 0:
-            continue
-        result.append(
-            HandoverOrderOut(
-                order_id=o.id,
-                carrier_name=f"{carrier.first_name} {carrier.last_name}".strip(),
-                carrier_number=carrier.carrier_number,
-                pickup_type=o.pickup_type,
-                items=items,
-                total_to_handover=total,
-            )
-        )
-    return result
-
-
-@router.post("/scan-for-courier", response_model=ScanResponse)
-async def scan_for_courier(
-    body: ScanRequest,
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(require_role(*WH_UZ)),
-) -> ScanResponse:
-    return await _scan_for_handover(db, body.barcode)
-
-
-@router.post("/confirm-courier-handover", response_model=OkResponse)
-async def confirm_courier_handover(
-    body: ConfirmRequest,
-    db: AsyncSession = Depends(get_db),
-    user: User = Depends(require_role(*WH_UZ)),
-) -> OkResponse:
-    # Kuryer tanlangan bo'lishi shart — yuk aynan shu kuryerga o'tadi,
-    # shunda kuryerning "Mening yuklarim" oynasida ko'rinadi.
-    if body.courier_id is None:
-        raise AppError("COURIER_REQUIRED", "Avval kuryerni tanlang")
-    courier = (
-        await db.execute(
-            select(User).where(User.id == body.courier_id, User.role == Role.COURIER_UZ)
-        )
-    ).scalar_one_or_none()
-    if courier is None:
-        raise AppError("COURIER_NOT_FOUND", "Kuryer topilmadi")
-
-    for item in body.items:
-        product = await db.scalar(
-            select(Product)
-            .options(selectinload(Product.variants))
-            .where(Product.barcode == item.barcode)
-        )
-        if product is None:
-            raise AppError("BARCODE_NOT_FOUND", f"Barkod topilmadi: {item.barcode}")
-        variant_id = await resolve_variant_id(db, product=product, variant_id=item.variant_id)
-        # Ombordan (WAREHOUSE_UZ, 0) kuryerga. COURIER_UZ_PICKUP eventi —
-        # kuryer o'zi olgani bilan bir xil, my-products hech o'zgarishsiz ishlaydi.
-        await transfer_custody(
-            db,
-            product,
-            variant_id=variant_id,
-            quantity=item.quantity,
-            from_holder_type=HolderType.WAREHOUSE_UZ,
-            from_holder_id=0,
-            to_holder_type=HolderType.COURIER_UZ,
-            to_holder_id=courier.id,
-            event_type=CustodyEventType.COURIER_UZ_PICKUP,
-            scanned_by=user.id,
-        )
-    return OkResponse(ok=True)
 
 
 @router.post("/orders/{order_id}/handover", response_model=OkResponse)

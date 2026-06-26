@@ -123,6 +123,13 @@ export default function MyOrders() {
                   )}
                 </div>
 
+                {order.status === 'with_carrier' && (
+                  <div className="px-4 py-2.5 flex items-center gap-2" style={{ background: 'rgba(52,211,153,0.10)' }}>
+                    <span style={{ color: 'var(--green)' }}><IconPlane size={15} /></span>
+                    <span className="text-xs font-medium" style={{ color: 'var(--green)' }}>{t('Yetib borgach, yukni topshirishni unutmang')}</span>
+                  </div>
+                )}
+
                 {damaged && (
                   <div className="px-4 py-2.5 flex items-center gap-2" style={{ background: 'rgba(239,68,68,0.08)' }}>
                     <span style={{ color: 'var(--red)' }}><IconAlert size={16} /></span>

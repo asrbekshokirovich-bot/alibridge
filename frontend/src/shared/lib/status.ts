@@ -7,7 +7,7 @@ export const ORDER_STATUS: Record<OrderStatus, { text: string; tone: Tone }> = {
   pending_admin: { text: 'Admin tasdiqlashini kuting', tone: 'yellow' },
   confirmed: { text: 'Admin tasdiqladi, yukni kuting', tone: 'blue' },
   in_warehouse_uz: { text: 'Toshkent omborida', tone: 'gray' },
-  with_carrier: { text: 'Mahsulot sizda', tone: 'green' },
+  with_carrier: { text: 'Yuk sizda — oq yo\'l!', tone: 'green' },
   delivered_tr: { text: 'Yuk topshirildi', tone: 'green' },
 }
 

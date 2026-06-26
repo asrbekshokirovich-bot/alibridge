@@ -57,6 +57,7 @@ from app.services.barcode_service import (
 )
 from app.services.custody_service import (
     STAGE_LABELS,
+    available_qty,
     resolve_variant_id,
     sync_warehouse_holding,
     transfer_custody,
@@ -502,10 +503,18 @@ async def order_handover(
 
     total = 0
     for it in order.items:
-        qty = it.actual_quantity or int(it.amount) or 0
-        if qty <= 0:
+        wanted = it.actual_quantity or int(it.amount) or 0
+        if wanted <= 0:
             continue
         variant_id = await resolve_variant_id(db, product=it.product, variant_id=it.variant_id)
+        # Omborda hozir bori bilan cheklaymiz — kiloli yukда qoldiq kamroq bo'lsa
+        # ham handover uzilmaydi (mavjudini o'tkazadi).
+        avail = await available_qty(
+            db, variant_id=variant_id, holder_type=HolderType.WAREHOUSE_UZ, holder_id=0
+        )
+        qty = min(wanted, avail)
+        if qty <= 0:
+            continue
         await transfer_custody(
             db,
             it.product,
@@ -519,6 +528,9 @@ async def order_handover(
             scanned_by=user.id,
         )
         total += qty
+
+    if total <= 0:
+        raise AppError("NOTHING_TO_HANDOVER", "Omborda bu buyurtma yuki qolmagan")
 
     order.handed_to_courier_id = courier.id
     await db.flush()

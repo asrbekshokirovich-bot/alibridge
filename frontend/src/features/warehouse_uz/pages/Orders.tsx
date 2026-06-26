@@ -55,7 +55,6 @@ export default function Orders() {
     onSuccess: () => {
       notify('success')
       qc.invalidateQueries({ queryKey: ['warehouse-uz-orders'] })
-      qc.invalidateQueries({ queryKey: ['courier-uz-queue'] })
       qc.invalidateQueries({ queryKey: ['courier-uz-my-products'] })
       setHandoverFor(null)
     },

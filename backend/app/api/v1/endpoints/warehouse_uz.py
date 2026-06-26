@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.deps import require_role
-from app.bot.notify import on_order_confirmed
+from app.bot.notify import on_courier_assigned, on_order_confirmed
 from app.core.enums import (
     CustodyEventType,
     HolderType,
@@ -500,6 +500,7 @@ async def order_handover(
     if courier is None:
         raise AppError("COURIER_NOT_FOUND", "Kuryer topilmadi")
 
+    total = 0
     for it in order.items:
         qty = it.actual_quantity or int(it.amount) or 0
         if qty <= 0:
@@ -517,9 +518,12 @@ async def order_handover(
             event_type=CustodyEventType.COURIER_UZ_PICKUP,
             scanned_by=user.id,
         )
+        total += qty
 
     order.handed_to_courier_id = courier.id
     await db.flush()
+    # Kuryerga "yangi yuk biriktirildi" bildirishnomasi
+    await on_courier_assigned(db, courier_id=courier.id, count=total)
     return OkResponse(ok=True)
 
 

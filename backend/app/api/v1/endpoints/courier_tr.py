@@ -51,6 +51,7 @@ from app.services.custody_service import (
     resolve_variant_id,
     transfer_custody,
 )
+from app.services.order_service import advance_orders_delivered_for_carrier
 from app.services.payment_service import recompute_carrier_payment
 
 
@@ -195,6 +196,8 @@ async def confirm_receive(
         )
 
     await recompute_carrier_payment(db, carrier.id)
+    # Yo'lovchi yukni TR kuryeriga topshirdi — buyurtma "Yetkazildi" (DELIVERED_TR) ga
+    await advance_orders_delivered_for_carrier(db, carrier.id)
     return OkResponse(ok=True)
 
 

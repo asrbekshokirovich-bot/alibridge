@@ -47,6 +47,7 @@ from app.services.custody_service import (
     resolve_variant_id,
     transfer_custody,
 )
+from app.services.order_service import advance_orders_delivered_for_carrier
 from app.services.payment_service import recompute_carrier_payment
 
 router = APIRouter(prefix="/warehouse-tr", tags=["warehouse_tr"])
@@ -186,6 +187,8 @@ async def confirm_receive(
     # Yo'lovchi to'g'ridan TR omborga topshirgan bo'lsa ham to'lov hisoblanadi
     for carrier_id in affected_carriers:
         await recompute_carrier_payment(db, carrier_id)
+        # Yo'lovchi yukni topshirdi — buyurtma "Yetkazildi" (DELIVERED_TR) ga
+        await advance_orders_delivered_for_carrier(db, carrier_id)
     return OkResponse(ok=True)
 
 

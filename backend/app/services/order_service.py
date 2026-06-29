@@ -1,13 +1,52 @@
 from decimal import Decimal
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.enums import OrderStatus, ProductStatus, ProductType
+from app.core.enums import HolderType, OrderStatus, ProductStatus, ProductType
 from app.core.errors import AppError
-from app.db.models import Order, OrderItem, Product
+from app.db.models import CustodyHolding, Order, OrderItem, Product
 from app.schemas.order import CreateOrderRequest
+
+
+async def advance_orders_delivered_for_carrier(db: AsyncSession, carrier_id: int) -> None:
+    """Yo'lovchi yukni Turkiyada topshirgach chaqiriladi.
+
+    Yo'lovchining WITH_CARRIER buyurtmalaridan yuki endi CARRIER custody'da
+    qolmaganlarini DELIVERED_TR ga o'tkazadi (buyurtmachi/yo'lovchi "Yetkazildi"
+    ko'radi). Yuki hali qisman yo'lovchida bo'lsa — holat o'zgarmaydi.
+    """
+    orders = (
+        (
+            await db.execute(
+                select(Order)
+                .where(
+                    Order.carrier_id == carrier_id,
+                    Order.status == OrderStatus.WITH_CARRIER,
+                )
+                .options(selectinload(Order.items))
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for o in orders:
+        variant_ids = [it.variant_id for it in o.items if it.variant_id is not None]
+        if not variant_ids:
+            continue
+        still_held = await db.scalar(
+            select(func.count())
+            .select_from(CustodyHolding)
+            .where(
+                CustodyHolding.holder_type == HolderType.CARRIER,
+                CustodyHolding.holder_id == carrier_id,
+                CustodyHolding.variant_id.in_(variant_ids),
+                CustodyHolding.quantity > 0,
+            )
+        )
+        if not still_held:
+            o.status = OrderStatus.DELIVERED_TR
 
 
 async def create_order(db: AsyncSession, carrier_id: int, body: CreateOrderRequest) -> Order:

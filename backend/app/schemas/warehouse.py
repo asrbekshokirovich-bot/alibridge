@@ -162,6 +162,27 @@ class OrderHandoverRequest(BaseModel):
     courier_id: int
 
 
+class ReceiveGroupItem(BaseModel):
+    """Qabul-checklist uchun bitta yuk (egada hozir bori)."""
+
+    product_id: int
+    variant_id: int
+    barcode: str
+    product_name: str
+    size_label: str
+    quantity: int  # egada hozir bori — skanlanishi kerak bo'lgan miqdor
+
+
+class ReceiveGroup(BaseModel):
+    """Bir egada (yo'lovchi/kuryer) turgan yuklar — qabul qilish checklist'i."""
+
+    holder_id: int
+    holder_name: str
+    holder_number: int | None = None
+    items: list[ReceiveGroupItem]
+    total: int
+
+
 class HeldCargoItem(BaseModel):
     """Bir ega(holder)da turgan yuk: mahsulot + o'lcham + nechta dona."""
 

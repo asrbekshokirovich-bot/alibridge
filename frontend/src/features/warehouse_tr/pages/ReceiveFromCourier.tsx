@@ -1,17 +1,22 @@
 import { useTranslation } from 'react-i18next'
-import { ScanSession } from '@/shared/ui'
+import { useNavigate } from 'react-router-dom'
+import { ReceiveChecklist } from '@/shared/ui'
 
 export default function ReceiveFromCourier() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   return (
-    <ScanSession
+    <ReceiveChecklist
       title={t('Kuryerdan qabul')}
-      subtitle={t('Barkodlarni skanlang')}
-      showBack
-      scanUrl="/warehouse-tr/scan-receive-courier"
+      groupNoun={t('Kuryer')}
+      groupsUrl="/warehouse-tr/receive-courier-groups"
       confirmUrl="/warehouse-tr/confirm-receive-courier"
+      queryKey="warehouse-tr-receive-courier-groups"
+      buttonLabel={t('Qabul qildim')}
       successTitle={t('Qabul qilindi!')}
-      successDesc={(n) => t('{{n}} ta mahsulot omborga olindi.', { n })}
+      successDesc={() => t('Yuk omborga olindi.')}
+      invalidateKeys={['warehouse-tr-incoming', 'warehouse-tr-held']}
+      onBack={() => navigate('/warehouse-tr')}
     />
   )
 }

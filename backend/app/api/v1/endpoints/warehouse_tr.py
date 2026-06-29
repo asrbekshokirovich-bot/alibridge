@@ -32,6 +32,8 @@ from app.schemas.warehouse import (
     ConfirmRequest,
     DailyOutReport,
     HeldCargoItem,
+    ReceiveGroup,
+    ReceiveGroupItem,
     ScanRequest,
     ScanResponse,
     VariantAvailability,
@@ -63,6 +65,50 @@ async def _carrier_for_product(db: AsyncSession, product_id: int) -> User | None
 
 
 # ─── Yo'lovchidan qabul ─────────────────────────────────────────────────────────
+
+
+@router.get("/receive-groups", response_model=list[ReceiveGroup])
+async def receive_groups(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*ROLE)),
+) -> list[ReceiveGroup]:
+    """Hozir yo'lovchilarda (CARRIER) turgan, TR ombor qabul qiladigan yuklar —
+    yo'lovchi bo'yicha guruhlangan. Har bir yuk skanlab tekshiriladi."""
+    rows = await db.execute(
+        select(CustodyHolding, Product, ProductVariant, User)
+        .join(Product, Product.id == CustodyHolding.product_id)
+        .join(ProductVariant, ProductVariant.id == CustodyHolding.variant_id)
+        .outerjoin(User, User.id == CustodyHolding.holder_id)
+        .where(
+            CustodyHolding.holder_type == HolderType.CARRIER,
+            CustodyHolding.quantity > 0,
+        )
+        .order_by(CustodyHolding.holder_id, Product.created_at.desc())
+    )
+    groups: dict[int, ReceiveGroup] = {}
+    for h, p, v, u in rows.all():
+        g = groups.get(h.holder_id)
+        if g is None:
+            g = ReceiveGroup(
+                holder_id=h.holder_id,
+                holder_name=f"{u.first_name} {u.last_name}".strip() if u else "",
+                holder_number=u.carrier_number if u else None,
+                items=[],
+                total=0,
+            )
+            groups[h.holder_id] = g
+        g.items.append(
+            ReceiveGroupItem(
+                product_id=p.id,
+                variant_id=v.id,
+                barcode=p.barcode,
+                product_name=p.name,
+                size_label=v.size_label,
+                quantity=h.quantity,
+            )
+        )
+        g.total += h.quantity
+    return list(groups.values())
 
 
 @router.post("/scan-receive", response_model=ScanResponse)
@@ -203,6 +249,50 @@ async def confirm_handover(
 
 
 # ─── Kuryerdan qabul (TR kuryeri qaytargan yukni ombor oladi) ───────────────────
+
+
+@router.get("/receive-courier-groups", response_model=list[ReceiveGroup])
+async def receive_courier_groups(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(require_role(*ROLE)),
+) -> list[ReceiveGroup]:
+    """Hozir TR kuryerlarida (COURIER_TR) turgan yuklar — kuryer bo'yicha guruhlangan.
+    TR ombor har bir yukni skanlab qabul qiladi."""
+    rows = await db.execute(
+        select(CustodyHolding, Product, ProductVariant, User)
+        .join(Product, Product.id == CustodyHolding.product_id)
+        .join(ProductVariant, ProductVariant.id == CustodyHolding.variant_id)
+        .outerjoin(User, User.id == CustodyHolding.holder_id)
+        .where(
+            CustodyHolding.holder_type == HolderType.COURIER_TR,
+            CustodyHolding.quantity > 0,
+        )
+        .order_by(CustodyHolding.holder_id, Product.created_at.desc())
+    )
+    groups: dict[int, ReceiveGroup] = {}
+    for h, p, v, u in rows.all():
+        g = groups.get(h.holder_id)
+        if g is None:
+            g = ReceiveGroup(
+                holder_id=h.holder_id,
+                holder_name=f"{u.first_name} {u.last_name}".strip() if u else "",
+                holder_number=None,
+                items=[],
+                total=0,
+            )
+            groups[h.holder_id] = g
+        g.items.append(
+            ReceiveGroupItem(
+                product_id=p.id,
+                variant_id=v.id,
+                barcode=p.barcode,
+                product_name=p.name,
+                size_label=v.size_label,
+                quantity=h.quantity,
+            )
+        )
+        g.total += h.quantity
+    return list(groups.values())
 
 
 @router.post("/scan-receive-courier", response_model=ScanResponse)
